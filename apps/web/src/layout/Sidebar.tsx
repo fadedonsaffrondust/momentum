@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
+import { ShoppingBag } from 'lucide-react';
 import { useSettings, useUpdateSettings } from '../api/hooks';
 import { useAuthStore } from '../store/auth';
 import { useUiStore } from '../store/ui';
@@ -41,6 +42,10 @@ const ParkingsIcon = ({ className }: IconProps) => (
   >
     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
   </svg>
+);
+
+const BrandsIcon = ({ className }: IconProps) => (
+  <ShoppingBag size={18} className={className} />
 );
 
 const SparkleIcon = ({ className }: IconProps) => (
@@ -149,7 +154,9 @@ interface SidebarNavItemProps {
 function SidebarNavItem({ to, label, icon: Icon, matchPaths }: SidebarNavItemProps) {
   const location = useLocation();
   const isActive =
-    location.pathname === to || (matchPaths?.includes(location.pathname) ?? false);
+    location.pathname === to ||
+    location.pathname.startsWith(to + '/') ||
+    (matchPaths?.includes(location.pathname) ?? false);
 
   return (
     <NavLink
@@ -238,6 +245,7 @@ export function Sidebar() {
       <nav className="flex-1 w-full flex flex-col items-center pt-2 gap-1">
         <SidebarNavItem to="/" label="Tasks" icon={TasksIcon} matchPaths={['/backlog']} />
         <SidebarNavItem to="/parkings" label="Parkings" icon={ParkingsIcon} />
+        <SidebarNavItem to="/brands" label="Brands" icon={BrandsIcon} matchPaths={[]} />
       </nav>
 
       {/* Bottom actions */}

@@ -1,0 +1,214 @@
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import { eq, and, desc } from 'drizzle-orm';
+import { z } from 'zod';
+import {
+  brandActionItemSchema,
+  brandActionStatusSchema,
+  createBrandActionItemInputSchema,
+  updateBrandActionItemInputSchema,
+  taskSchema,
+  toLocalIsoDate,
+} from '@momentum/shared';
+import { brandActionItems, brands, tasks } from '@momentum/db';
+import { db } from '../db.ts';
+import { mapBrandActionItem, mapTask } from '../mappers.ts';
+import { notFound } from '../errors.ts';
+
+const brandIdParam = z.object({ brandId: z.string().uuid() });
+const idParam = z.object({ brandId: z.string().uuid(), id: z.string().uuid() });
+
+export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
+  app.addHook('preHandler', app.authenticate);
+
+  app.get(
+    '/brands/:brandId/action-items',
+    {
+      schema: {
+        params: brandIdParam,
+        querystring: z.object({ status: brandActionStatusSchema.optional() }),
+        response: { 200: z.array(brandActionItemSchema) },
+      },
+    },
+    async (req) => {
+      const conds = [
+        eq(brandActionItems.brandId, req.params.brandId),
+        eq(brandActionItems.userId, req.userId),
+      ];
+      if (req.query.status) conds.push(eq(brandActionItems.status, req.query.status));
+      const rows = await db
+        .select()
+        .from(brandActionItems)
+        .where(and(...conds))
+        .orderBy(desc(brandActionItems.createdAt));
+      return rows.map(mapBrandActionItem);
+    },
+  );
+
+  app.post(
+    '/brands/:brandId/action-items',
+    {
+      schema: {
+        params: brandIdParam,
+        body: createBrandActionItemInputSchema,
+        response: { 200: brandActionItemSchema },
+      },
+    },
+    async (req) => {
+      const [row] = await db
+        .insert(brandActionItems)
+        .values({
+          brandId: req.params.brandId,
+          userId: req.userId,
+          text: req.body.text,
+          meetingId: req.body.meetingId ?? null,
+          owner: req.body.owner ?? null,
+          dueDate: req.body.dueDate ?? null,
+        })
+        .returning();
+      if (!row) throw new Error('Failed to create action item');
+      await db
+        .update(brands)
+        .set({ updatedAt: new Date() })
+        .where(eq(brands.id, req.params.brandId));
+      return mapBrandActionItem(row);
+    },
+  );
+
+  app.patch(
+    '/brands/:brandId/action-items/:id',
+    {
+      schema: {
+        params: idParam,
+        body: updateBrandActionItemInputSchema,
+        response: { 200: brandActionItemSchema },
+      },
+    },
+    async (req) => {
+      const updates: Record<string, unknown> = { ...req.body };
+      if (req.body.status === 'done') updates.completedAt = new Date();
+      const [row] = await db
+        .update(brandActionItems)
+        .set(updates)
+        .where(
+          and(
+            eq(brandActionItems.id, req.params.id),
+            eq(brandActionItems.brandId, req.params.brandId),
+            eq(brandActionItems.userId, req.userId),
+          ),
+        )
+        .returning();
+      if (!row) throw notFound('Action item not found');
+      return mapBrandActionItem(row);
+    },
+  );
+
+  app.delete(
+    '/brands/:brandId/action-items/:id',
+    {
+      schema: {
+        params: idParam,
+        response: { 200: z.object({ ok: z.literal(true) }) },
+      },
+    },
+    async (req) => {
+      const [row] = await db
+        .delete(brandActionItems)
+        .where(
+          and(
+            eq(brandActionItems.id, req.params.id),
+            eq(brandActionItems.brandId, req.params.brandId),
+            eq(brandActionItems.userId, req.userId),
+          ),
+        )
+        .returning({ id: brandActionItems.id });
+      if (!row) throw notFound('Action item not found');
+      return { ok: true as const };
+    },
+  );
+
+  app.post(
+    '/brands/:brandId/action-items/:id/send-to-today',
+    {
+      schema: {
+        params: idParam,
+        response: { 200: z.object({ actionItem: brandActionItemSchema, task: taskSchema }) },
+      },
+    },
+    async (req) => {
+      const [existing] = await db
+        .select()
+        .from(brandActionItems)
+        .where(
+          and(
+            eq(brandActionItems.id, req.params.id),
+            eq(brandActionItems.brandId, req.params.brandId),
+            eq(brandActionItems.userId, req.userId),
+          ),
+        )
+        .limit(1);
+      if (!existing) throw notFound('Action item not found');
+
+      const [task] = await db
+        .insert(tasks)
+        .values({
+          userId: req.userId,
+          title: existing.text,
+          scheduledDate: toLocalIsoDate(new Date()),
+          priority: 'medium',
+        })
+        .returning();
+      if (!task) throw new Error('Failed to create task');
+
+      const [updated] = await db
+        .update(brandActionItems)
+        .set({ linkedTaskId: task.id })
+        .where(eq(brandActionItems.id, existing.id))
+        .returning();
+      if (!updated) throw new Error('Failed to link action item');
+
+      return { actionItem: mapBrandActionItem(updated), task: mapTask(task) };
+    },
+  );
+
+  app.post(
+    '/brands/:brandId/action-items/:id/complete',
+    {
+      schema: {
+        params: idParam,
+        response: { 200: brandActionItemSchema },
+      },
+    },
+    async (req) => {
+      const [existing] = await db
+        .select()
+        .from(brandActionItems)
+        .where(
+          and(
+            eq(brandActionItems.id, req.params.id),
+            eq(brandActionItems.brandId, req.params.brandId),
+            eq(brandActionItems.userId, req.userId),
+          ),
+        )
+        .limit(1);
+      if (!existing) throw notFound('Action item not found');
+
+      const [row] = await db
+        .update(brandActionItems)
+        .set({ status: 'done', completedAt: new Date() })
+        .where(eq(brandActionItems.id, existing.id))
+        .returning();
+      if (!row) throw notFound('Action item not found');
+
+      if (existing.linkedTaskId) {
+        await db
+          .update(tasks)
+          .set({ status: 'done', column: 'done', completedAt: new Date() })
+          .where(
+            and(eq(tasks.id, existing.linkedTaskId), eq(tasks.userId, req.userId)),
+          );
+      }
+
+      return mapBrandActionItem(row);
+    },
+  );
+};

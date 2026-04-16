@@ -11,6 +11,7 @@ import {
   real,
   uniqueIndex,
   index,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 
 /* ─────────────── enums ─────────────── */
@@ -20,6 +21,8 @@ export const taskStatusEnum = pgEnum('task_status', ['todo', 'in_progress', 'don
 export const taskColumnEnum = pgEnum('task_column', ['up_next', 'in_progress', 'done']);
 export const themeEnum = pgEnum('theme', ['dark', 'light']);
 export const parkingStatusEnum = pgEnum('parking_status', ['open', 'discussed', 'archived']);
+export const brandStatusEnum = pgEnum('brand_status', ['active', 'importing', 'import_failed']);
+export const brandActionStatusEnum = pgEnum('brand_action_status', ['open', 'done']);
 
 /* ─────────────── users ─────────────── */
 
@@ -136,6 +139,106 @@ export const parkings = pgTable(
     userIdIdx: index('parkings_user_id_idx').on(t.userId),
     targetDateIdx: index('parkings_target_date_idx').on(t.userId, t.targetDate),
     statusIdx: index('parkings_status_idx').on(t.userId, t.status),
+  }),
+);
+
+/* ─────────────── brands ─────────────── */
+
+export const brands = pgTable(
+  'brands',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    goals: text('goals'),
+    successDefinition: text('success_definition'),
+    customFields: jsonb('custom_fields').notNull().default('{}'),
+    status: brandStatusEnum('status').notNull().default('active'),
+    importError: text('import_error'),
+    importedFrom: text('imported_from'),
+    rawImportContent: text('raw_import_content'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userIdIdx: index('brands_user_id_idx').on(t.userId),
+  }),
+);
+
+/* ─────────────── brand stakeholders ─────────────── */
+
+export const brandStakeholders = pgTable(
+  'brand_stakeholders',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    brandId: uuid('brand_id')
+      .notNull()
+      .references(() => brands.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    role: text('role'),
+    notes: text('notes'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    brandIdIdx: index('brand_stakeholders_brand_id_idx').on(t.brandId),
+  }),
+);
+
+/* ─────────────── brand meetings ─────────────── */
+
+export const brandMeetings = pgTable(
+  'brand_meetings',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    brandId: uuid('brand_id')
+      .notNull()
+      .references(() => brands.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    date: date('date').notNull(),
+    title: text('title').notNull(),
+    attendees: text('attendees').array().notNull().default(sql`'{}'::text[]`),
+    summary: text('summary'),
+    rawNotes: text('raw_notes').notNull().default(''),
+    decisions: text('decisions').array().notNull().default(sql`'{}'::text[]`),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    brandIdIdx: index('brand_meetings_brand_id_idx').on(t.brandId),
+    dateIdx: index('brand_meetings_date_idx').on(t.brandId, t.date),
+  }),
+);
+
+/* ─────────────── brand action items ─────────────── */
+
+export const brandActionItems = pgTable(
+  'brand_action_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    brandId: uuid('brand_id')
+      .notNull()
+      .references(() => brands.id, { onDelete: 'cascade' }),
+    meetingId: uuid('meeting_id').references(() => brandMeetings.id, { onDelete: 'set null' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    text: text('text').notNull(),
+    status: brandActionStatusEnum('status').notNull().default('open'),
+    owner: text('owner'),
+    dueDate: date('due_date'),
+    linkedTaskId: uuid('linked_task_id').references(() => tasks.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+  },
+  (t) => ({
+    brandIdIdx: index('brand_action_items_brand_id_idx').on(t.brandId),
+    statusIdx: index('brand_action_items_status_idx').on(t.brandId, t.status),
   }),
 );
 

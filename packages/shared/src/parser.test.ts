@@ -1,54 +1,75 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, expect } from 'vitest';
 import { parseQuickAdd, resolveDateToken, toLocalIsoDate } from './parser.ts';
 
 describe('parseQuickAdd', () => {
   it('parses a plain title', () => {
     const r = parseQuickAdd('Buy domain');
-    assert.equal(r.title, 'Buy domain');
-    assert.equal(r.estimateMinutes, null);
-    assert.equal(r.roleTag, null);
-    assert.equal(r.priority, null);
-    assert.equal(r.dateToken, null);
+    expect(r.title).toBe('Buy domain');
+    expect(r.estimateMinutes).toBeNull();
+    expect(r.roleTag).toBeNull();
+    expect(r.priority).toBeNull();
+    expect(r.dateToken).toBeNull();
   });
 
   it('parses minute estimate', () => {
-    assert.equal(parseQuickAdd('Buy domain ~30m').estimateMinutes, 30);
+    expect(parseQuickAdd('Buy domain ~30m').estimateMinutes).toBe(30);
   });
 
   it('parses hour estimate', () => {
-    assert.equal(parseQuickAdd('Write pitch deck ~2h').estimateMinutes, 120);
+    expect(parseQuickAdd('Write pitch deck ~2h').estimateMinutes).toBe(120);
   });
 
   it('parses role tag', () => {
-    assert.equal(parseQuickAdd('Email VC #strategy').roleTag, 'strategy');
+    expect(parseQuickAdd('Email VC #strategy').roleTag).toBe('strategy');
   });
 
   it('parses priority', () => {
-    assert.equal(parseQuickAdd('Call lawyer !h').priority, 'high');
-    assert.equal(parseQuickAdd('Order snacks !l').priority, 'low');
-    assert.equal(parseQuickAdd('Clean inbox !m').priority, 'medium');
+    expect(parseQuickAdd('Call lawyer !h').priority).toBe('high');
+    expect(parseQuickAdd('Order snacks !l').priority).toBe('low');
+    expect(parseQuickAdd('Clean inbox !m').priority).toBe('medium');
   });
 
   it('parses date token', () => {
-    assert.equal(parseQuickAdd('Ship update +tomorrow').dateToken, 'tomorrow');
+    expect(parseQuickAdd('Ship update +tomorrow').dateToken).toBe('tomorrow');
   });
 
   it('is order-agnostic', () => {
     const a = parseQuickAdd('Buy domain ~30m #product !h +tomorrow');
     const b = parseQuickAdd('Buy domain +tomorrow !h #product ~30m');
-    assert.deepEqual(a, b);
+    expect(a).toEqual(b);
   });
 
   it('leaves title clean when modifiers are interleaved', () => {
     const r = parseQuickAdd('Call   ~15m   investor   #strategy');
-    assert.equal(r.title, 'Call investor');
+    expect(r.title).toBe('Call investor');
   });
 
   it('does not parse modifiers mid-word', () => {
     const r = parseQuickAdd('Review#product notes');
-    assert.equal(r.roleTag, null);
-    assert.equal(r.title, 'Review#product notes');
+    expect(r.roleTag).toBeNull();
+    expect(r.title).toBe('Review#product notes');
+  });
+
+  it('returns empty title for empty string', () => {
+    const r = parseQuickAdd('');
+    expect(r.title).toBe('');
+    expect(r.estimateMinutes).toBeNull();
+    expect(r.roleTag).toBeNull();
+    expect(r.priority).toBeNull();
+    expect(r.dateToken).toBeNull();
+  });
+
+  it('returns empty title when input is only modifiers', () => {
+    const r = parseQuickAdd('~30m #product !h +tomorrow');
+    expect(r.title).toBe('');
+    expect(r.estimateMinutes).toBe(30);
+    expect(r.roleTag).toBe('product');
+    expect(r.priority).toBe('high');
+    expect(r.dateToken).toBe('tomorrow');
+  });
+
+  it('parses ~0m as zero minutes', () => {
+    expect(parseQuickAdd('Do nothing ~0m').estimateMinutes).toBe(0);
   });
 });
 
@@ -56,32 +77,56 @@ describe('resolveDateToken', () => {
   const base = new Date(2026, 3, 13); // Mon Apr 13 2026
 
   it('returns null for unknown tokens', () => {
-    assert.equal(resolveDateToken('foo', base), null);
+    expect(resolveDateToken('foo', base)).toBeNull();
   });
 
   it('resolves today', () => {
-    assert.equal(resolveDateToken('today', base), '2026-04-13');
+    expect(resolveDateToken('today', base)).toBe('2026-04-13');
   });
 
   it('resolves tomorrow', () => {
-    assert.equal(resolveDateToken('tomorrow', base), '2026-04-14');
+    expect(resolveDateToken('tomorrow', base)).toBe('2026-04-14');
   });
 
   it('resolves next weekday (future day this week)', () => {
-    assert.equal(resolveDateToken('fri', base), '2026-04-17');
+    expect(resolveDateToken('fri', base)).toBe('2026-04-17');
   });
 
   it('resolves same weekday to 7 days later', () => {
-    assert.equal(resolveDateToken('mon', base), '2026-04-20');
+    expect(resolveDateToken('mon', base)).toBe('2026-04-20');
   });
 
   it('resolves past weekday to next week', () => {
-    assert.equal(resolveDateToken('sun', base), '2026-04-19');
+    expect(resolveDateToken('sun', base)).toBe('2026-04-19');
+  });
+
+  it('returns null for null input', () => {
+    expect(resolveDateToken(null, base)).toBeNull();
+  });
+
+  it('resolves yesterday', () => {
+    expect(resolveDateToken('yesterday', base)).toBe('2026-04-12');
+  });
+
+  it('resolves tmrw as tomorrow', () => {
+    expect(resolveDateToken('tmrw', base)).toBe('2026-04-14');
+  });
+
+  it('resolves tom as tomorrow', () => {
+    expect(resolveDateToken('tom', base)).toBe('2026-04-14');
+  });
+
+  it('resolves full weekday name monday', () => {
+    expect(resolveDateToken('monday', base)).toBe('2026-04-20');
+  });
+
+  it('resolves full weekday name friday', () => {
+    expect(resolveDateToken('friday', base)).toBe('2026-04-17');
   });
 });
 
 describe('toLocalIsoDate', () => {
   it('zero-pads month and day', () => {
-    assert.equal(toLocalIsoDate(new Date(2026, 0, 5)), '2026-01-05');
+    expect(toLocalIsoDate(new Date(2026, 0, 5))).toBe('2026-01-05');
   });
 });

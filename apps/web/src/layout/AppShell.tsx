@@ -6,6 +6,7 @@ import { ModalRoot } from '../modals/ModalRoot';
 import { DataSync } from '../components/DataSync';
 import { BackupReminder } from '../components/BackupReminder';
 import { ShortcutsHint } from '../components/ShortcutsHint';
+import { ConfirmProvider } from '../components/ConfirmModal';
 import { Sidebar } from './Sidebar';
 import { useReleaseNotesPrompt } from '../hooks/useReleaseNotesPrompt';
 import { useGlobalShortcuts } from '../hooks/useGlobalShortcuts';
@@ -51,6 +52,7 @@ export function AppShell() {
       <DataSync />
       <BackupReminder />
       <ShortcutsHint />
+      <ConfirmProvider />
     </div>
   );
 }

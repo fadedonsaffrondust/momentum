@@ -200,10 +200,142 @@ export const authResponseSchema = z.object({
 });
 export type AuthResponse = z.infer<typeof authResponseSchema>;
 
+/* ─────────────── brands ─────────────── */
+
+export const brandStatusSchema = z.enum(['active', 'importing', 'import_failed']);
+export type BrandStatus = z.infer<typeof brandStatusSchema>;
+
+export const brandSchema = z.object({
+  id: z.string().uuid(),
+  userId: z.string().uuid(),
+  name: z.string().min(1).max(256),
+  goals: z.string().max(10_000).nullable(),
+  successDefinition: z.string().max(10_000).nullable(),
+  customFields: z.record(z.unknown()).default({}),
+  status: brandStatusSchema,
+  importError: z.string().nullable(),
+  importedFrom: z.string().max(64).nullable(),
+  rawImportContent: z.string().nullable(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+export type Brand = z.infer<typeof brandSchema>;
+
+export const createBrandInputSchema = z.object({
+  name: z.string().min(1).max(256),
+  goals: z.string().max(10_000).nullable().optional(),
+  successDefinition: z.string().max(10_000).nullable().optional(),
+});
+export type CreateBrandInput = z.infer<typeof createBrandInputSchema>;
+
+export const updateBrandInputSchema = createBrandInputSchema.partial().strict();
+export type UpdateBrandInput = z.infer<typeof updateBrandInputSchema>;
+
+/* ─────────────── brand stakeholders ─────────────── */
+
+export const brandStakeholderSchema = z.object({
+  id: z.string().uuid(),
+  brandId: z.string().uuid(),
+  userId: z.string().uuid(),
+  name: z.string().min(1).max(256),
+  role: z.string().max(256).nullable(),
+  notes: z.string().max(4000).nullable(),
+  createdAt: z.string().datetime(),
+});
+export type BrandStakeholder = z.infer<typeof brandStakeholderSchema>;
+
+export const createBrandStakeholderInputSchema = z.object({
+  name: z.string().min(1).max(256),
+  role: z.string().max(256).nullable().optional(),
+  notes: z.string().max(4000).nullable().optional(),
+});
+export type CreateBrandStakeholderInput = z.infer<typeof createBrandStakeholderInputSchema>;
+
+export const updateBrandStakeholderInputSchema = createBrandStakeholderInputSchema
+  .partial()
+  .strict();
+export type UpdateBrandStakeholderInput = z.infer<typeof updateBrandStakeholderInputSchema>;
+
+/* ─────────────── brand meetings ─────────────── */
+
+export const brandMeetingSchema = z.object({
+  id: z.string().uuid(),
+  brandId: z.string().uuid(),
+  userId: z.string().uuid(),
+  date: isoDateSchema,
+  title: z.string().min(1).max(500),
+  attendees: z.array(z.string()),
+  summary: z.string().max(10_000).nullable(),
+  rawNotes: z.string().max(100_000),
+  decisions: z.array(z.string()),
+  createdAt: z.string().datetime(),
+});
+export type BrandMeeting = z.infer<typeof brandMeetingSchema>;
+
+export const createBrandMeetingInputSchema = z.object({
+  date: isoDateSchema,
+  title: z.string().min(1).max(500),
+  attendees: z.array(z.string()).optional().default([]),
+  summary: z.string().max(10_000).nullable().optional(),
+  rawNotes: z.string().max(100_000),
+  decisions: z.array(z.string()).optional().default([]),
+});
+export type CreateBrandMeetingInput = z.infer<typeof createBrandMeetingInputSchema>;
+
+export const updateBrandMeetingInputSchema = createBrandMeetingInputSchema.partial().strict();
+export type UpdateBrandMeetingInput = z.infer<typeof updateBrandMeetingInputSchema>;
+
+/* ─────────────── brand action items ─────────────── */
+
+export const brandActionStatusSchema = z.enum(['open', 'done']);
+export type BrandActionStatus = z.infer<typeof brandActionStatusSchema>;
+
+export const brandActionItemSchema = z.object({
+  id: z.string().uuid(),
+  brandId: z.string().uuid(),
+  meetingId: z.string().uuid().nullable(),
+  userId: z.string().uuid(),
+  text: z.string().min(1).max(2000),
+  status: brandActionStatusSchema,
+  owner: z.string().max(256).nullable(),
+  dueDate: isoDateSchema.nullable(),
+  linkedTaskId: z.string().uuid().nullable(),
+  createdAt: z.string().datetime(),
+  completedAt: z.string().datetime().nullable(),
+});
+export type BrandActionItem = z.infer<typeof brandActionItemSchema>;
+
+export const createBrandActionItemInputSchema = z.object({
+  text: z.string().min(1).max(2000),
+  meetingId: z.string().uuid().nullable().optional(),
+  owner: z.string().max(256).nullable().optional(),
+  dueDate: isoDateSchema.nullable().optional(),
+});
+export type CreateBrandActionItemInput = z.infer<typeof createBrandActionItemInputSchema>;
+
+export const updateBrandActionItemInputSchema = createBrandActionItemInputSchema
+  .partial()
+  .extend({ status: brandActionStatusSchema.optional() })
+  .strict();
+export type UpdateBrandActionItemInput = z.infer<typeof updateBrandActionItemInputSchema>;
+
+/* ─────────────── brand import ─────────────── */
+
+export const brandImportInputSchema = z.object({
+  fileName: z.string().min(1),
+  fileContent: z.string().min(1).max(100_000),
+});
+export type BrandImportInput = z.infer<typeof brandImportInputSchema>;
+
+export const brandImportResponseSchema = z.object({
+  brand: brandSchema,
+});
+export type BrandImportResponse = z.infer<typeof brandImportResponseSchema>;
+
 /* ─────────────── export / import ─────────────── */
 
 export const exportFileSchema = z.object({
-  version: z.enum(['1.0', '1.1']),
+  version: z.enum(['1.0', '1.1', '1.2']),
   exportedAt: z.string().datetime(),
   settings: userSettingsSchema.omit({ userId: true }),
   roles: z.array(roleSchema.omit({ id: true }).extend({ id: z.string() })),
@@ -224,6 +356,20 @@ export const exportFileSchema = z.object({
         roleId: z.string().nullable(),
       }),
     )
+    .optional()
+    .default([]),
+  // Added in 1.2.
+  brands: z.array(brandSchema.omit({ userId: true })).optional().default([]),
+  brandStakeholders: z
+    .array(brandStakeholderSchema.omit({ userId: true }))
+    .optional()
+    .default([]),
+  brandMeetings: z
+    .array(brandMeetingSchema.omit({ userId: true }))
+    .optional()
+    .default([]),
+  brandActionItems: z
+    .array(brandActionItemSchema.omit({ userId: true }))
     .optional()
     .default([]),
 });

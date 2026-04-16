@@ -2,9 +2,30 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { exportFileSchema, importRequestSchema } from '@momentum/shared';
-import { users, userSettings, roles, tasks, dailyLogs, parkings } from '@momentum/db';
+import {
+  users,
+  userSettings,
+  roles,
+  tasks,
+  dailyLogs,
+  parkings,
+  brands,
+  brandStakeholders,
+  brandMeetings,
+  brandActionItems,
+} from '@momentum/db';
 import { db } from '../db.ts';
-import { mapTask, mapRole, mapSettings, mapDailyLog, mapParking } from '../mappers.ts';
+import {
+  mapTask,
+  mapRole,
+  mapSettings,
+  mapDailyLog,
+  mapParking,
+  mapBrand,
+  mapBrandStakeholder,
+  mapBrandMeeting,
+  mapBrandActionItem,
+} from '../mappers.ts';
 import { notFound } from '../errors.ts';
 
 export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -31,6 +52,19 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         .select()
         .from(parkings)
         .where(eq(parkings.userId, req.userId));
+      const brandRows = await db.select().from(brands).where(eq(brands.userId, req.userId));
+      const stakeholderRows = await db
+        .select()
+        .from(brandStakeholders)
+        .where(eq(brandStakeholders.userId, req.userId));
+      const meetingRows = await db
+        .select()
+        .from(brandMeetings)
+        .where(eq(brandMeetings.userId, req.userId));
+      const actionItemRows = await db
+        .select()
+        .from(brandActionItems)
+        .where(eq(brandActionItems.userId, req.userId));
 
       const { userId: _ignoredUserId, ...settingsNoUser } = mapSettings(settingsRow);
 
@@ -41,7 +75,7 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(eq(userSettings.userId, req.userId));
 
       return {
-        version: '1.1' as const,
+        version: '1.2' as const,
         exportedAt: new Date().toISOString(),
         settings: settingsNoUser,
         roles: roleRows.map(mapRole),
@@ -55,6 +89,22 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         }),
         parkings: parkingRows.map((p) => {
           const { userId: _u, ...rest } = mapParking(p);
+          return rest;
+        }),
+        brands: brandRows.map((b) => {
+          const { userId: _u, ...rest } = mapBrand(b);
+          return rest;
+        }),
+        brandStakeholders: stakeholderRows.map((s) => {
+          const { userId: _u, ...rest } = mapBrandStakeholder(s);
+          return rest;
+        }),
+        brandMeetings: meetingRows.map((m) => {
+          const { userId: _u, ...rest } = mapBrandMeeting(m);
+          return rest;
+        }),
+        brandActionItems: actionItemRows.map((a) => {
+          const { userId: _u, ...rest } = mapBrandActionItem(a);
           return rest;
         }),
       };
@@ -74,6 +124,10 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
               roles: z.number(),
               dailyLogs: z.number(),
               parkings: z.number(),
+              brands: z.number(),
+              brandStakeholders: z.number(),
+              brandMeetings: z.number(),
+              brandActionItems: z.number(),
             }),
           }),
         },
@@ -83,6 +137,10 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
       const { mode, file } = req.body;
 
       if (mode === 'replace') {
+        await db.delete(brandActionItems).where(eq(brandActionItems.userId, req.userId));
+        await db.delete(brandMeetings).where(eq(brandMeetings.userId, req.userId));
+        await db.delete(brandStakeholders).where(eq(brandStakeholders.userId, req.userId));
+        await db.delete(brands).where(eq(brands.userId, req.userId));
         await db.delete(parkings).where(eq(parkings.userId, req.userId));
         await db.delete(tasks).where(eq(tasks.userId, req.userId));
         await db.delete(dailyLogs).where(eq(dailyLogs.userId, req.userId));
@@ -173,6 +231,84 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         importedParkings++;
       }
 
+      // Brands (added in v1.2).
+      const brandIdMap = new Map<string, string>();
+      let importedBrands = 0;
+      for (const b of file.brands ?? []) {
+        const [inserted] = await db
+          .insert(brands)
+          .values({
+            userId: req.userId,
+            name: b.name,
+            goals: b.goals,
+            successDefinition: b.successDefinition,
+            customFields: b.customFields ?? {},
+            status: b.status === 'importing' ? 'active' : b.status,
+            importedFrom: b.importedFrom,
+            rawImportContent: b.rawImportContent,
+          })
+          .returning({ id: brands.id });
+        if (inserted) {
+          brandIdMap.set(b.id, inserted.id);
+          importedBrands++;
+        }
+      }
+
+      let importedStakeholders = 0;
+      for (const s of file.brandStakeholders ?? []) {
+        const resolvedBrandId = brandIdMap.get(s.brandId);
+        if (!resolvedBrandId) continue;
+        await db.insert(brandStakeholders).values({
+          brandId: resolvedBrandId,
+          userId: req.userId,
+          name: s.name,
+          role: s.role,
+          notes: s.notes,
+        });
+        importedStakeholders++;
+      }
+
+      const meetingIdMap = new Map<string, string>();
+      let importedMeetings = 0;
+      for (const m of file.brandMeetings ?? []) {
+        const resolvedBrandId = brandIdMap.get(m.brandId);
+        if (!resolvedBrandId) continue;
+        const [inserted] = await db
+          .insert(brandMeetings)
+          .values({
+            brandId: resolvedBrandId,
+            userId: req.userId,
+            date: m.date,
+            title: m.title,
+            attendees: m.attendees,
+            summary: m.summary,
+            rawNotes: m.rawNotes,
+            decisions: m.decisions,
+          })
+          .returning({ id: brandMeetings.id });
+        if (inserted) {
+          meetingIdMap.set(m.id, inserted.id);
+          importedMeetings++;
+        }
+      }
+
+      let importedActionItems = 0;
+      for (const a of file.brandActionItems ?? []) {
+        const resolvedBrandId = brandIdMap.get(a.brandId);
+        if (!resolvedBrandId) continue;
+        await db.insert(brandActionItems).values({
+          brandId: resolvedBrandId,
+          userId: req.userId,
+          meetingId: a.meetingId ? (meetingIdMap.get(a.meetingId) ?? null) : null,
+          text: a.text,
+          status: a.status,
+          owner: a.owner,
+          dueDate: a.dueDate,
+          completedAt: a.completedAt ? new Date(a.completedAt) : null,
+        });
+        importedActionItems++;
+      }
+
       return {
         ok: true as const,
         imported: {
@@ -180,6 +316,10 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
           roles: importedRoles,
           dailyLogs: importedLogs,
           parkings: importedParkings,
+          brands: importedBrands,
+          brandStakeholders: importedStakeholders,
+          brandMeetings: importedMeetings,
+          brandActionItems: importedActionItems,
         },
       };
     },

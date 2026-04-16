@@ -31,11 +31,13 @@ const SECTIONS: Section[] = [
   },
   {
     title: 'View navigation',
-    description: 'Jump between Tasks and Parkings without touching the mouse.',
+    description: 'Jump between views without touching the mouse.',
     rows: [
       { keys: ['g', 't'], label: 'Go to Today (Tasks)' },
-      { keys: ['g', 'b'], label: 'Go to Backlog' },
+      { keys: ['g', 'l'], label: 'Go to Backlog (list)' },
       { keys: ['g', 'p'], label: 'Go to Parkings' },
+      { keys: ['g', 'b'], label: 'Go to Brands' },
+      { keys: ['⌘', 'B'], label: 'Go to Brands (modifier)' },
       { keys: [']'], label: 'Next view' },
       { keys: ['['], label: 'Previous view' },
     ],
@@ -77,6 +79,15 @@ const SECTIONS: Section[] = [
       { keys: ['p'], label: 'Cycle priority' },
       { keys: ['d'], label: 'Defer to next day' },
       { keys: ['⌫'], label: 'Delete (with 5s undo)' },
+    ],
+  },
+  {
+    title: 'Brands',
+    description: 'On the Brands detail view.',
+    rows: [
+      { keys: ['n'], label: 'New meeting note' },
+      { keys: ['a'], label: 'New action item' },
+      { keys: ['Esc'], label: 'Back to brand list' },
     ],
   },
 ];

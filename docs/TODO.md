@@ -148,3 +148,21 @@ Items intentionally cut from the global-shortcuts refactor (see release notes v0
 - [ ] **Keyboard selection + actions on the Backlog view.** Today the backlog is a read-only list with a mouse-only "→ Today" button per row. Add `j/k` selection, `t` (move to today), `e` (edit), `Delete` (remove) so the backlog feels like Today and Parkings.
 - [ ] **Configurable `g` prefix timeout.** Hard-coded to 1500ms. Some users may want it shorter or longer; could be a user setting once preferences grow.
 - [ ] **Consider migrating shortcut registration to `react-hotkeys-hook`.** The hand-rolled hook is working, but a library would give us sequence-key parsing (`gt`, `gg`), scoping, and help-text generation for free. Not urgent — revisit only if the hand-rolled hook starts accumulating bugs.
+
+---
+
+## Brands — deferred (V2)
+
+Features intentionally deferred from the V1 Brands implementation (see release notes v0.3.0). The `customFields` JSONB column is ready for extensibility.
+
+- [ ] **Brand-level metrics** — revenue, deal stage, contract dates, renewal timeline. Store in `customFields` JSONB.
+- [ ] **Stakeholder sentiment tracking** — per-stakeholder health/mood signal updated after each meeting.
+- [ ] **Email integration / thread capture** — ingest email threads and link them to brands/stakeholders.
+- [ ] **Meeting transcription from audio** — upload audio files, transcribe via Whisper/Deepgram, extract action items.
+- [ ] **LLM-generated brand summary** across all meetings — "What's happened with Boudin this quarter?"
+- [ ] **Search across all brands/meetings** — full-text search over meeting notes, action items, stakeholder names.
+- [ ] **Multi-user collaboration / sharing** — shared brands with per-user access control.
+- [ ] **`.docx` import support** — V1 is `.md`/`.txt` only. Add `.docx` parsing via a library like `mammoth`.
+- [ ] **"Enhance with AI" on individual meetings** — re-run LLM extraction on a single meeting's notes to generate summary + action items, not just on import.
+- [ ] **Brand-level keyboard nav on the list** — `j/k` to navigate brands, `Enter` to open, without needing the mouse.
+- [ ] **Task card brand badge** — when a task is linked to a brand action item via "Send to Today", show a small brand name badge on the task card in the Today view.

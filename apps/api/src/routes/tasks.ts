@@ -8,7 +8,7 @@ import {
   isoDateSchema,
   toLocalIsoDate,
 } from '@momentum/shared';
-import { tasks } from '@momentum/db';
+import { tasks, brandActionItems } from '@momentum/db';
 import { db } from '../db.ts';
 import { mapTask } from '../mappers.ts';
 import { badRequest, notFound } from '../errors.ts';
@@ -199,6 +199,19 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(and(eq(tasks.id, req.params.id), eq(tasks.userId, req.userId)))
         .returning();
       if (!row) throw notFound('Task not found');
+
+      // Bidirectional sync: mark any linked brand action item as done.
+      await db
+        .update(brandActionItems)
+        .set({ status: 'done', completedAt: new Date() })
+        .where(
+          and(
+            eq(brandActionItems.linkedTaskId, row.id),
+            eq(brandActionItems.userId, req.userId),
+            eq(brandActionItems.status, 'open'),
+          ),
+        );
+
       return mapTask(row);
     },
   );

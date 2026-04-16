@@ -1,7 +1,18 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   AuthResponse,
   AuthUser,
+  Brand,
+  BrandActionItem,
+  BrandActionStatus,
+  BrandImportInput,
+  BrandImportResponse,
+  BrandMeeting,
+  BrandStakeholder,
+  CreateBrandActionItemInput,
+  CreateBrandInput,
+  CreateBrandMeetingInput,
+  CreateBrandStakeholderInput,
   CreateParkingInput,
   CreateRoleInput,
   CreateTaskInput,
@@ -14,6 +25,10 @@ import type {
   Role,
   Task,
   TaskStatus,
+  UpdateBrandActionItemInput,
+  UpdateBrandInput,
+  UpdateBrandMeetingInput,
+  UpdateBrandStakeholderInput,
   UpdateParkingInput,
   UpdateSettingsInput,
   UpdateTaskInput,
@@ -266,6 +281,292 @@ export function useWeeklyStats() {
     queryKey: ['weekly-stats'],
     queryFn: () => apiFetch<WeeklyStats>('/stats/weekly', { token }),
     enabled: !!token,
+  });
+}
+
+/* ─────────────── brands ─────────────── */
+
+export function useBrands() {
+  const token = useToken();
+  return useQuery({
+    queryKey: ['brands'],
+    queryFn: () => apiFetch<Brand[]>('/brands', { token }),
+    enabled: !!token,
+  });
+}
+
+export function useBrand(id: string | undefined) {
+  const token = useToken();
+  return useQuery({
+    queryKey: ['brands', id],
+    queryFn: () => apiFetch<Brand>(`/brands/${id}`, { token }),
+    enabled: !!token && !!id,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      return data?.status === 'importing' ? 3000 : false;
+    },
+  });
+}
+
+export function useCreateBrand() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateBrandInput) =>
+      apiFetch<Brand>('/brands', { method: 'POST', body: input, token }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands'] }),
+  });
+}
+
+export function useUpdateBrand() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...input }: UpdateBrandInput & { id: string }) =>
+      apiFetch<Brand>(`/brands/${id}`, { method: 'PATCH', body: input, token }),
+    onSuccess: (data) => {
+      qc.setQueryData(['brands', data.id], data);
+      qc.invalidateQueries({ queryKey: ['brands'] });
+    },
+  });
+}
+
+export function useDeleteBrand() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<{ ok: true }>(`/brands/${id}`, { method: 'DELETE', token }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands'] }),
+  });
+}
+
+export function useImportBrand() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: BrandImportInput) =>
+      apiFetch<BrandImportResponse>('/brands/import', { method: 'POST', body: input, token }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands'] }),
+  });
+}
+
+/* ─────────────── brand stakeholders ─────────────── */
+
+export function useBrandStakeholders(brandId: string | undefined) {
+  const token = useToken();
+  return useQuery({
+    queryKey: ['brands', brandId, 'stakeholders'],
+    queryFn: () => apiFetch<BrandStakeholder[]>(`/brands/${brandId}/stakeholders`, { token }),
+    enabled: !!token && !!brandId,
+  });
+}
+
+export function useCreateBrandStakeholder(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateBrandStakeholderInput) =>
+      apiFetch<BrandStakeholder>(`/brands/${brandId}/stakeholders`, {
+        method: 'POST',
+        body: input,
+        token,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands', brandId, 'stakeholders'] }),
+  });
+}
+
+export function useUpdateBrandStakeholder(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...input }: UpdateBrandStakeholderInput & { id: string }) =>
+      apiFetch<BrandStakeholder>(`/brands/${brandId}/stakeholders/${id}`, {
+        method: 'PATCH',
+        body: input,
+        token,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands', brandId, 'stakeholders'] }),
+  });
+}
+
+export function useDeleteBrandStakeholder(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<{ ok: true }>(`/brands/${brandId}/stakeholders/${id}`, {
+        method: 'DELETE',
+        token,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands', brandId, 'stakeholders'] }),
+  });
+}
+
+/* ─────────────── brand meetings ─────────────── */
+
+export function useBrandMeetings(brandId: string | undefined) {
+  const token = useToken();
+  return useQuery({
+    queryKey: ['brands', brandId, 'meetings'],
+    queryFn: () => apiFetch<BrandMeeting[]>(`/brands/${brandId}/meetings`, { token }),
+    enabled: !!token && !!brandId,
+  });
+}
+
+export function useAllBrandMeetings(brandIds: string[]) {
+  const token = useToken();
+  return useQueries({
+    queries: brandIds.map((id) => ({
+      queryKey: ['brands', id, 'meetings'],
+      queryFn: () => apiFetch<BrandMeeting[]>(`/brands/${id}/meetings`, { token }),
+      enabled: !!token,
+      staleTime: 60_000,
+    })),
+  });
+}
+
+export function useAllBrandActionItems(brandIds: string[]) {
+  const token = useToken();
+  return useQueries({
+    queries: brandIds.map((id) => ({
+      queryKey: ['brands', id, 'action-items', {}],
+      queryFn: () => apiFetch<BrandActionItem[]>(`/brands/${id}/action-items`, { token }),
+      enabled: !!token,
+      staleTime: 60_000,
+    })),
+  });
+}
+
+export function useCreateBrandMeeting(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateBrandMeetingInput) =>
+      apiFetch<BrandMeeting>(`/brands/${brandId}/meetings`, {
+        method: 'POST',
+        body: input,
+        token,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands', brandId, 'meetings'] }),
+  });
+}
+
+export function useUpdateBrandMeeting(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...input }: UpdateBrandMeetingInput & { id: string }) =>
+      apiFetch<BrandMeeting>(`/brands/${brandId}/meetings/${id}`, {
+        method: 'PATCH',
+        body: input,
+        token,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands', brandId, 'meetings'] }),
+  });
+}
+
+export function useDeleteBrandMeeting(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<{ ok: true }>(`/brands/${brandId}/meetings/${id}`, {
+        method: 'DELETE',
+        token,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands', brandId, 'meetings'] }),
+  });
+}
+
+/* ─────────────── brand action items ─────────────── */
+
+export function useBrandActionItems(
+  brandId: string | undefined,
+  params: { status?: BrandActionStatus } = {},
+) {
+  const token = useToken();
+  return useQuery({
+    queryKey: ['brands', brandId, 'action-items', params],
+    queryFn: () =>
+      apiFetch<BrandActionItem[]>(`/brands/${brandId}/action-items`, {
+        token,
+        query: { ...params },
+      }),
+    enabled: !!token && !!brandId,
+  });
+}
+
+export function useCreateBrandActionItem(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateBrandActionItemInput) =>
+      apiFetch<BrandActionItem>(`/brands/${brandId}/action-items`, {
+        method: 'POST',
+        body: input,
+        token,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands', brandId, 'action-items'] }),
+  });
+}
+
+export function useUpdateBrandActionItem(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...input }: UpdateBrandActionItemInput & { id: string }) =>
+      apiFetch<BrandActionItem>(`/brands/${brandId}/action-items/${id}`, {
+        method: 'PATCH',
+        body: input,
+        token,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands', brandId, 'action-items'] }),
+  });
+}
+
+export function useDeleteBrandActionItem(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<{ ok: true }>(`/brands/${brandId}/action-items/${id}`, {
+        method: 'DELETE',
+        token,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands', brandId, 'action-items'] }),
+  });
+}
+
+export function useSendActionItemToToday(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<{ actionItem: BrandActionItem; task: Task }>(
+        `/brands/${brandId}/action-items/${id}/send-to-today`,
+        { method: 'POST', token },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['brands', brandId, 'action-items'] });
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+}
+
+export function useCompleteBrandActionItem(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<BrandActionItem>(`/brands/${brandId}/action-items/${id}/complete`, {
+        method: 'POST',
+        token,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['brands', brandId, 'action-items'] });
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+    },
   });
 }
 

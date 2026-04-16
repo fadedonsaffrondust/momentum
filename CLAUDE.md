@@ -99,6 +99,20 @@ Concretely, the README must be updated when any of these happen:
 
 If you're unsure whether a change is README-worthy, ask: "would a new contributor following the README hit something unexpected?" If yes, update it.
 
+## Keep tests in sync
+
+Every code change that adds or modifies runtime logic must include corresponding unit tests in the same commit. This applies to:
+
+- **New functions or modules:** write tests that cover the happy path, edge cases, and error conditions.
+- **Modified functions:** update existing tests to reflect the new behavior. Add new test cases for any new code paths introduced.
+- **New API routes:** test business logic (state transitions, calculations, validation) with mocked DB via Fastify `.inject()` and the mock-db helper at `apps/api/src/test/mock-db.ts`.
+- **New Zod schemas:** test that valid data parses and invalid data is rejected with the expected errors.
+- **Bug fixes:** add a regression test that would have caught the bug before the fix.
+
+Run `pnpm test` before committing and ensure all tests pass. Never commit with failing tests.
+
+Test files are colocated with source: `foo.ts` → `foo.test.ts`. Use Vitest (`describe`/`it`/`expect`). For pure functions, test directly with no mocking. For functions that depend on the current date, use `vi.useFakeTimers()`. For API routes, use the mock-db helper and Fastify `.inject()`.
+
 ## Conventions
 
 - **Data contract lives in `packages/shared`.** When the data model changes, update Zod schemas there first; both api and web import the derived types. Never duplicate shapes.
@@ -108,6 +122,7 @@ If you're unsure whether a change is README-worthy, ask: "would a new contributo
 - **Frontend data fetching** goes through TanStack Query hooks in `apps/web/src/api/*`. Never call `fetch` directly from components.
 - **Keyboard shortcuts** are registered via a single `useKeyboardController` hook that respects context (input focus / modal open).
 - **Quick-add parser** is shared code (`packages/shared/src/parser.ts`) and must remain pure so both client and server can use it.
+- **Tests** use Vitest in every package. Colocated `*.test.ts` files next to source. Run via `pnpm test` (Turbo-orchestrated).
 
 ## Non-goals
 

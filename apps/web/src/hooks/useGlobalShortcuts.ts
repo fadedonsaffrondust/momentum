@@ -125,6 +125,11 @@ export function useGlobalShortcuts(): void {
           window.dispatchEvent(new CustomEvent('momentum:import'));
           return;
         }
+        if (k === 'b') {
+          consume(e);
+          navigate('/brands');
+          return;
+        }
         return;
       }
 
@@ -140,13 +145,14 @@ export function useGlobalShortcuts(): void {
       }
 
       // View navigation — `g` prefix (vim-style "go to") + bracket cycling.
-      const VIEW_CYCLE = ['/', '/backlog', '/parkings'];
+      const VIEW_CYCLE = ['/', '/backlog', '/parkings', '/brands'];
 
       if (gPendingRef.current) {
         let target: string | null = null;
         if (e.key === 't') target = '/';
-        else if (e.key === 'b') target = '/backlog';
+        else if (e.key === 'l') target = '/backlog';
         else if (e.key === 'p') target = '/parkings';
+        else if (e.key === 'b') target = '/brands';
 
         if (target) {
           consume(e);

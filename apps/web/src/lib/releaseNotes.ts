@@ -25,6 +25,56 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.3.0',
+    date: '2026-04-15',
+    headline: 'Brands — client management meets daily execution',
+    summary:
+      'A full Brands section for managing enterprise client relationships: meetings, stakeholders, action items, health tracking, AI-powered import, and bidirectional sync with your Today view.',
+    items: [
+      {
+        title: 'Brand management',
+        description:
+          'Create and manage brands with three layers: North Star (goals, stakeholders, success definition), Pulse (activity snapshot, open action items, stakeholder badges), and Archive (meeting notes with decisions and extracted action items). Everything auto-saves on blur.',
+        shortcuts: ['⌘', 'B'],
+        howTo:
+          'Press Cmd+B or g b to open Brands. Click "+ New Brand" to create one, then fill in goals and add stakeholders. Double-click the brand name to rename.',
+      },
+      {
+        title: 'Meeting notes with action item extraction',
+        description:
+          'Log meetings with date, title, attendees (chip input with stakeholder autocomplete), notes, and decisions. Lines starting with → are automatically extracted as action items on save. Past titles autocomplete as you type.',
+        shortcuts: ['n'],
+        howTo:
+          'Open a brand and press n (or click "+ New Meeting Note"). Write notes with → prefixed lines for action items. Press Cmd+Enter to save.',
+      },
+      {
+        title: 'Send to Today — bidirectional sync',
+        description:
+          'Push any brand action item to your Today task list. Completing the task in Today auto-marks the action item done, and vice versa. The task card shows a linked badge.',
+        howTo:
+          'Hover an action item and click →Today, or use the "Send to Today" link in the Pulse section.',
+      },
+      {
+        title: 'AI-powered brand import',
+        description:
+          'Upload a .md or .txt file of client notes and the server uses OpenAI to extract meetings, stakeholders, action items, goals, and success definition. Processing is async — you can keep working while it runs.',
+        howTo:
+          'Click "Import from file" in the Brands sidebar, select a file, click Analyze. The brand appears in the list with an importing spinner and auto-navigates to the detail view when done.',
+      },
+      {
+        title: 'Health pills',
+        description:
+          'Each brand shows a computed health dot: green (on track), amber (quiet), red (needs attention). Based on meeting recency, open action item count, and overdue items.',
+      },
+      {
+        title: 'Keyboard shortcuts updated',
+        description:
+          'g b now goes to Brands (Backlog moved to g l). Cmd+B is a modifier shortcut for Brands. Brands detail view supports n (new meeting) and a (new action item). View cycle updated to include Brands.',
+        shortcuts: ['g', 'b'],
+      },
+    ],
+  },
+  {
     version: '0.2.5',
     date: '2026-04-15',
     headline: 'Global shortcuts work from every view',
