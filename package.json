@@ -1,0 +1,31 @@
+{
+  "name": "momentum",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Momentum — a keyboard-first daily task operating system",
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "db:generate": "pnpm --filter @momentum/db generate",
+    "db:migrate": "pnpm --filter @momentum/db migrate",
+    "db:studio": "pnpm --filter @momentum/db studio",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "prettier": "^3.3.3",
+    "turbo": "^2.3.0",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "bcrypt"]
+  }
+}
