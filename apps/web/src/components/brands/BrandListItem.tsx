@@ -22,20 +22,20 @@ export function BrandListItem({ brand, meetings, actionItems, selected, onClick 
         'group w-full text-left px-3 py-2.5 rounded-lg transition',
         selected
           ? 'bg-accent/10 border border-accent/30'
-          : 'border border-transparent hover:bg-zinc-900/60',
+          : 'border border-transparent hover:bg-m-surface-60',
         brand.status === 'importing' && 'opacity-60',
       )}
     >
       <div className="flex items-center gap-2">
         <HealthPill status={health} />
-        <span className="flex-1 text-sm text-zinc-100 truncate font-medium">
+        <span className="flex-1 text-sm text-m-fg truncate font-medium">
           {brand.name}
         </span>
         {brand.status === 'importing' && (
           <span className="text-[9px] text-accent animate-pulse">importing…</span>
         )}
       </div>
-      <div className="mt-0.5 pl-[14px] text-[10px] text-zinc-600">
+      <div className="mt-0.5 pl-[14px] text-[10px] text-m-fg-dim">
         {brand.status === 'import_failed'
           ? 'Import failed'
           : formatTimeAgo(brand.updatedAt)}

@@ -210,6 +210,7 @@ describe('mapBrand', () => {
       goals: 'Increase retention',
       successDefinition: 'Churn below 5%',
       customFields: null,
+      syncConfig: null,
       status: 'active' as const,
       importError: null,
       importedFrom: null,
@@ -223,6 +224,7 @@ describe('mapBrand', () => {
     expect(result.id).toBe(UUID);
     expect(result.name).toBe('Acme Corp');
     expect(result.customFields).toEqual({});
+    expect(result.syncConfig).toBeNull();
     expect(result.createdAt).toBe('2026-04-15T10:30:00.000Z');
     expect(result.updatedAt).toBe('2026-04-15T10:30:00.000Z');
   });
@@ -236,6 +238,7 @@ describe('mapBrand', () => {
       goals: null,
       successDefinition: null,
       customFields: fields,
+      syncConfig: { matchRules: {}, syncedMeetingIds: [] },
       status: 'active' as const,
       importError: null,
       importedFrom: null,
@@ -258,6 +261,7 @@ describe('mapBrandStakeholder', () => {
       brandId: UUID2,
       userId: UUID,
       name: 'Jane Doe',
+      email: 'jane@example.com',
       role: 'VP Marketing',
       notes: 'Key decision maker',
       createdAt: NOW,
@@ -267,6 +271,7 @@ describe('mapBrandStakeholder', () => {
 
     expect(result.id).toBe(UUID);
     expect(result.name).toBe('Jane Doe');
+    expect(result.email).toBe('jane@example.com');
     expect(result.role).toBe('VP Marketing');
     expect(result.createdAt).toBe('2026-04-15T10:30:00.000Z');
   });
@@ -286,6 +291,9 @@ describe('mapBrandMeeting', () => {
       summary: 'Went well',
       rawNotes: 'Raw text',
       decisions: null,
+      source: 'manual',
+      externalMeetingId: null,
+      recordingUrl: null,
       createdAt: NOW,
     };
 
@@ -293,6 +301,9 @@ describe('mapBrandMeeting', () => {
 
     expect(result.attendees).toEqual([]);
     expect(result.decisions).toEqual([]);
+    expect(result.source).toBe('manual');
+    expect(result.externalMeetingId).toBeNull();
+    expect(result.recordingUrl).toBeNull();
     expect(result.createdAt).toBe('2026-04-15T10:30:00.000Z');
     expect(result.title).toBe('Kickoff');
   });
@@ -308,6 +319,9 @@ describe('mapBrandMeeting', () => {
       summary: null,
       rawNotes: null,
       decisions: ['Ship it'],
+      source: 'recording_sync',
+      externalMeetingId: 'tldv-123',
+      recordingUrl: 'https://tldv.io/play/123',
       createdAt: NOW,
     };
 
@@ -315,6 +329,9 @@ describe('mapBrandMeeting', () => {
 
     expect(result.attendees).toEqual(['Alice', 'Bob']);
     expect(result.decisions).toEqual(['Ship it']);
+    expect(result.source).toBe('recording_sync');
+    expect(result.externalMeetingId).toBe('tldv-123');
+    expect(result.recordingUrl).toBe('https://tldv.io/play/123');
   });
 });
 
@@ -332,6 +349,7 @@ describe('mapBrandActionItem', () => {
       owner: 'Nader',
       dueDate: '2026-04-20',
       linkedTaskId: UUID,
+      meetingDate: '2026-04-15',
       createdAt: NOW,
       completedAt: EARLIER,
     };
@@ -340,11 +358,12 @@ describe('mapBrandActionItem', () => {
 
     expect(result.id).toBe(UUID);
     expect(result.text).toBe('Follow up on proposal');
+    expect(result.meetingDate).toBe('2026-04-15');
     expect(result.createdAt).toBe('2026-04-15T10:30:00.000Z');
     expect(result.completedAt).toBe('2026-04-14T08:00:00.000Z');
   });
 
-  it('maps null completedAt to null', () => {
+  it('maps null completedAt and missing meetingDate to null', () => {
     const row = {
       id: UUID,
       brandId: UUID2,
@@ -361,5 +380,6 @@ describe('mapBrandActionItem', () => {
 
     const result = mapBrandActionItem(row as any);
     expect(result.completedAt).toBeNull();
+    expect(result.meetingDate).toBeNull();
   });
 });

@@ -351,6 +351,7 @@ describe('brandSchema', () => {
     goals: null,
     successDefinition: null,
     customFields: {},
+    syncConfig: null,
     status: 'active' as const,
     importError: null,
     importedFrom: null,
@@ -393,6 +394,9 @@ describe('brandMeetingSchema', () => {
     summary: null,
     rawNotes: 'Notes from the meeting',
     decisions: ['Ship v2'],
+    source: 'manual',
+    externalMeetingId: null,
+    recordingUrl: null,
     createdAt: DT,
   };
 
@@ -435,6 +439,7 @@ describe('brandActionItemSchema + create/update', () => {
     owner: null,
     dueDate: null,
     linkedTaskId: null,
+    meetingDate: null,
     createdAt: DT,
     completedAt: null,
   };

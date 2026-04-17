@@ -18,7 +18,7 @@ interface Props {
 const priorityBorder: Record<Parking['priority'], string> = {
   high: 'border-l-red-500',
   medium: 'border-l-amber-500',
-  low: 'border-l-zinc-600',
+  low: 'border-l-m-fg-dim',
 };
 
 export function ParkingCard({
@@ -89,10 +89,10 @@ export function ParkingCard({
       tabIndex={-1}
       onClick={onSelect}
       className={clsx(
-        'group rounded-lg border-l-4 border border-zinc-800 bg-zinc-900/60 p-3 cursor-pointer transition',
-        'hover:border-zinc-700',
+        'group rounded-lg border-l-4 border border-m-border bg-m-surface-60 p-3 cursor-pointer transition',
+        'hover:border-m-border-strong',
         priorityBorder[parking.priority],
-        selected && 'ring-2 ring-accent/80 border-zinc-700',
+        selected && 'ring-2 ring-accent/80 border-m-border-strong',
         isDiscussed && 'opacity-70',
       )}
     >
@@ -115,13 +115,13 @@ export function ParkingCard({
               }
               e.stopPropagation();
             }}
-            className="flex-1 bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-sm text-zinc-100 focus:outline-none focus:border-accent"
+            className="flex-1 bg-m-bg border border-m-border rounded px-2 py-1 text-sm text-m-fg focus:outline-none focus:border-accent"
             data-task-edit-input="true"
           />
         ) : (
           <div
             className={clsx(
-              'flex-1 text-sm text-zinc-100 leading-snug break-words',
+              'flex-1 text-sm text-m-fg leading-snug break-words',
               isDiscussed && 'line-through',
             )}
           >
@@ -133,14 +133,14 @@ export function ParkingCard({
             e.stopPropagation();
             onToggleExpand();
           }}
-          className="shrink-0 text-xs text-zinc-600 hover:text-zinc-200 transition"
+          className="shrink-0 text-xs text-m-fg-dim hover:text-m-fg-strong transition"
           aria-label={expanded ? 'Collapse' : 'Expand'}
         >
           {expanded ? '▾' : '▸'}
         </button>
       </div>
 
-      <div className="mt-2 flex items-center gap-2 flex-wrap text-xs text-zinc-500">
+      <div className="mt-2 flex items-center gap-2 flex-wrap text-xs text-m-fg-muted">
         {role && (
           <span
             className="px-2 py-0.5 rounded-full"
@@ -153,18 +153,18 @@ export function ParkingCard({
           <span className="text-emerald-500">discussed</span>
         )}
         {parking.notes && !expanded && (
-          <span className="text-zinc-600">• notes</span>
+          <span className="text-m-fg-dim">• notes</span>
         )}
-        <span className="ml-auto text-zinc-600">{formatTimeAgo(parking.createdAt)}</span>
+        <span className="ml-auto text-m-fg-dim">{formatTimeAgo(parking.createdAt)}</span>
       </div>
 
       {expanded && (
         <div
-          className="mt-3 pt-3 border-t border-zinc-800 space-y-3 animate-slideUp"
+          className="mt-3 pt-3 border-t border-m-border space-y-3 animate-slideUp"
           onClick={(e) => e.stopPropagation()}
         >
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-zinc-500">
+            <span className="text-[10px] uppercase tracking-widest text-m-fg-muted">
               Prep notes
             </span>
             <textarea
@@ -174,11 +174,11 @@ export function ParkingCard({
               onBlur={() => void commitNotes()}
               rows={3}
               placeholder="What do you want to bring up?"
-              className="mt-1 w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-accent resize-none"
+              className="mt-1 w-full bg-m-bg border border-m-border rounded px-3 py-2 text-xs text-m-fg focus:outline-none focus:border-accent resize-none"
             />
           </label>
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-zinc-500">
+            <span className="text-[10px] uppercase tracking-widest text-m-fg-muted">
               Outcome
             </span>
             <textarea
@@ -187,7 +187,7 @@ export function ParkingCard({
               onBlur={() => void commitOutcome()}
               rows={2}
               placeholder="Fill in after the daily — what got decided?"
-              className="mt-1 w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-accent resize-none"
+              className="mt-1 w-full bg-m-bg border border-m-border rounded px-3 py-2 text-xs text-m-fg focus:outline-none focus:border-accent resize-none"
             />
           </label>
         </div>

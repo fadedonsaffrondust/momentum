@@ -17,9 +17,9 @@ export function HealthPill({ status, showLabel = false }: Props) {
   return (
     <span className="inline-flex items-center gap-1.5" title={cfg.label}>
       <span
-        className={clsx('inline-block w-[6px] h-[6px] rounded-full shadow-sm', cfg.color, cfg.glow)}
+        className={clsx('inline-block w-2 h-2 rounded-full shadow-sm', cfg.color, cfg.glow)}
       />
-      {showLabel && <span className="text-[10px] text-zinc-500">{cfg.label}</span>}
+      {showLabel && <span className="text-xs text-m-fg-secondary">{cfg.label}</span>}
     </span>
   );
 }

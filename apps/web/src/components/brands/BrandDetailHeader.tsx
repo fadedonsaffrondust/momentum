@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import type { Brand, BrandMeeting, BrandActionItem } from '@momentum/shared';
+import { RefreshCw } from 'lucide-react';
 import { HealthPill } from './HealthPill';
 import { computeBrandHealth } from '../../hooks/useBrandHealth';
 import { useUpdateBrand, useDeleteBrand } from '../../api/hooks';
@@ -12,9 +13,11 @@ interface Props {
   meetings: BrandMeeting[];
   actionItems: BrandActionItem[];
   onNewMeeting: () => void;
+  onSyncRecordings: () => void;
+  onSyncSettings: () => void;
 }
 
-export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting }: Props) {
+export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting, onSyncRecordings, onSyncSettings }: Props) {
   const health = computeBrandHealth(meetings, actionItems);
   const updateBrand = useUpdateBrand();
   const deleteBrand = useDeleteBrand();
@@ -56,9 +59,9 @@ export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting }
   };
 
   return (
-    <header className="sticky top-0 z-10 flex items-center justify-between gap-4 px-6 py-4 border-b border-zinc-900 bg-zinc-950/90 backdrop-blur">
+    <header className="sticky top-0 z-10 flex items-center justify-between gap-4 px-6 py-4 border-b border-m-border-subtle bg-m-bg/90 backdrop-blur">
       <div className="flex items-center gap-3 min-w-0">
-        <HealthPill status={health} />
+        <HealthPill status={health} showLabel />
         {editing ? (
           <input
             ref={inputRef}
@@ -73,11 +76,11 @@ export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting }
                 setEditing(false);
               }
             }}
-            className="text-xl font-semibold text-zinc-100 bg-transparent border-b border-accent focus:outline-none min-w-0"
+            className="text-xl font-semibold text-m-fg bg-transparent border-b border-accent focus:outline-none min-w-0"
           />
         ) : (
           <h1
-            className="text-xl font-semibold text-zinc-100 truncate cursor-pointer hover:text-accent transition"
+            className="text-xl font-semibold text-m-fg truncate cursor-pointer hover:text-accent transition"
             onDoubleClick={() => setEditing(true)}
             title="Double-click to rename"
           >
@@ -85,12 +88,12 @@ export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting }
           </h1>
         )}
         {brand.status === 'importing' && (
-          <span className="text-[10px] text-accent animate-pulse px-2 py-0.5 rounded-full border border-accent/30 bg-accent/5">
+          <span className="text-xs text-accent animate-pulse px-2 py-0.5 rounded-full border border-accent/30 bg-accent/5">
             Importing…
           </span>
         )}
         {brand.status === 'import_failed' && (
-          <span className="text-[10px] text-red-400 px-2 py-0.5 rounded-full border border-red-500/30 bg-red-500/5">
+          <span className="text-xs text-red-400 px-2 py-0.5 rounded-full border border-red-500/30 bg-red-500/5">
             Import failed
           </span>
         )}
@@ -104,10 +107,28 @@ export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting }
           + New Meeting Note
         </button>
 
+        <button
+          onClick={onSyncRecordings}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-m-border hover:bg-m-surface-hover text-sm text-m-fg-tertiary hover:text-m-fg transition"
+          title="Sync meeting recordings"
+        >
+          <RefreshCw size={14} />
+          Sync Recordings
+        </button>
+
+        <button
+          onClick={onSyncSettings}
+          className="w-8 h-8 flex items-center justify-center rounded-md border border-m-border hover:bg-m-surface-hover text-m-fg-tertiary hover:text-m-fg transition"
+          aria-label="Recording sync settings"
+          title="Recording sync settings"
+        >
+          ⚙
+        </button>
+
         <div className="relative">
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="w-8 h-8 flex items-center justify-center rounded-md border border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition"
+            className="w-8 h-8 flex items-center justify-center rounded-md border border-m-border hover:bg-m-surface-hover text-m-fg-tertiary hover:text-m-fg transition"
             aria-label="More actions"
           >
             ⋯
@@ -118,19 +139,19 @@ export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting }
                 className="fixed inset-0 z-20"
                 onClick={() => setMenuOpen(false)}
               />
-              <div className="absolute right-0 top-10 z-30 w-40 rounded-lg border border-zinc-800 bg-zinc-950 shadow-xl py-1 animate-scaleIn">
+              <div className="absolute right-0 top-10 z-30 w-40 rounded-lg border border-m-border bg-m-bg shadow-xl py-1 animate-scaleIn">
                 <button
                   onClick={() => {
                     setEditing(true);
                     setMenuOpen(false);
                   }}
-                  className="w-full text-left px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-900"
+                  className="w-full text-left px-3 py-1.5 text-sm text-m-fg-secondary hover:bg-m-surface-hover"
                 >
                   Rename
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="w-full text-left px-3 py-1.5 text-sm text-red-400 hover:bg-zinc-900"
+                  className="w-full text-left px-3 py-1.5 text-sm text-red-400 hover:bg-m-surface-hover"
                 >
                   Delete brand
                 </button>

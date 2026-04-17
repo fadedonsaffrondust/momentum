@@ -59,11 +59,11 @@ Right now everything uses browser-local time via `new Date()`. That's fine for a
 
 ## Light mode: proper refactor
 
-Light mode currently works via a block of `!important` overrides in `apps/web/src/index.css` that remap hardcoded zinc classes. It's a hack.
+~~Light mode currently works via a block of `!important` overrides in `apps/web/src/index.css` that remap hardcoded zinc classes. It's a hack.~~
 
-- [ ] **Convert surface colors to CSS variables** (`--m-bg`, `--m-surface`, `--m-fg`, `--m-border`, etc.).
-- [ ] **Update every component** to use `bg-[var(--m-surface)]` / Tailwind arbitrary values or semantic utility classes.
-- [ ] **Delete the `!important` block** from `index.css` once the refactor is complete.
+- [x] **Convert surface colors to CSS variables** (`--m-bg`, `--m-surface`, `--m-fg`, `--m-border`, etc.).
+- [x] **Update every component** to use `bg-m-surface` / `text-m-fg` semantic Tailwind utility classes via `m.*` color namespace.
+- [x] **Delete the `!important` block** from `index.css` once the refactor is complete.
 
 ---
 

@@ -17,7 +17,7 @@ export function RoleFilterBar() {
           'px-3 py-1 rounded-full text-xs border transition',
           roleFilter === null
             ? 'border-accent text-accent bg-accent/10'
-            : 'border-zinc-800 text-zinc-500 hover:text-zinc-300',
+            : 'border-m-border text-m-fg-muted hover:text-m-fg-secondary',
         )}
       >
         All
@@ -31,10 +31,10 @@ export function RoleFilterBar() {
             onClick={() => setRoleFilter(active ? null : r.id)}
             className={clsx(
               'px-3 py-1 rounded-full text-xs border transition',
-              active ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-100',
+              active ? 'text-m-fg' : 'text-m-fg-tertiary hover:text-m-fg',
             )}
             style={{
-              borderColor: active ? r.color : '#27272a',
+              borderColor: active ? r.color : 'var(--m-border)',
               backgroundColor: active ? r.color + '22' : 'transparent',
             }}
           >

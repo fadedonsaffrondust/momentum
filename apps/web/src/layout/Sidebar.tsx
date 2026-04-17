@@ -169,7 +169,7 @@ function SidebarNavItem({ to, label, icon: Icon, matchPaths }: SidebarNavItemPro
       <span
         className={clsx(
           'absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[2px] rounded-r transition-all',
-          isActive ? 'bg-accent opacity-100' : 'opacity-0 group-hover:opacity-40 bg-zinc-600',
+          isActive ? 'bg-accent opacity-100' : 'opacity-0 group-hover:opacity-40 bg-m-fg-dim',
         )}
       />
       <span
@@ -177,13 +177,13 @@ function SidebarNavItem({ to, label, icon: Icon, matchPaths }: SidebarNavItemPro
           'flex items-center justify-center w-9 h-9 rounded-lg transition',
           isActive
             ? 'text-accent bg-accent/10'
-            : 'text-zinc-500 group-hover:text-zinc-200 group-hover:bg-zinc-900/60',
+            : 'text-m-fg-muted group-hover:text-m-fg-strong group-hover:bg-m-surface-60',
         )}
       >
         <Icon />
       </span>
       {/* Tooltip */}
-      <span className="pointer-events-none absolute left-[58px] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-[11px] text-zinc-200 whitespace-nowrap shadow-lg z-50">
+      <span className="pointer-events-none absolute left-[58px] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 px-2 py-1 rounded-md border border-m-border bg-m-bg text-[11px] text-m-fg-strong whitespace-nowrap shadow-lg z-50">
         {label}
       </span>
     </NavLink>
@@ -205,13 +205,13 @@ function SidebarIconButton({ onClick, label, icon: Icon, badge }: SidebarIconBut
       aria-label={label}
       title={label}
     >
-      <span className="relative flex items-center justify-center w-9 h-9 rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900/60 transition">
+      <span className="relative flex items-center justify-center w-9 h-9 rounded-lg text-m-fg-muted hover:text-m-fg-strong hover:bg-m-surface-60 transition">
         <Icon />
         {badge && (
           <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
         )}
       </span>
-      <span className="pointer-events-none absolute left-[58px] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 px-2 py-1 rounded-md border border-zinc-800 bg-zinc-950 text-[11px] text-zinc-200 whitespace-nowrap shadow-lg z-50">
+      <span className="pointer-events-none absolute left-[58px] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 px-2 py-1 rounded-md border border-m-border bg-m-bg text-[11px] text-m-fg-strong whitespace-nowrap shadow-lg z-50">
         {label}
       </span>
     </button>
@@ -233,7 +233,7 @@ export function Sidebar() {
   const userInitial = (settingsQ.data?.userName ?? '?').slice(0, 1).toUpperCase();
 
   return (
-    <aside className="hidden md:flex w-[56px] flex-col shrink-0 items-center border-r border-zinc-900 bg-zinc-950/80 backdrop-blur h-full">
+    <aside className="hidden md:flex w-[56px] flex-col shrink-0 items-center border-r border-m-border-subtle bg-m-bg/80 backdrop-blur h-full">
       {/* Logo mark */}
       <div className="py-4" title={`Momentum v${LATEST_VERSION}`}>
         <div className="w-8 h-8 rounded-lg border border-accent/40 bg-accent/10 flex items-center justify-center text-accent font-semibold text-sm">
@@ -249,7 +249,7 @@ export function Sidebar() {
       </nav>
 
       {/* Bottom actions */}
-      <div className="w-full flex flex-col items-center pb-2 border-t border-zinc-900 pt-2">
+      <div className="w-full flex flex-col items-center pb-2 border-t border-m-border-subtle pt-2">
         <SidebarIconButton
           onClick={() => openModal('release-notes')}
           label="What's new"
@@ -274,7 +274,7 @@ export function Sidebar() {
 
         {/* User avatar */}
         <div
-          className="mt-2 w-8 h-8 rounded-full border border-zinc-800 bg-zinc-900 flex items-center justify-center text-[11px] text-zinc-300"
+          className="mt-2 w-8 h-8 rounded-full border border-m-border bg-m-surface flex items-center justify-center text-[11px] text-m-fg-secondary"
           title={settingsQ.data?.userName ?? ''}
         >
           {userInitial}

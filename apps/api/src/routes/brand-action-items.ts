@@ -1,5 +1,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, getTableColumns } from 'drizzle-orm';
 import { z } from 'zod';
 import {
   brandActionItemSchema,
@@ -9,7 +9,7 @@ import {
   taskSchema,
   toLocalIsoDate,
 } from '@momentum/shared';
-import { brandActionItems, brands, tasks } from '@momentum/db';
+import { brandActionItems, brandMeetings, brands, tasks } from '@momentum/db';
 import { db } from '../db.ts';
 import { mapBrandActionItem, mapTask } from '../mappers.ts';
 import { notFound } from '../errors.ts';
@@ -36,10 +36,14 @@ export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
       ];
       if (req.query.status) conds.push(eq(brandActionItems.status, req.query.status));
       const rows = await db
-        .select()
+        .select({
+          ...getTableColumns(brandActionItems),
+          meetingDate: brandMeetings.date,
+        })
         .from(brandActionItems)
+        .leftJoin(brandMeetings, eq(brandActionItems.meetingId, brandMeetings.id))
         .where(and(...conds))
-        .orderBy(desc(brandActionItems.createdAt));
+        .orderBy(desc(brandMeetings.date), desc(brandActionItems.createdAt));
       return rows.map(mapBrandActionItem);
     },
   );

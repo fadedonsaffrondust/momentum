@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useImportBrand } from '../../api/hooks';
 import { useUiStore } from '../../store/ui';
 import { X, Upload, FileText } from 'lucide-react';
@@ -63,19 +64,19 @@ export function ImportBrandModal({ onClose, onImportStarted }: Props) {
 
   const truncated = fileContent && fileContent.length > MAX_SIZE_CHARS;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl animate-scaleIn overflow-hidden">
-        <header className="flex items-center justify-between px-6 py-4 border-b border-zinc-900">
-          <h2 className="text-sm text-zinc-300">Import Brand from File</h2>
+      <div className="w-full max-w-lg rounded-2xl border border-m-border bg-m-bg shadow-2xl animate-scaleIn overflow-hidden">
+        <header className="flex items-center justify-between px-6 py-4 border-b border-m-border-subtle">
+          <h2 className="text-sm text-m-fg-secondary">Import Brand from File</h2>
           <button
             onClick={onClose}
-            className="text-zinc-500 hover:text-zinc-100 transition"
+            className="text-m-fg-muted hover:text-m-fg transition"
             aria-label="Close"
           >
             <X size={18} />
@@ -83,9 +84,9 @@ export function ImportBrandModal({ onClose, onImportStarted }: Props) {
         </header>
 
         <div className="p-6 space-y-5">
-          <p className="text-xs text-zinc-500">
-            Upload a <code className="text-zinc-400">.md</code> or{' '}
-            <code className="text-zinc-400">.txt</code> file with client notes. The server
+          <p className="text-xs text-m-fg-muted">
+            Upload a <code className="text-m-fg-tertiary">.md</code> or{' '}
+            <code className="text-m-fg-tertiary">.txt</code> file with client notes. The server
             will analyze it with AI and create a structured brand with meetings,
             stakeholders, and action items.
           </p>
@@ -93,14 +94,14 @@ export function ImportBrandModal({ onClose, onImportStarted }: Props) {
           {/* File picker */}
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-zinc-800 hover:border-zinc-700 rounded-xl p-8 text-center cursor-pointer transition"
+            className="border-2 border-dashed border-m-border hover:border-m-border-strong rounded-xl p-8 text-center cursor-pointer transition"
           >
             {fileName ? (
               <div className="flex items-center justify-center gap-3">
                 <FileText size={20} className="text-accent" />
                 <div className="text-left">
-                  <div className="text-sm text-zinc-200">{fileName}</div>
-                  <div className="text-[10px] text-zinc-500">
+                  <div className="text-sm text-m-fg-strong">{fileName}</div>
+                  <div className="text-[10px] text-m-fg-muted">
                     {fileContent ? `${(fileContent.length / 1000).toFixed(1)}k characters` : ''}
                     {truncated && (
                       <span className="text-amber-400 ml-2">
@@ -112,8 +113,8 @@ export function ImportBrandModal({ onClose, onImportStarted }: Props) {
               </div>
             ) : (
               <div className="space-y-2">
-                <Upload size={24} className="mx-auto text-zinc-600" />
-                <p className="text-xs text-zinc-500">
+                <Upload size={24} className="mx-auto text-m-fg-dim" />
+                <p className="text-xs text-m-fg-muted">
                   Click to select a file
                 </p>
               </div>
@@ -135,13 +136,13 @@ export function ImportBrandModal({ onClose, onImportStarted }: Props) {
           )}
 
           <div className="flex items-center justify-between pt-2">
-            <p className="text-[10px] text-zinc-600">
-              Requires <code className="text-zinc-500">OPENAI_API_KEY</code> on the server.
+            <p className="text-[10px] text-m-fg-dim">
+              Requires <code className="text-m-fg-muted">OPENAI_API_KEY</code> on the server.
             </p>
             <div className="flex gap-2">
               <button
                 onClick={onClose}
-                className="px-4 py-2 rounded-md border border-zinc-800 text-sm hover:bg-zinc-900 transition"
+                className="px-4 py-2 rounded-md border border-m-border text-sm hover:bg-m-surface-hover transition"
               >
                 Cancel
               </button>
@@ -156,6 +157,7 @@ export function ImportBrandModal({ onClose, onImportStarted }: Props) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

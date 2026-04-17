@@ -29,15 +29,15 @@ export function CommandPaletteModal() {
     >
       <Command
         label="Command Palette"
-        className="w-full max-w-xl rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden"
+        className="w-full max-w-xl rounded-xl border border-m-border bg-m-bg shadow-2xl overflow-hidden"
       >
         <Command.Input
           autoFocus
           placeholder="Type a command…"
-          className="w-full px-4 py-3 bg-transparent border-b border-zinc-900 text-zinc-100 placeholder:text-zinc-600 focus:outline-none"
+          className="w-full px-4 py-3 bg-transparent border-b border-m-border-subtle text-m-fg placeholder:text-m-fg-dim focus:outline-none"
         />
         <Command.List className="max-h-80 overflow-y-auto py-2">
-          <Command.Empty className="px-4 py-6 text-center text-sm text-zinc-500">
+          <Command.Empty className="px-4 py-6 text-center text-sm text-m-fg-muted">
             No commands match.
           </Command.Empty>
 

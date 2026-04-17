@@ -24,7 +24,7 @@ export function AppShell() {
 
   if (settingsQ.isLoading || meQ.isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-zinc-500">
+      <div className="min-h-screen flex items-center justify-center text-m-fg-muted">
         Loading…
       </div>
     );
@@ -40,7 +40,7 @@ export function AppShell() {
   }
 
   return (
-    <div className="h-screen flex bg-zinc-950 text-zinc-100 font-mono overflow-hidden">
+    <div className="h-screen flex bg-m-bg text-m-fg font-mono overflow-hidden">
       <Sidebar />
 
       <main className="flex-1 min-w-0 overflow-hidden">

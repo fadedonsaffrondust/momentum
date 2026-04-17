@@ -56,6 +56,7 @@ export const brandStakeholdersRoutes: FastifyPluginAsyncZod = async (app) => {
           brandId: req.params.brandId,
           userId: req.userId,
           name: req.body.name,
+          email: req.body.email ?? null,
           role: req.body.role ?? null,
           notes: req.body.notes ?? null,
         })

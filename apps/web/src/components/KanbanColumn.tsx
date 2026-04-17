@@ -37,18 +37,18 @@ export function KanbanColumn({
     <section
       className={clsx(
         'flex flex-col rounded-xl border transition h-full min-h-0',
-        isFocused ? 'border-zinc-700 bg-zinc-950/60' : 'border-zinc-900 bg-zinc-950/30',
+        isFocused ? 'border-m-border-strong bg-m-bg-60' : 'border-m-border-subtle bg-m-bg-30',
       )}
     >
-      <header className="px-4 py-3 border-b border-zinc-900 flex items-center justify-between">
+      <header className="px-4 py-3 border-b border-m-border-subtle flex items-center justify-between">
         <div>
-          <h2 className="text-xs uppercase tracking-wider text-zinc-500">{title}</h2>
-          <p className="text-xs text-zinc-600 mt-0.5">{tasks.length} · {TITLE_HINT[column]}</p>
+          <h2 className="text-xs uppercase tracking-wider text-m-fg-muted">{title}</h2>
+          <p className="text-xs text-m-fg-dim mt-0.5">{tasks.length} · {TITLE_HINT[column]}</p>
         </div>
       </header>
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {tasks.length === 0 && (
-          <p className="text-xs text-zinc-600 text-center py-6">No tasks.</p>
+          <p className="text-xs text-m-fg-dim text-center py-6">No tasks.</p>
         )}
         {tasks.map((t) => (
           <TaskCard

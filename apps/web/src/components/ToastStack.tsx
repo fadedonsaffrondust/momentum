@@ -12,10 +12,10 @@ export function ToastStack() {
           key={t.id}
           className={clsx(
             'px-4 py-3 rounded-md shadow-lg border text-sm flex items-start gap-3',
-            'bg-zinc-900/95 backdrop-blur',
+            'bg-m-surface-95 backdrop-blur',
             t.kind === 'error' && 'border-red-500/50',
             t.kind === 'success' && 'border-green-500/50',
-            t.kind === 'info' && 'border-zinc-700',
+            t.kind === 'info' && 'border-m-border-strong',
           )}
         >
           <span className="flex-1">{t.message}</span>
@@ -32,7 +32,7 @@ export function ToastStack() {
           )}
           <button
             onClick={() => dismiss(t.id)}
-            className="text-zinc-500 hover:text-zinc-100"
+            className="text-m-fg-muted hover:text-m-fg"
             aria-label="Dismiss"
           >
             ✕

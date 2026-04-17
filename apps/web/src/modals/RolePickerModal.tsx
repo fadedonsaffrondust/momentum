@@ -120,7 +120,7 @@ export function RolePickerModal() {
   if (!subject) {
     return (
       <Overlay onClose={close}>
-        <p className="text-sm text-zinc-500">Nothing selected.</p>
+        <p className="text-sm text-m-fg-muted">Nothing selected.</p>
       </Overlay>
     );
   }
@@ -134,10 +134,10 @@ export function RolePickerModal() {
   return (
     <Overlay onClose={close}>
       <div className="mb-3">
-        <div className="text-[10px] uppercase tracking-widest text-zinc-500">
+        <div className="text-[10px] uppercase tracking-widest text-m-fg-muted">
           Assign role
         </div>
-        <div className="text-sm text-zinc-200 mt-0.5 truncate">{subjectTitle}</div>
+        <div className="text-sm text-m-fg-strong mt-0.5 truncate">{subjectTitle}</div>
       </div>
       <ul className="space-y-1">
         {options.map((o, i) => (
@@ -147,7 +147,7 @@ export function RolePickerModal() {
             onClick={() => directApply(o.id)}
             className={clsx(
               'flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm cursor-pointer transition',
-              cursor === i ? 'bg-zinc-900 text-zinc-100' : 'text-zinc-400 hover:bg-zinc-900/60',
+              cursor === i ? 'bg-m-surface text-m-fg' : 'text-m-fg-tertiary hover:bg-m-surface-60',
             )}
           >
             <span className="flex items-center gap-2">
@@ -157,17 +157,17 @@ export function RolePickerModal() {
                   style={{ backgroundColor: o.color }}
                 />
               ) : (
-                <span className="inline-block w-2 h-2 rounded-full border border-zinc-700" />
+                <span className="inline-block w-2 h-2 rounded-full border border-m-border-strong" />
               )}
               {o.name}
             </span>
-            <span className="text-[10px] text-zinc-600 font-mono">
+            <span className="text-[10px] text-m-fg-dim font-mono">
               {o.id === null ? '0' : i < 9 ? i + 1 : ''}
             </span>
           </li>
         ))}
       </ul>
-      <div className="mt-4 pt-3 border-t border-zinc-900 text-[10px] text-zinc-600 flex items-center justify-between">
+      <div className="mt-4 pt-3 border-t border-m-border-subtle text-[10px] text-m-fg-dim flex items-center justify-between">
         <span>
           <Kbd>↑</Kbd> <Kbd>↓</Kbd> navigate &nbsp; <Kbd>Enter</Kbd> select
         </span>
@@ -196,7 +196,7 @@ function Overlay({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl p-4 animate-scaleIn">
+      <div className="w-full max-w-sm rounded-xl border border-m-border bg-m-bg shadow-2xl p-4 animate-scaleIn">
         {children}
       </div>
     </div>
@@ -205,7 +205,7 @@ function Overlay({
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex items-center justify-center min-w-[1.2rem] h-4 px-1 rounded border border-zinc-800 bg-zinc-900 text-[9px] font-mono text-zinc-400">
+    <kbd className="inline-flex items-center justify-center min-w-[1.2rem] h-4 px-1 rounded border border-m-border bg-m-surface text-[9px] font-mono text-m-fg-tertiary">
       {children}
     </kbd>
   );

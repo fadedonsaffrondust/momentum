@@ -14,9 +14,9 @@ export function RegisterPage() {
   if (token) return <Navigate to="/" replace />;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-100 font-mono">
+    <div className="min-h-screen flex items-center justify-center bg-m-bg text-m-fg font-mono">
       <form
-        className="w-full max-w-sm space-y-5 p-6 border border-zinc-800 rounded-xl bg-zinc-900/50 shadow-xl"
+        className="w-full max-w-sm space-y-5 p-6 border border-m-border rounded-xl bg-m-surface-50 shadow-xl"
         onSubmit={(e) => {
           e.preventDefault();
           register.mutate({ email, password, userName });
@@ -24,11 +24,11 @@ export function RegisterPage() {
       >
         <div>
           <h1 className="text-2xl font-semibold text-accent">Momentum</h1>
-          <p className="text-sm text-zinc-400 mt-1">Build your daily execution engine.</p>
+          <p className="text-sm text-m-fg-tertiary mt-1">Build your daily execution engine.</p>
         </div>
 
         <label className="block text-sm">
-          <span className="text-zinc-400">What should I call you?</span>
+          <span className="text-m-fg-tertiary">What should I call you?</span>
           <input
             type="text"
             autoFocus
@@ -37,30 +37,30 @@ export function RegisterPage() {
             maxLength={64}
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
-            className="mt-1 w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-md focus:outline-none focus:border-accent"
+            className="mt-1 w-full px-3 py-2 bg-m-bg border border-m-border rounded-md focus:outline-none focus:border-accent"
           />
         </label>
 
         <label className="block text-sm">
-          <span className="text-zinc-400">Email</span>
+          <span className="text-m-fg-tertiary">Email</span>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-md focus:outline-none focus:border-accent"
+            className="mt-1 w-full px-3 py-2 bg-m-bg border border-m-border rounded-md focus:outline-none focus:border-accent"
           />
         </label>
 
         <label className="block text-sm">
-          <span className="text-zinc-400">Password</span>
+          <span className="text-m-fg-tertiary">Password</span>
           <PasswordInput
             required
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <span className="text-xs text-zinc-500 block mt-1">Minimum 8 characters.</span>
+          <span className="text-xs text-m-fg-muted block mt-1">Minimum 8 characters.</span>
         </label>
 
         {register.isError && (
@@ -77,7 +77,7 @@ export function RegisterPage() {
           {register.isPending ? 'Creating…' : 'Create account'}
         </button>
 
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-m-fg-muted">
           Already have one?{' '}
           <Link to="/login" className="text-accent hover:underline">
             Sign in

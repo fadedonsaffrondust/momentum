@@ -43,26 +43,26 @@ export function EndOfDayModal() {
         </div>
 
         <section>
-          <h3 className="text-xs uppercase tracking-wider text-zinc-500 mb-2">Done</h3>
+          <h3 className="text-xs uppercase tracking-wider text-m-fg-muted mb-2">Done</h3>
           <ul className="space-y-1 text-sm">
             {done.map((t) => (
               <li key={t.id} className="flex justify-between">
-                <span className="text-zinc-300 line-through">{t.title}</span>
-                <span className="text-xs text-zinc-600">
+                <span className="text-m-fg-secondary line-through">{t.title}</span>
+                <span className="text-xs text-m-fg-dim">
                   {formatMinutes(t.actualMinutes)} / {formatMinutes(t.estimateMinutes)}
                 </span>
               </li>
             ))}
-            {done.length === 0 && <li className="text-xs text-zinc-600">Nothing done.</li>}
+            {done.length === 0 && <li className="text-xs text-m-fg-dim">Nothing done.</li>}
           </ul>
         </section>
 
         <section>
-          <h3 className="text-xs uppercase tracking-wider text-zinc-500 mb-2">Incomplete</h3>
+          <h3 className="text-xs uppercase tracking-wider text-m-fg-muted mb-2">Incomplete</h3>
           <ul className="space-y-1 text-sm">
             {incomplete.map((t) => (
               <li key={t.id} className="flex items-center justify-between gap-3">
-                <span className="text-zinc-300">{t.title}</span>
+                <span className="text-m-fg-secondary">{t.title}</span>
                 <div className="flex gap-2 text-xs">
                   <button
                     className="text-accent hover:underline"
@@ -80,18 +80,18 @@ export function EndOfDayModal() {
               </li>
             ))}
             {incomplete.length === 0 && (
-              <li className="text-xs text-zinc-600">Clean slate for tomorrow.</li>
+              <li className="text-xs text-m-fg-dim">Clean slate for tomorrow.</li>
             )}
           </ul>
         </section>
 
         <label className="block">
-          <span className="text-xs text-zinc-500">One thing you learned today?</span>
+          <span className="text-xs text-m-fg-muted">One thing you learned today?</span>
           <textarea
             value={journal}
             onChange={(e) => setJournal(e.target.value)}
             rows={3}
-            className="mt-1 w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-accent resize-none"
+            className="mt-1 w-full bg-m-bg border border-m-border rounded px-3 py-2 text-sm text-m-fg focus:outline-none focus:border-accent resize-none"
             placeholder="Write a sentence…"
           />
         </label>
@@ -99,7 +99,7 @@ export function EndOfDayModal() {
         <div className="flex gap-2">
           <button
             onClick={close}
-            className="flex-1 py-2 rounded-md border border-zinc-800 text-sm hover:bg-zinc-900"
+            className="flex-1 py-2 rounded-md border border-m-border text-sm hover:bg-m-surface-hover"
           >
             Cancel
           </button>
@@ -118,9 +118,9 @@ export function EndOfDayModal() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-zinc-800 rounded-lg py-3">
-      <div className="text-2xl font-semibold text-zinc-100">{value}</div>
-      <div className="text-xs text-zinc-500 mt-1">{label}</div>
+    <div className="border border-m-border rounded-lg py-3">
+      <div className="text-2xl font-semibold text-m-fg">{value}</div>
+      <div className="text-xs text-m-fg-muted mt-1">{label}</div>
     </div>
   );
 }

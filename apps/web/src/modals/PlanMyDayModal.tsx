@@ -67,7 +67,7 @@ export function PlanMyDayModal() {
   return (
     <Modal title="Plan My Day" onClose={close} className="max-w-3xl">
       <div className="space-y-4">
-        <div className="flex items-center gap-2 text-xs text-zinc-500">
+        <div className="flex items-center gap-2 text-xs text-m-fg-muted">
           {['Leftovers', 'Backlog', 'Summary'].map((label, i) => (
             <div
               key={label}
@@ -75,8 +75,8 @@ export function PlanMyDayModal() {
                 i === step
                   ? 'border-accent text-accent'
                   : i < step
-                    ? 'border-zinc-700 text-zinc-400'
-                    : 'border-zinc-900 text-zinc-600'
+                    ? 'border-m-border-strong text-m-fg-tertiary'
+                    : 'border-m-border-subtle text-m-fg-dim'
               }`}
             >
               {i + 1}. {label}
@@ -86,18 +86,18 @@ export function PlanMyDayModal() {
 
         {step === 0 && (
           <section className="space-y-2">
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-m-fg-tertiary">
               Yesterday's leftovers — {leftovers.length} incomplete.
             </p>
             {leftovers.length === 0 && (
-              <p className="text-xs text-zinc-600">Nothing left behind. Nice.</p>
+              <p className="text-xs text-m-fg-dim">Nothing left behind. Nice.</p>
             )}
             {leftovers.map((t) => (
               <div
                 key={t.id}
-                className="flex items-center justify-between rounded border border-zinc-800 px-3 py-2 text-sm"
+                className="flex items-center justify-between rounded border border-m-border px-3 py-2 text-sm"
               >
-                <span className="text-zinc-200">{t.title}</span>
+                <span className="text-m-fg-strong">{t.title}</span>
                 <div className="flex gap-2">
                   <button
                     className="text-xs text-accent hover:underline"
@@ -106,7 +106,7 @@ export function PlanMyDayModal() {
                     Move to today
                   </button>
                   <button
-                    className="text-xs text-zinc-500 hover:text-zinc-300"
+                    className="text-xs text-m-fg-muted hover:text-m-fg-secondary"
                     onClick={() =>
                       deferTask.mutate(t.id)
                     }
@@ -127,18 +127,18 @@ export function PlanMyDayModal() {
 
         {step === 1 && (
           <section className="space-y-2">
-            <p className="text-sm text-zinc-400">Top {backlogSuggestions.length} from backlog</p>
+            <p className="text-sm text-m-fg-tertiary">Top {backlogSuggestions.length} from backlog</p>
             {backlogSuggestions.length === 0 && (
-              <p className="text-xs text-zinc-600">Backlog is clean.</p>
+              <p className="text-xs text-m-fg-dim">Backlog is clean.</p>
             )}
             {backlogSuggestions.map((t) => (
               <div
                 key={t.id}
-                className="flex items-center justify-between rounded border border-zinc-800 px-3 py-2 text-sm"
+                className="flex items-center justify-between rounded border border-m-border px-3 py-2 text-sm"
               >
                 <div>
-                  <div className="text-zinc-200">{t.title}</div>
-                  <div className="text-xs text-zinc-600">
+                  <div className="text-m-fg-strong">{t.title}</div>
+                  <div className="text-xs text-m-fg-dim">
                     {t.priority} · {formatMinutes(t.estimateMinutes)}
                   </div>
                 </div>
@@ -155,14 +155,14 @@ export function PlanMyDayModal() {
 
         {step === 2 && (
           <section className="space-y-3">
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-m-fg-tertiary">
               {todayTasks.length} tasks planned · {formatMinutes(totalMinutes)} /{' '}
               {formatMinutes(capacity)}
             </p>
-            <p className="text-zinc-200">{message}</p>
+            <p className="text-m-fg-strong">{message}</p>
             <ul className="space-y-1">
               {todayTasks.map((t) => (
-                <li key={t.id} className="text-xs text-zinc-400">
+                <li key={t.id} className="text-xs text-m-fg-tertiary">
                   • {t.title}
                 </li>
               ))}
@@ -173,7 +173,7 @@ export function PlanMyDayModal() {
         <div className="flex gap-2 pt-2">
           <button
             onClick={() => (step === 0 ? close() : setStep(step - 1))}
-            className="flex-1 py-2 rounded-md border border-zinc-800 text-sm hover:bg-zinc-900"
+            className="flex-1 py-2 rounded-md border border-m-border text-sm hover:bg-m-surface-hover"
           >
             {step === 0 ? 'Close' : 'Back'}
           </button>

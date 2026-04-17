@@ -205,6 +205,25 @@ export type AuthResponse = z.infer<typeof authResponseSchema>;
 export const brandStatusSchema = z.enum(['active', 'importing', 'import_failed']);
 export type BrandStatus = z.infer<typeof brandStatusSchema>;
 
+export const meetingSourceSchema = z.enum(['manual', 'recording_sync']);
+export type MeetingSource = z.infer<typeof meetingSourceSchema>;
+
+export const syncMatchRulesSchema = z.object({
+  stakeholderEmails: z.array(z.string().email()).default([]),
+  titleKeywords: z.array(z.string()).default([]),
+  meetingType: z.enum(['external', 'internal', 'both']).default('external'),
+  syncWindowDays: z.number().int().positive().default(30),
+});
+export type SyncMatchRules = z.infer<typeof syncMatchRulesSchema>;
+
+export const syncConfigSchema = z.object({
+  matchRules: syncMatchRulesSchema.default({}),
+  syncedMeetingIds: z.array(z.string()).default([]),
+  lastSyncedAt: z.string().datetime().nullable().default(null),
+  lastSyncedMeetingDate: z.string().nullable().default(null),
+});
+export type SyncConfig = z.infer<typeof syncConfigSchema>;
+
 export const brandSchema = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
@@ -212,6 +231,7 @@ export const brandSchema = z.object({
   goals: z.string().max(10_000).nullable(),
   successDefinition: z.string().max(10_000).nullable(),
   customFields: z.record(z.unknown()).default({}),
+  syncConfig: syncConfigSchema.nullable(),
   status: brandStatusSchema,
   importError: z.string().nullable(),
   importedFrom: z.string().max(64).nullable(),
@@ -238,6 +258,7 @@ export const brandStakeholderSchema = z.object({
   brandId: z.string().uuid(),
   userId: z.string().uuid(),
   name: z.string().min(1).max(256),
+  email: z.string().email().max(320).nullable(),
   role: z.string().max(256).nullable(),
   notes: z.string().max(4000).nullable(),
   createdAt: z.string().datetime(),
@@ -246,6 +267,7 @@ export type BrandStakeholder = z.infer<typeof brandStakeholderSchema>;
 
 export const createBrandStakeholderInputSchema = z.object({
   name: z.string().min(1).max(256),
+  email: z.string().email().max(320).nullable().optional(),
   role: z.string().max(256).nullable().optional(),
   notes: z.string().max(4000).nullable().optional(),
 });
@@ -268,6 +290,9 @@ export const brandMeetingSchema = z.object({
   summary: z.string().max(10_000).nullable(),
   rawNotes: z.string().max(100_000),
   decisions: z.array(z.string()),
+  source: meetingSourceSchema,
+  externalMeetingId: z.string().max(500).nullable(),
+  recordingUrl: z.string().max(2000).nullable(),
   createdAt: z.string().datetime(),
 });
 export type BrandMeeting = z.infer<typeof brandMeetingSchema>;
@@ -300,6 +325,7 @@ export const brandActionItemSchema = z.object({
   owner: z.string().max(256).nullable(),
   dueDate: isoDateSchema.nullable(),
   linkedTaskId: z.string().uuid().nullable(),
+  meetingDate: isoDateSchema.nullable(),
   createdAt: z.string().datetime(),
   completedAt: z.string().datetime().nullable(),
 });
@@ -318,6 +344,62 @@ export const updateBrandActionItemInputSchema = createBrandActionItemInputSchema
   .extend({ status: brandActionStatusSchema.optional() })
   .strict();
 export type UpdateBrandActionItemInput = z.infer<typeof updateBrandActionItemInputSchema>;
+
+/* ─────────────── brand sync ─────────────── */
+
+export const syncCandidateSchema = z.object({
+  meeting: z.object({
+    id: z.string(),
+    name: z.string(),
+    happenedAt: z.string(),
+    duration: z.number().optional(),
+    invitees: z.array(z.object({ name: z.string(), email: z.string() })),
+    organizer: z.object({ name: z.string(), email: z.string() }),
+    url: z.string(),
+  }),
+  score: z.number(),
+  reasons: z.array(z.string()),
+  confidence: z.enum(['high', 'low']),
+});
+export type SyncCandidate = z.infer<typeof syncCandidateSchema>;
+
+export const syncCandidatesResponseSchema = z.object({
+  likely: z.array(syncCandidateSchema),
+  possible: z.array(syncCandidateSchema),
+  lastSyncedAt: z.string().datetime().nullable(),
+});
+export type SyncCandidatesResponse = z.infer<typeof syncCandidatesResponseSchema>;
+
+export const syncLookupInputSchema = z.object({
+  meetingRef: z.string().min(1).max(500),
+});
+export type SyncLookupInput = z.infer<typeof syncLookupInputSchema>;
+
+export const syncLookupResponseSchema = syncCandidateSchema;
+export type SyncLookupResponse = z.infer<typeof syncLookupResponseSchema>;
+
+export const syncConfirmInputSchema = z.object({
+  meetingIds: z.array(z.string()).min(1),
+});
+export type SyncConfirmInput = z.infer<typeof syncConfirmInputSchema>;
+
+export const syncConfirmResponseSchema = z.object({
+  imported: z.number().int().nonnegative(),
+  pendingTranscripts: z.number().int().nonnegative(),
+  errors: z.array(z.string()),
+  actionItemStats: z.object({
+    extracted: z.number().int().nonnegative(),
+    created: z.number().int().nonnegative(),
+    skipped: z.number().int().nonnegative(),
+    updated: z.number().int().nonnegative(),
+  }),
+});
+export type SyncConfirmResponse = z.infer<typeof syncConfirmResponseSchema>;
+
+export const updateSyncConfigInputSchema = z.object({
+  matchRules: syncMatchRulesSchema.partial(),
+});
+export type UpdateSyncConfigInput = z.infer<typeof updateSyncConfigInputSchema>;
 
 /* ─────────────── brand import ─────────────── */
 

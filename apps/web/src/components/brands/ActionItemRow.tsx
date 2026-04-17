@@ -23,22 +23,23 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
     else setEditText(item.text);
   };
 
-  const age = (() => {
-    const diff = Math.floor((Date.now() - new Date(item.createdAt).getTime()) / 86_400_000);
+  const dateLabel = (() => {
+    const ref = item.meetingDate ?? item.createdAt.slice(0, 10);
+    const diff = Math.floor((Date.now() - new Date(ref).getTime()) / 86_400_000);
     if (diff === 0) return 'today';
     if (diff === 1) return '1d';
     return `${diff}d`;
   })();
 
   return (
-    <div className="group flex items-start gap-2 py-1.5 px-1 rounded hover:bg-zinc-900/30 transition text-sm">
+    <div className="group flex items-start gap-2 py-1.5 px-1 rounded hover:bg-m-surface-40 transition text-sm">
       <button
         onClick={onToggleDone}
         className={clsx(
           'mt-0.5 w-4 h-4 shrink-0 rounded border flex items-center justify-center transition',
           isDone
             ? 'border-emerald-500 bg-emerald-500/20 text-emerald-400'
-            : 'border-zinc-700 hover:border-accent',
+            : 'border-m-border-strong hover:border-accent',
         )}
         aria-label={isDone ? 'Reopen' : 'Mark done'}
       >
@@ -60,27 +61,27 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
                 setEditing(false);
               }
             }}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-0.5 text-xs focus:outline-none focus:border-accent"
+            className="w-full bg-m-bg border border-m-border rounded px-2 py-0.5 text-xs focus:outline-none focus:border-accent"
           />
         ) : (
           <span
             className={clsx(
-              'text-zinc-200 break-words',
-              isDone && 'line-through text-zinc-500',
+              'text-m-fg-strong break-words',
+              isDone && 'line-through text-m-fg-muted',
             )}
           >
             {item.text}
           </span>
         )}
 
-        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-zinc-600">
+        <div className="flex items-center gap-2 mt-0.5 text-xs text-m-fg-muted">
           {item.owner && <span>{item.owner}</span>}
           {item.dueDate && (
             <span className={item.dueDate < new Date().toISOString().slice(0, 10) ? 'text-red-400' : ''}>
               due {item.dueDate}
             </span>
           )}
-          <span>{age}</span>
+          <span>{dateLabel}</span>
           {item.linkedTaskId && (
             <span className="text-accent">In Today</span>
           )}
@@ -91,25 +92,25 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
         {!isDone && !item.linkedTaskId && (
           <button
             onClick={onSendToToday}
-            className="p-0.5 text-zinc-600 hover:text-accent"
+            className="p-1 text-m-fg-dim hover:text-accent"
             title="Send to Today"
           >
-            <ArrowRight size={12} />
+            <ArrowRight size={14} />
           </button>
         )}
         <button
           onClick={() => setEditing(true)}
-          className="p-0.5 text-zinc-600 hover:text-zinc-200"
+          className="p-1 text-m-fg-dim hover:text-m-fg-strong"
           title="Edit"
         >
-          <Pencil size={12} />
+          <Pencil size={14} />
         </button>
         <button
           onClick={onDelete}
-          className="p-0.5 text-zinc-600 hover:text-red-400"
+          className="p-1 text-m-fg-dim hover:text-red-400"
           title="Delete"
         >
-          <Trash2 size={12} />
+          <Trash2 size={14} />
         </button>
       </div>
     </div>

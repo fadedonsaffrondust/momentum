@@ -88,26 +88,26 @@ export function PulseSection({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* 1A — Activity Snapshot */}
         <div className="space-y-2">
-          <h3 className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
+          <h3 className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
             Activity
           </h3>
           <div className="space-y-1.5 text-sm">
-            <div className="text-zinc-300">
+            <div className="text-m-fg-secondary">
               {lastMeeting ? (
                 <>
-                  <span className="text-zinc-500">Last meeting:</span>{' '}
+                  <span className="text-m-fg-muted">Last meeting:</span>{' '}
                   {daysSince(lastMeeting.date)} — {lastMeeting.title}
                 </>
               ) : (
-                <span className="text-zinc-600">No meetings logged</span>
+                <span className="text-m-fg-dim">No meetings logged</span>
               )}
             </div>
             {cadence !== null && (
-              <div className="text-zinc-500 text-xs">
+              <div className="text-m-fg-muted text-xs">
                 Avg {cadence} days between meetings
               </div>
             )}
-            <div className="text-zinc-500 text-xs">
+            <div className="text-m-fg-muted text-xs">
               {totalMeetings} meeting{totalMeetings !== 1 ? 's' : ''} logged
             </div>
           </div>
@@ -115,14 +115,14 @@ export function PulseSection({
 
         {/* 1B — Open Action Items (top 3) */}
         <div className="space-y-2">
-          <h3 className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
+          <h3 className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
             Open items
             {openCount > 0 && (
-              <span className="ml-1 text-zinc-600">({openCount})</span>
+              <span className="ml-1 text-m-fg-dim">({openCount})</span>
             )}
           </h3>
           {topOpenItems.length === 0 && (
-            <p className="text-xs text-zinc-600">No open action items.</p>
+            <p className="text-xs text-m-fg-dim">No open action items.</p>
           )}
           <ul className="space-y-1.5">
             {topOpenItems.map((item) => (
@@ -130,8 +130,8 @@ export function PulseSection({
                 key={item.id}
                 className="flex items-start gap-2 text-xs group"
               >
-                <span className="flex-1 text-zinc-300 leading-snug">{item.text}</span>
-                <span className="shrink-0 text-zinc-600">{itemAge(item.createdAt)}</span>
+                <span className="flex-1 text-m-fg-secondary leading-snug">{item.text}</span>
+                <span className="shrink-0 text-m-fg-dim">{itemAge(item.createdAt)}</span>
                 <div className="shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition">
                   <button
                     onClick={() => onSendToToday(item.id)}
@@ -160,11 +160,11 @@ export function PulseSection({
 
         {/* 1C — Stakeholder Activity */}
         <div className="space-y-2">
-          <h3 className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
+          <h3 className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
             Stakeholders
           </h3>
           {stakeholders.length === 0 && (
-            <p className="text-xs text-zinc-600">No stakeholders added yet.</p>
+            <p className="text-xs text-m-fg-dim">No stakeholders added yet.</p>
           )}
           <div className="flex flex-wrap gap-2">
             {stakeholders.slice(0, 4).map((s, i) => (
@@ -177,7 +177,7 @@ export function PulseSection({
               />
             ))}
             {stakeholders.length > 4 && (
-              <span className="flex items-center justify-center w-8 h-8 rounded-full border border-zinc-800 text-[10px] text-zinc-500">
+              <span className="flex items-center justify-center w-8 h-8 rounded-full border border-m-border text-[10px] text-m-fg-muted">
                 +{stakeholders.length - 4}
               </span>
             )}

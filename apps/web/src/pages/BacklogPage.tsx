@@ -58,7 +58,7 @@ export function BacklogPage() {
           if (!items || items.length === 0) return null;
           return (
             <section key={label}>
-              <h2 className="text-xs uppercase tracking-wider text-zinc-500 mb-2">
+              <h2 className="text-xs uppercase tracking-wider text-m-fg-muted mb-2">
                 {label} · {items.length}
               </h2>
               <ul className="space-y-2">
@@ -67,11 +67,11 @@ export function BacklogPage() {
                   return (
                     <li
                       key={t.id}
-                      className="flex items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-sm"
+                      className="flex items-center justify-between gap-3 rounded-lg border border-m-border bg-m-surface-40 px-3 py-2 text-sm"
                     >
                       <div className="min-w-0">
-                        <div className="text-zinc-200 truncate">{t.title}</div>
-                        <div className="text-xs text-zinc-500 flex gap-2 mt-1">
+                        <div className="text-m-fg-strong truncate">{t.title}</div>
+                        <div className="text-xs text-m-fg-muted flex gap-2 mt-1">
                           {role && (
                             <span style={{ color: role.color }}>{role.name}</span>
                           )}
@@ -95,7 +95,7 @@ export function BacklogPage() {
           );
         })}
         {Object.values(groups).every((g) => g.length === 0) && (
-          <p className="text-zinc-500 text-sm">Backlog is empty. Plan your day.</p>
+          <p className="text-m-fg-muted text-sm">Backlog is empty. Plan your day.</p>
         )}
       </div>
     </div>

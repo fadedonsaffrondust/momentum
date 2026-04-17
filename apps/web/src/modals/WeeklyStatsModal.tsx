@@ -10,7 +10,7 @@ export function WeeklyStatsModal() {
   if (!statsQ.data) {
     return (
       <Modal title="Weekly Stats" onClose={close}>
-        <p className="text-sm text-zinc-500">Loading…</p>
+        <p className="text-sm text-m-fg-muted">Loading…</p>
       </Modal>
     );
   }
@@ -34,7 +34,7 @@ export function WeeklyStatsModal() {
                     title={`${d.tasksCompleted}/${d.tasksPlanned}`}
                   />
                 </div>
-                <div className="text-[10px] text-zinc-600">
+                <div className="text-[10px] text-m-fg-dim">
                   {new Date(d.date + 'T00:00:00').toLocaleDateString(undefined, {
                     weekday: 'short',
                   })}
@@ -63,9 +63,9 @@ export function WeeklyStatsModal() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-zinc-800 rounded-lg py-3">
-      <div className="text-lg font-semibold text-zinc-100">{value}</div>
-      <div className="text-xs text-zinc-500 mt-1">{label}</div>
+    <div className="border border-m-border rounded-lg py-3">
+      <div className="text-lg font-semibold text-m-fg">{value}</div>
+      <div className="text-xs text-m-fg-muted mt-1">{label}</div>
     </div>
   );
 }

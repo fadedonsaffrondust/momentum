@@ -33,7 +33,7 @@ export function StakeholderBadge({ stakeholder, index, lastMentionDate, onClick 
     <button
       onClick={onClick}
       title={tooltip}
-      className="group relative flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-semibold transition hover:ring-2 hover:ring-offset-1 hover:ring-offset-zinc-950"
+      className="group relative flex items-center justify-center w-10 h-10 rounded-full text-xs font-semibold transition hover:ring-2 hover:ring-offset-1 hover:ring-offset-m-bg"
       style={{
         backgroundColor: color + '22',
         color,

@@ -13,10 +13,10 @@ interface Props {
   onEditDone: () => void;
 }
 
-const priorityBorder: Record<Task['priority'], string> = {
-  high: 'border-l-red-500',
-  medium: 'border-l-amber-500',
-  low: 'border-l-zinc-600',
+const priorityColor: Record<Task['priority'], string> = {
+  high: '#ef4444',
+  medium: '#f59e0b',
+  low: '#a1a1aa',
 };
 
 export function TaskCard({ task, role, selected, onSelect, editing, onEditDone }: Props) {
@@ -52,11 +52,11 @@ export function TaskCard({ task, role, selected, onSelect, editing, onEditDone }
       role="button"
       tabIndex={-1}
       onClick={onSelect}
+      style={{ borderLeftColor: priorityColor[task.priority] }}
       className={clsx(
-        'group rounded-lg border-l-4 border border-zinc-800 bg-zinc-900/60 p-3 cursor-pointer transition',
-        'hover:border-zinc-700',
-        priorityBorder[task.priority],
-        selected && 'ring-2 ring-accent/80 border-zinc-700',
+        'group rounded-lg border-l-4 border border-m-border bg-m-surface-60 p-3 cursor-pointer transition',
+        'hover:border-m-border-strong',
+        selected && 'ring-2 ring-accent/80 border-m-border-strong',
         task.status === 'done' && 'opacity-60',
       )}
     >
@@ -78,13 +78,13 @@ export function TaskCard({ task, role, selected, onSelect, editing, onEditDone }
             }
             e.stopPropagation();
           }}
-          className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-sm text-zinc-100 focus:outline-none focus:border-accent"
+          className="w-full bg-m-bg border border-m-border rounded px-2 py-1 text-sm text-m-fg focus:outline-none focus:border-accent"
           data-task-edit-input="true"
         />
       ) : (
         <div
           className={clsx(
-            'text-sm text-zinc-100 leading-snug break-words',
+            'text-sm text-m-fg leading-snug break-words',
             task.status === 'done' && 'line-through',
           )}
         >
@@ -92,7 +92,7 @@ export function TaskCard({ task, role, selected, onSelect, editing, onEditDone }
         </div>
       )}
 
-      <div className="mt-2 flex items-center gap-2 flex-wrap text-xs text-zinc-500">
+      <div className="mt-2 flex items-center gap-2 flex-wrap text-xs text-m-fg-muted">
         {role && (
           <span
             className="px-2 py-0.5 rounded-full"
@@ -102,14 +102,14 @@ export function TaskCard({ task, role, selected, onSelect, editing, onEditDone }
           </span>
         )}
         {task.estimateMinutes != null && (
-          <span className="text-zinc-400">{formatMinutes(task.estimateMinutes)}</span>
+          <span className="text-m-fg-tertiary">{formatMinutes(task.estimateMinutes)}</span>
         )}
         {task.status === 'done' && task.actualMinutes != null && (
           <span className="text-emerald-500">
             actual {formatMinutes(task.actualMinutes)}
           </span>
         )}
-        <span className="ml-auto text-zinc-600">{formatTimeAgo(task.createdAt)}</span>
+        <span className="ml-auto text-m-fg-dim">{formatTimeAgo(task.createdAt)}</span>
       </div>
     </div>
   );

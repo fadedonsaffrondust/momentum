@@ -21,6 +21,9 @@ function makeMeeting(overrides: Partial<BrandMeeting> = {}): BrandMeeting {
     summary: null,
     rawNotes: '',
     decisions: [],
+    source: 'manual',
+    externalMeetingId: null,
+    recordingUrl: null,
     createdAt: DATETIME,
     ...overrides,
   };
@@ -37,6 +40,7 @@ function makeActionItem(overrides: Partial<BrandActionItem> = {}): BrandActionIt
     owner: null,
     dueDate: null,
     linkedTaskId: null,
+    meetingDate: null,
     createdAt: DATETIME,
     completedAt: null,
     ...overrides,

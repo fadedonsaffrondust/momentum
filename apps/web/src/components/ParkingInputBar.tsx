@@ -62,7 +62,7 @@ export const ParkingInputBar = forwardRef<HTMLInputElement>((_props, ref) => {
         onChange={(e) => setValue(e.target.value)}
         data-task-input="true"
         placeholder="Park a topic for the next daily… (#role for context, !h for priority, +mon to target a specific daily)"
-        className="w-full px-4 py-3 bg-zinc-900/60 border border-zinc-800 rounded-lg focus:outline-none focus:border-accent text-zinc-100 placeholder:text-zinc-600"
+        className="w-full px-4 py-3 bg-m-surface-60 border border-m-border rounded-lg focus:outline-none focus:border-accent text-m-fg placeholder:text-m-fg-dim"
       />
     </form>
   );

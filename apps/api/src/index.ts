@@ -18,6 +18,7 @@ import { brandStakeholdersRoutes } from './routes/brand-stakeholders.ts';
 import { brandMeetingsRoutes } from './routes/brand-meetings.ts';
 import { brandActionItemsRoutes } from './routes/brand-action-items.ts';
 import { brandImportRoutes } from './routes/brand-import.ts';
+import { brandSyncRoutes } from './routes/brand-sync.ts';
 import { dailyLogsRoutes } from './routes/daily-logs.ts';
 import { statsRoutes } from './routes/stats.ts';
 import { dataRoutes } from './routes/data.ts';
@@ -52,6 +53,7 @@ async function main() {
   await app.register(brandStakeholdersRoutes);
   await app.register(brandMeetingsRoutes);
   await app.register(brandActionItemsRoutes);
+  await app.register(brandSyncRoutes);
   await app.register(dailyLogsRoutes);
   await app.register(statsRoutes);
   await app.register(dataRoutes);

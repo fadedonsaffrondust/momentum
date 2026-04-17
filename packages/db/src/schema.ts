@@ -23,6 +23,7 @@ export const themeEnum = pgEnum('theme', ['dark', 'light']);
 export const parkingStatusEnum = pgEnum('parking_status', ['open', 'discussed', 'archived']);
 export const brandStatusEnum = pgEnum('brand_status', ['active', 'importing', 'import_failed']);
 export const brandActionStatusEnum = pgEnum('brand_action_status', ['open', 'done']);
+export const meetingSourceEnum = pgEnum('meeting_source', ['manual', 'recording_sync']);
 
 /* ─────────────── users ─────────────── */
 
@@ -155,6 +156,7 @@ export const brands = pgTable(
     goals: text('goals'),
     successDefinition: text('success_definition'),
     customFields: jsonb('custom_fields').notNull().default('{}'),
+    syncConfig: jsonb('sync_config'),
     status: brandStatusEnum('status').notNull().default('active'),
     importError: text('import_error'),
     importedFrom: text('imported_from'),
@@ -180,6 +182,7 @@ export const brandStakeholders = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
+    email: text('email'),
     role: text('role'),
     notes: text('notes'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -207,6 +210,9 @@ export const brandMeetings = pgTable(
     summary: text('summary'),
     rawNotes: text('raw_notes').notNull().default(''),
     decisions: text('decisions').array().notNull().default(sql`'{}'::text[]`),
+    source: meetingSourceEnum('source').notNull().default('manual'),
+    externalMeetingId: text('external_meeting_id'),
+    recordingUrl: text('recording_url'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({

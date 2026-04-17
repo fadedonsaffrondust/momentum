@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { BrandMeeting, BrandStakeholder } from '@momentum/shared';
 import {
   useCreateBrandMeeting,
@@ -148,7 +149,7 @@ export function MeetingNoteModal({
     onClose();
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-40 flex items-start justify-center bg-black/70 backdrop-blur-sm animate-fadeIn overflow-y-auto"
       onMouseDown={(e) => {
@@ -156,7 +157,7 @@ export function MeetingNoteModal({
       }}
     >
       <div
-        className="w-full max-w-4xl my-12 mx-4 rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl animate-scaleIn"
+        className="w-full max-w-4xl my-12 mx-4 rounded-2xl border border-m-border bg-m-bg shadow-2xl animate-scaleIn"
         onKeyDown={(e) => {
           if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
             e.preventDefault();
@@ -164,13 +165,13 @@ export function MeetingNoteModal({
           }
         }}
       >
-        <header className="flex items-center justify-between px-6 py-4 border-b border-zinc-900">
-          <h2 className="text-sm text-zinc-300">
+        <header className="flex items-center justify-between px-6 py-4 border-b border-m-border-subtle">
+          <h2 className="text-sm text-m-fg-secondary">
             {isEdit ? 'Edit Meeting Note' : 'New Meeting Note'}
           </h2>
           <button
             onClick={handleClose}
-            className="text-zinc-500 hover:text-zinc-100 transition"
+            className="text-m-fg-muted hover:text-m-fg transition"
             aria-label="Close"
           >
             <X size={18} />
@@ -180,7 +181,7 @@ export function MeetingNoteModal({
         <div className="p-6 space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
+              <span className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
                 Date
               </span>
               <input
@@ -190,12 +191,12 @@ export function MeetingNoteModal({
                   setDate(e.target.value);
                   markDirty();
                 }}
-                className="mt-1 w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-accent"
+                className="mt-1 w-full bg-m-surface border border-m-border rounded-lg px-3 py-2 text-sm text-m-fg focus:outline-none focus:border-accent"
               />
             </label>
 
             <label className="block relative">
-              <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
+              <span className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
                 Title
               </span>
               <input
@@ -204,10 +205,10 @@ export function MeetingNoteModal({
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="e.g. Weekly sync"
-                className="mt-1 w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-accent"
+                className="mt-1 w-full bg-m-surface border border-m-border rounded-lg px-3 py-2 text-sm text-m-fg focus:outline-none focus:border-accent"
               />
               {titleSuggestions.length > 0 && (
-                <ul className="absolute z-10 left-0 right-0 mt-1 border border-zinc-800 bg-zinc-950 rounded-lg shadow-xl py-1 max-h-40 overflow-y-auto">
+                <ul className="absolute z-10 left-0 right-0 mt-1 border border-m-border bg-m-bg rounded-lg shadow-xl py-1 max-h-40 overflow-y-auto">
                   {titleSuggestions.map((s) => (
                     <li key={s}>
                       <button
@@ -217,7 +218,7 @@ export function MeetingNoteModal({
                           setTitleSuggestions([]);
                           markDirty();
                         }}
-                        className="w-full text-left px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900"
+                        className="w-full text-left px-3 py-1.5 text-xs text-m-fg-secondary hover:bg-m-surface-hover"
                       >
                         {s}
                       </button>
@@ -230,10 +231,10 @@ export function MeetingNoteModal({
 
           {/* Attendees chip input */}
           <div>
-            <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
+            <span className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
               Attendees
             </span>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 min-h-[40px]">
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 bg-m-surface border border-m-border rounded-lg px-3 py-2 min-h-[40px]">
               {attendees.map((a) => (
                 <span
                   key={a}
@@ -264,16 +265,16 @@ export function MeetingNoteModal({
                     }
                   }}
                   placeholder={attendees.length === 0 ? 'Type a name…' : ''}
-                  className="w-full bg-transparent text-xs text-zinc-100 focus:outline-none"
+                  className="w-full bg-transparent text-xs text-m-fg focus:outline-none"
                 />
                 {attendeeSuggestions.length > 0 && (
-                  <ul className="absolute z-10 left-0 right-0 mt-2 border border-zinc-800 bg-zinc-950 rounded-lg shadow-xl py-1 max-h-32 overflow-y-auto">
+                  <ul className="absolute z-10 left-0 right-0 mt-2 border border-m-border bg-m-bg rounded-lg shadow-xl py-1 max-h-32 overflow-y-auto">
                     {attendeeSuggestions.map((s) => (
                       <li key={s}>
                         <button
                           type="button"
                           onClick={() => addAttendee(s)}
-                          className="w-full text-left px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900"
+                          className="w-full text-left px-3 py-1.5 text-xs text-m-fg-secondary hover:bg-m-surface-hover"
                         >
                           {s}
                         </button>
@@ -286,14 +287,14 @@ export function MeetingNoteModal({
           </div>
 
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
+            <span className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
               Notes
             </span>
-            <p className="text-[10px] text-zinc-600 mt-0.5 mb-1">
-              Type <code className="text-zinc-500">/todo</code> for action items.{' '}
-              <code className="text-zinc-500">- </code> or{' '}
-              <code className="text-zinc-500">1. </code> for lists.{' '}
-              <code className="text-zinc-500">Tab</code> to indent.
+            <p className="text-[10px] text-m-fg-dim mt-0.5 mb-1">
+              Type <code className="text-m-fg-muted">/todo</code> for action items.{' '}
+              <code className="text-m-fg-muted">- </code> or{' '}
+              <code className="text-m-fg-muted">1. </code> for lists.{' '}
+              <code className="text-m-fg-muted">Tab</code> to indent.
             </p>
             <textarea
               value={notes}
@@ -301,13 +302,13 @@ export function MeetingNoteModal({
               onKeyDown={smartNotes.onKeyDown}
               rows={10}
               placeholder="Meeting notes…"
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-accent resize-y font-mono"
+              className="w-full bg-m-surface border border-m-border rounded-lg px-3 py-2 text-sm text-m-fg focus:outline-none focus:border-accent resize-y font-mono"
             />
           </label>
 
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
-              Decisions <span className="text-zinc-600">(optional)</span>
+            <span className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
+              Decisions <span className="text-m-fg-dim">(optional)</span>
             </span>
             <textarea
               value={decisions}
@@ -317,14 +318,14 @@ export function MeetingNoteModal({
               }}
               rows={3}
               placeholder="One decision per line…"
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-accent resize-y"
+              className="w-full bg-m-surface border border-m-border rounded-lg px-3 py-2 text-sm text-m-fg focus:outline-none focus:border-accent resize-y"
             />
           </label>
         </div>
 
-        <footer className="flex items-center justify-between px-6 py-4 border-t border-zinc-900">
-          <span className="text-[10px] text-zinc-600">
-            <kbd className="px-1 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-zinc-400 font-mono text-[9px]">
+        <footer className="flex items-center justify-between px-6 py-4 border-t border-m-border-subtle">
+          <span className="text-[10px] text-m-fg-dim">
+            <kbd className="px-1 py-0.5 rounded border border-m-border bg-m-surface text-m-fg-tertiary font-mono text-[9px]">
               ⌘ Enter
             </kbd>{' '}
             to save
@@ -332,7 +333,7 @@ export function MeetingNoteModal({
           <div className="flex gap-2">
             <button
               onClick={handleClose}
-              className="px-4 py-2 rounded-md border border-zinc-800 text-sm hover:bg-zinc-900 transition"
+              className="px-4 py-2 rounded-md border border-m-border text-sm hover:bg-m-surface-hover transition"
             >
               Cancel
             </button>
@@ -346,6 +347,7 @@ export function MeetingNoteModal({
           </div>
         </footer>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

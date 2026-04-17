@@ -20,6 +20,7 @@ import type {
   BrandStakeholder,
   BrandMeeting,
   BrandActionItem,
+  SyncConfig,
 } from '@momentum/shared';
 
 type DbTask = InferSelectModel<typeof tasks>;
@@ -97,6 +98,7 @@ export function mapBrand(row: DbBrand): Brand {
     goals: row.goals,
     successDefinition: row.successDefinition,
     customFields: (row.customFields ?? {}) as Record<string, unknown>,
+    syncConfig: (row.syncConfig as SyncConfig) ?? null,
     status: row.status,
     importError: row.importError,
     importedFrom: row.importedFrom,
@@ -112,6 +114,7 @@ export function mapBrandStakeholder(row: DbBrandStakeholder): BrandStakeholder {
     brandId: row.brandId,
     userId: row.userId,
     name: row.name,
+    email: row.email,
     role: row.role,
     notes: row.notes,
     createdAt: isoNonNull(row.createdAt),
@@ -129,11 +132,14 @@ export function mapBrandMeeting(row: DbBrandMeeting): BrandMeeting {
     summary: row.summary,
     rawNotes: row.rawNotes,
     decisions: row.decisions ?? [],
+    source: row.source,
+    externalMeetingId: row.externalMeetingId,
+    recordingUrl: row.recordingUrl,
     createdAt: isoNonNull(row.createdAt),
   };
 }
 
-export function mapBrandActionItem(row: DbBrandActionItem): BrandActionItem {
+export function mapBrandActionItem(row: DbBrandActionItem & { meetingDate?: string | null }): BrandActionItem {
   return {
     id: row.id,
     brandId: row.brandId,
@@ -144,6 +150,7 @@ export function mapBrandActionItem(row: DbBrandActionItem): BrandActionItem {
     owner: row.owner,
     dueDate: row.dueDate,
     linkedTaskId: row.linkedTaskId,
+    meetingDate: row.meetingDate ?? null,
     createdAt: isoNonNull(row.createdAt),
     completedAt: iso(row.completedAt),
   };

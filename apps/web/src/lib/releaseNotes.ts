@@ -25,6 +25,90 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.5.0',
+    date: '2026-04-16',
+    headline: 'Brand detail view redesigned with tabbed layout',
+    summary:
+      'The brand detail page now uses a clean tabbed interface — Overview for the health snapshot, stakeholders, and goals; Action Items & Meetings for the working area. Better typography, spacing, and contrast throughout.',
+    items: [
+      {
+        title: 'Tabbed Brand View',
+        description:
+          'The brand detail page is now split into an Overview tab and an Action Items & Meetings tab, eliminating the need to scroll through collapsed sections. Switch between them with a click or keyboard shortcuts.',
+        shortcuts: ['1', '2'],
+        howTo: 'Open any brand and use the tab bar below the header, or press 1 for Overview and 2 for Action Items & Meetings.',
+      },
+      {
+        title: 'Stakeholder Cards',
+        description:
+          'Stakeholders are now displayed as a visual grid of cards showing name, role, and email — much easier to scan than the previous inline list.',
+      },
+      {
+        title: 'Improved Readability',
+        description:
+          'All section labels, body text, and metadata have been bumped up in size and contrast for a more comfortable reading experience. No more squinting at 10px labels.',
+      },
+    ],
+  },
+  {
+    version: '0.4.1',
+    date: '2026-04-16',
+    headline: 'Smarter recording sync — no more duplicate action items',
+    summary:
+      'When syncing meeting recordings, extracted action items are now compared against your existing action items using AI. Duplicates are automatically skipped, and similar items are merged with updated details.',
+    items: [
+      {
+        title: 'Action Item Deduplication',
+        description:
+          'During recording sync, Momentum uses an LLM to compare each extracted action item against your existing open items. Items that are essentially the same are skipped, items with new details are merged into the existing entry, and genuinely new items are created as before.',
+        howTo:
+          'Just sync recordings as usual — deduplication happens automatically. You\'ll see fewer duplicate action items after importing multiple recordings.',
+      },
+    ],
+  },
+  {
+    version: '0.4.0',
+    date: '2026-04-15',
+    headline: 'Meeting Recording Sync — pull transcripts into your brand notes',
+    summary:
+      'Sync meeting recordings into Momentum. Transcripts are automatically processed to extract summaries, action items, and decisions — all linked to the right brand.',
+    items: [
+      {
+        title: 'Sync Recordings',
+        description:
+          'Click "Sync Recordings" on any brand to search your meeting recordings. Momentum scores each recording against your matching rules and shows likely and possible matches for you to review before importing.',
+        shortcuts: ['s'],
+        howTo:
+          'Open a brand, click "Sync Recordings" or press s. Review the candidates, check the ones you want, and hit "Sync Selected".',
+      },
+      {
+        title: 'Matching Rules',
+        description:
+          'Configure per-brand matching rules to control which recordings are surfaced. Match by stakeholder email, title keywords, meeting type, and sync window. Click the gear icon on a brand to configure.',
+      },
+      {
+        title: 'AI-Powered Extraction',
+        description:
+          'Synced recordings are processed to extract a concise summary, action items with owners, and key decisions. Action items are automatically added to the brand.',
+      },
+      {
+        title: 'Recording Links',
+        description:
+          'Meeting notes synced from recordings show a "Recording" link that opens the playback in a new tab.',
+      },
+      {
+        title: 'Same-Day Merge',
+        description:
+          'If you already have manual notes for a day and sync a recording from that same day, the content is merged into one unified note — no duplicates.',
+      },
+      {
+        title: 'Stakeholder Emails',
+        description:
+          'Stakeholders now support an email field. Adding emails to stakeholders improves recording matching accuracy.',
+      },
+    ],
+  },
+  {
     version: '0.3.0',
     date: '2026-04-15',
     headline: 'Brands — client management meets daily execution',

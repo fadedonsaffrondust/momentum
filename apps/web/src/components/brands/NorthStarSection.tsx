@@ -23,11 +23,11 @@ export function NorthStarSection({ brand, stakeholders }: Props) {
         className="flex items-center gap-2 w-full text-left group"
       >
         {collapsed ? (
-          <ChevronRight size={14} className="text-zinc-600" />
+          <ChevronRight size={14} className="text-m-fg-dim" />
         ) : (
-          <ChevronDown size={14} className="text-zinc-600" />
+          <ChevronDown size={14} className="text-m-fg-dim" />
         )}
-        <h2 className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold group-hover:text-zinc-300 transition">
+        <h2 className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold group-hover:text-m-fg-secondary transition">
           North Star
         </h2>
       </button>
@@ -91,7 +91,7 @@ function EditableTextField({
   return (
     <label className="block">
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
+        <span className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
           {label}
         </span>
         {saved && <Check size={12} className="text-emerald-500" />}
@@ -102,7 +102,7 @@ function EditableTextField({
         onBlur={commit}
         rows={3}
         placeholder={`Add ${label.toLowerCase()}…`}
-        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-accent resize-none placeholder:text-zinc-700"
+        className="w-full bg-m-bg border border-m-border rounded-lg px-3 py-2 text-sm text-m-fg-strong focus:outline-none focus:border-accent resize-none placeholder:text-m-fg-dim"
       />
     </label>
   );
@@ -121,9 +121,11 @@ function StakeholdersList({
   const [adding, setAdding] = useState(false);
   const [draftName, setDraftName] = useState('');
   const [draftRole, setDraftRole] = useState('');
+  const [draftEmail, setDraftEmail] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editRole, setEditRole] = useState('');
+  const [editEmail, setEditEmail] = useState('');
   const addInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -137,11 +139,12 @@ function StakeholdersList({
       return;
     }
     createStakeholder.mutate(
-      { name, role: draftRole.trim() || null },
+      { name, role: draftRole.trim() || null, email: draftEmail.trim() || null },
       {
         onSuccess: () => {
           setDraftName('');
           setDraftRole('');
+          setDraftEmail('');
           setAdding(false);
         },
       },
@@ -152,6 +155,7 @@ function StakeholdersList({
     setEditingId(s.id);
     setEditName(s.name);
     setEditRole(s.role ?? '');
+    setEditEmail(s.email ?? '');
   };
 
   const commitEdit = (id: string) => {
@@ -161,7 +165,7 @@ function StakeholdersList({
       return;
     }
     updateStakeholder.mutate(
-      { id, name, role: editRole.trim() || null },
+      { id, name, role: editRole.trim() || null, email: editEmail.trim() || null },
       { onSuccess: () => setEditingId(null) },
     );
   };
@@ -169,20 +173,20 @@ function StakeholdersList({
   return (
     <div>
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">
+        <span className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
           Key Stakeholders
         </span>
-        <span className="text-[10px] text-zinc-600">({stakeholders.length})</span>
+        <span className="text-[10px] text-m-fg-dim">({stakeholders.length})</span>
       </div>
 
       <ul className="space-y-1">
         {stakeholders.map((s) => (
           <li
             key={s.id}
-            className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-zinc-900/40 transition text-sm"
+            className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-m-surface-40 transition text-sm"
           >
             {editingId === s.id ? (
-              <div className="flex-1 flex gap-2">
+              <div className="flex-1 flex gap-2 flex-wrap">
                 <input
                   autoFocus
                   type="text"
@@ -192,7 +196,7 @@ function StakeholdersList({
                     if (e.key === 'Enter') commitEdit(s.id);
                     if (e.key === 'Escape') setEditingId(null);
                   }}
-                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-xs focus:outline-none focus:border-accent"
+                  className="flex-1 min-w-[80px] bg-m-bg border border-m-border rounded px-2 py-1 text-xs focus:outline-none focus:border-accent"
                   placeholder="Name"
                 />
                 <input
@@ -203,26 +207,42 @@ function StakeholdersList({
                     if (e.key === 'Enter') commitEdit(s.id);
                     if (e.key === 'Escape') setEditingId(null);
                   }}
-                  onBlur={() => commitEdit(s.id)}
-                  className="w-28 bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-xs focus:outline-none focus:border-accent"
+                  className="w-24 bg-m-bg border border-m-border rounded px-2 py-1 text-xs focus:outline-none focus:border-accent"
                   placeholder="Role"
+                />
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') commitEdit(s.id);
+                    if (e.key === 'Escape') setEditingId(null);
+                  }}
+                  onBlur={() => commitEdit(s.id)}
+                  className="w-40 bg-m-bg border border-m-border rounded px-2 py-1 text-xs focus:outline-none focus:border-accent"
+                  placeholder="Email"
                 />
               </div>
             ) : (
               <>
-                <span className="flex-1 text-zinc-200">{s.name}</span>
-                {s.role && <span className="text-xs text-zinc-500">{s.role}</span>}
+                <span className="flex-1 text-m-fg-strong">
+                  {s.name}
+                  {s.email && (
+                    <span className="ml-2 text-xs text-m-fg-dim">{s.email}</span>
+                  )}
+                </span>
+                {s.role && <span className="text-xs text-m-fg-muted">{s.role}</span>}
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
                   <button
                     onClick={() => startEdit(s)}
-                    className="p-0.5 text-zinc-600 hover:text-zinc-200"
+                    className="p-0.5 text-m-fg-dim hover:text-m-fg-strong"
                     title="Edit"
                   >
                     <Pencil size={12} />
                   </button>
                   <button
                     onClick={() => deleteStakeholder.mutate(s.id)}
-                    className="p-0.5 text-zinc-600 hover:text-red-400"
+                    className="p-0.5 text-m-fg-dim hover:text-red-400"
                     title="Remove"
                   >
                     <Trash2 size={12} />
@@ -235,7 +255,7 @@ function StakeholdersList({
       </ul>
 
       {adding ? (
-        <div className="flex gap-2 mt-2">
+        <div className="flex gap-2 mt-2 flex-wrap">
           <input
             ref={addInputRef}
             type="text"
@@ -245,7 +265,7 @@ function StakeholdersList({
               if (e.key === 'Enter') submitNew();
               if (e.key === 'Escape') setAdding(false);
             }}
-            className="flex-1 bg-zinc-950 border border-zinc-800 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-accent"
+            className="flex-1 min-w-[80px] bg-m-bg border border-m-border rounded px-2 py-1.5 text-xs focus:outline-none focus:border-accent"
             placeholder="Name"
           />
           <input
@@ -256,15 +276,26 @@ function StakeholdersList({
               if (e.key === 'Enter') submitNew();
               if (e.key === 'Escape') setAdding(false);
             }}
+            className="w-24 bg-m-bg border border-m-border rounded px-2 py-1.5 text-xs focus:outline-none focus:border-accent"
+            placeholder="Role"
+          />
+          <input
+            type="email"
+            value={draftEmail}
+            onChange={(e) => setDraftEmail(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') submitNew();
+              if (e.key === 'Escape') setAdding(false);
+            }}
             onBlur={submitNew}
-            className="w-28 bg-zinc-950 border border-zinc-800 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-accent"
-            placeholder="Role (optional)"
+            className="w-40 bg-m-bg border border-m-border rounded px-2 py-1.5 text-xs focus:outline-none focus:border-accent"
+            placeholder="Email"
           />
         </div>
       ) : (
         <button
           onClick={() => setAdding(true)}
-          className="mt-2 flex items-center gap-1 text-xs text-zinc-500 hover:text-accent transition"
+          className="mt-2 flex items-center gap-1 text-xs text-m-fg-muted hover:text-accent transition"
         >
           <Plus size={12} /> Add stakeholder
         </button>

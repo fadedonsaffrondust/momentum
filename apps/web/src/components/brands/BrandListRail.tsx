@@ -30,21 +30,21 @@ export function BrandListRail({
   }, [brands, search]);
 
   return (
-    <aside className="w-[280px] shrink-0 border-r border-zinc-900 flex flex-col h-full bg-zinc-950/60">
-      <div className="p-3 border-b border-zinc-900">
+    <aside className="w-[280px] shrink-0 border-r border-m-border-subtle flex flex-col h-full bg-m-bg-60">
+      <div className="p-3 border-b border-m-border-subtle">
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search brands…"
           data-task-input="true"
-          className="w-full px-3 py-2 bg-zinc-900/60 border border-zinc-800 rounded-md text-sm focus:outline-none focus:border-accent text-zinc-100 placeholder:text-zinc-600"
+          className="w-full px-3 py-2 bg-m-surface-60 border border-m-border rounded-md text-sm focus:outline-none focus:border-accent text-m-fg placeholder:text-m-fg-dim"
         />
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
         {filtered.length === 0 && (
-          <p className="text-xs text-zinc-600 text-center py-8">
+          <p className="text-xs text-m-fg-dim text-center py-8">
             {search ? 'No brands match.' : 'No brands yet.'}
           </p>
         )}
@@ -60,7 +60,7 @@ export function BrandListRail({
         ))}
       </div>
 
-      <div className="p-3 border-t border-zinc-900 space-y-2">
+      <div className="p-3 border-t border-m-border-subtle space-y-2">
         <button
           onClick={onNewBrand}
           className="w-full py-2 rounded-md bg-accent hover:bg-accent-hover text-sm transition"
@@ -69,7 +69,7 @@ export function BrandListRail({
         </button>
         <button
           onClick={onImport}
-          className="w-full py-2 rounded-md border border-zinc-800 text-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900 transition"
+          className="w-full py-2 rounded-md border border-m-border text-xs text-m-fg-muted hover:text-m-fg-strong hover:bg-m-surface-hover transition"
         >
           Import from file
         </button>

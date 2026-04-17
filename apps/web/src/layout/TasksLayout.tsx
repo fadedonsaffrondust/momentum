@@ -16,8 +16,8 @@ function Tab({ to, label, end }: TabProps) {
         clsx(
           'relative px-4 py-2 text-sm rounded-md transition',
           isActive
-            ? 'text-zinc-100'
-            : 'text-zinc-500 hover:text-zinc-200',
+            ? 'text-m-fg'
+            : 'text-m-fg-muted hover:text-m-fg-strong',
         )
       }
     >
@@ -36,8 +36,8 @@ function Tab({ to, label, end }: TabProps) {
 export function TasksLayout() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <div className="px-6 pt-4 pb-3 border-b border-zinc-900 flex items-center gap-1">
-        <h1 className="text-xs uppercase tracking-widest text-zinc-600 font-semibold mr-3">
+      <div className="px-6 pt-4 pb-3 border-b border-m-border-subtle flex items-center gap-1">
+        <h1 className="text-xs uppercase tracking-widest text-m-fg-dim font-semibold mr-3">
           Tasks
         </h1>
         <Tab to="/" label="Today" end />

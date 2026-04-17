@@ -85,9 +85,22 @@ const SECTIONS: Section[] = [
     title: 'Brands',
     description: 'On the Brands detail view.',
     rows: [
+      { keys: ['1'], label: 'Overview tab' },
+      { keys: ['2'], label: 'Action Items & Meetings tab' },
+      { keys: ['s'], label: 'Sync recordings' },
       { keys: ['n'], label: 'New meeting note' },
       { keys: ['a'], label: 'New action item' },
       { keys: ['Esc'], label: 'Back to brand list' },
+    ],
+  },
+  {
+    title: 'Sync Review',
+    description: 'Inside the recording sync review modal.',
+    rows: [
+      { keys: ['j', '/', 'k'], label: 'Navigate candidates' },
+      { keys: ['Enter'], label: 'Toggle selection' },
+      { keys: ['⌘', 'Enter'], label: 'Confirm and sync' },
+      { keys: ['Esc'], label: 'Close without syncing' },
     ],
   },
 ];
@@ -105,38 +118,38 @@ export function ShortcutsModal() {
         if (e.target === e.currentTarget) close();
       }}
     >
-      <div className="relative w-full max-w-3xl max-h-[85vh] rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl animate-scaleIn overflow-hidden">
+      <div className="relative w-full max-w-3xl max-h-[85vh] rounded-2xl border border-m-border bg-m-bg shadow-2xl animate-scaleIn overflow-hidden">
         {/* accent glow */}
         <div
           aria-hidden
           className="pointer-events-none absolute -top-24 -left-24 w-72 h-72 rounded-full blur-3xl opacity-30"
           style={{
-            background: 'radial-gradient(circle, #4F8EF7 0%, transparent 70%)',
+            background: 'radial-gradient(circle, var(--m-glow-accent) 0%, transparent 70%)',
           }}
         />
         <div
           aria-hidden
           className="pointer-events-none absolute -bottom-24 -right-24 w-72 h-72 rounded-full blur-3xl opacity-20"
           style={{
-            background: 'radial-gradient(circle, #B184F7 0%, transparent 70%)',
+            background: 'radial-gradient(circle, var(--m-glow-secondary) 0%, transparent 70%)',
           }}
         />
 
-        <header className="relative flex items-start justify-between px-6 pt-6 pb-5 border-b border-zinc-900">
+        <header className="relative flex items-start justify-between px-6 pt-6 pb-5 border-b border-m-border-subtle">
           <div>
             <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full border border-accent/40 text-[10px] uppercase tracking-widest text-accent mb-2">
               <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
               Keyboard-first
             </div>
-            <h2 className="text-xl font-semibold text-zinc-100">Shortcuts</h2>
-            <p className="text-xs text-zinc-500 mt-1">
+            <h2 className="text-xl font-semibold text-m-fg">Shortcuts</h2>
+            <p className="text-xs text-m-fg-muted mt-1">
               Press{' '}
               <Kbd subtle>?</Kbd> anywhere to reopen this. Press <Kbd subtle>Esc</Kbd> to close.
             </p>
           </div>
           <button
             onClick={close}
-            className="text-zinc-500 hover:text-zinc-100 transition"
+            className="text-m-fg-muted hover:text-m-fg transition"
             aria-label="Close"
           >
             ✕
@@ -151,17 +164,17 @@ export function ShortcutsModal() {
                 className="animate-slideUp"
                 style={{ animationDelay: `${80 + sectionIdx * 60}ms` }}
               >
-                <h3 className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">
+                <h3 className="text-xs uppercase tracking-widest text-m-fg-tertiary font-semibold">
                   {section.title}
                 </h3>
-                <p className="text-xs text-zinc-600 mt-0.5 mb-3">{section.description}</p>
+                <p className="text-xs text-m-fg-dim mt-0.5 mb-3">{section.description}</p>
                 <ul className="space-y-2">
                   {section.rows.map((row) => (
                     <li
                       key={row.label}
                       className="flex items-center justify-between gap-4 text-sm"
                     >
-                      <span className="text-zinc-400">{row.label}</span>
+                      <span className="text-m-fg-tertiary">{row.label}</span>
                       <span className="flex items-center gap-1 shrink-0">
                         {row.keys.map((k, i) => (
                           <Kbd key={i}>{k}</Kbd>
@@ -184,8 +197,8 @@ function Kbd({ children, subtle = false }: { children: React.ReactNode; subtle?:
     <kbd
       className={
         subtle
-          ? 'inline-flex items-center justify-center min-w-[1.4rem] h-5 px-1.5 rounded border border-zinc-800 bg-zinc-900 text-[10px] font-mono text-zinc-400'
-          : 'inline-flex items-center justify-center min-w-[1.6rem] h-6 px-1.5 rounded-md border border-zinc-700 bg-gradient-to-b from-zinc-800 to-zinc-900 text-[11px] font-mono text-zinc-100 shadow-[inset_0_-1px_0_rgba(0,0,0,0.4),0_1px_0_rgba(255,255,255,0.05)]'
+          ? 'inline-flex items-center justify-center min-w-[1.4rem] h-5 px-1.5 rounded border border-m-border bg-m-surface text-[10px] font-mono text-m-fg-tertiary'
+          : 'inline-flex items-center justify-center min-w-[1.6rem] h-6 px-1.5 rounded-md border border-m-border-strong bg-gradient-to-b from-[var(--m-kbd-from)] to-[var(--m-kbd-to)] text-[11px] font-mono text-m-fg shadow-[inset_0_-1px_0_rgba(0,0,0,0.2),0_1px_0_rgba(255,255,255,0.05)]'
       }
     >
       {children}
