@@ -105,7 +105,7 @@ export function BrandDetailView({ brandId }: Props) {
 
   if (!brand) {
     return (
-      <div className="h-full flex items-center justify-center text-m-fg-muted text-sm">
+      <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
         Loading…
       </div>
     );
@@ -147,12 +147,12 @@ export function BrandDetailView({ brandId }: Props) {
             });
           },
           onError: () => {
-            pushToast({ kind: 'error', message: 'Failed to push changes to Google Sheets', durationMs: 4000 });
+            pushToast({ kind: 'error', message: 'Failed to push feature-request changes to the external sheet', durationMs: 4000 });
           },
         });
       },
       onError: () => {
-        pushToast({ kind: 'error', message: 'Failed to pull from Google Sheets', durationMs: 4000 });
+        pushToast({ kind: 'error', message: 'Failed to pull updates from the external sheet', durationMs: 4000 });
       },
     });
   };

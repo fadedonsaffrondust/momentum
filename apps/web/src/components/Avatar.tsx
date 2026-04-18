@@ -42,9 +42,9 @@ export function Avatar({ user, size = 'sm', showTooltip = true, onClick, classNa
     'inline-flex items-center justify-center rounded-full font-mono font-semibold select-none shrink-0',
     SIZE_CLASSES[size],
     deactivated
-      ? 'bg-m-surface-raised text-m-fg-muted opacity-60'
+      ? 'bg-secondary text-muted-foreground opacity-60'
       : '',
-    onClick ? 'cursor-pointer hover:ring-2 hover:ring-accent/40 transition' : '',
+    onClick ? 'cursor-pointer hover:ring-2 hover:ring-primary/40 transition' : '',
     className,
   );
 
@@ -80,7 +80,7 @@ export function Avatar({ user, size = 'sm', showTooltip = true, onClick, classNa
 const SIZE_CLASSES: Record<AvatarSize, string> = {
   xs: 'w-4 h-4 text-[8px]',
   sm: 'w-5 h-5 text-[9px]',
-  md: 'w-8 h-8 text-[11px]',
+  md: 'w-8 h-8 text-2xs',
 };
 
 /**

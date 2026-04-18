@@ -19,7 +19,7 @@ export function HealthPill({ status, showLabel = false }: Props) {
       <span
         className={clsx('inline-block w-2 h-2 rounded-full shadow-sm', cfg.color, cfg.glow)}
       />
-      {showLabel && <span className="text-xs text-m-fg-secondary">{cfg.label}</span>}
+      {showLabel && <span className="text-xs text-foreground">{cfg.label}</span>}
     </span>
   );
 }

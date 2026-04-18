@@ -33,7 +33,7 @@ export function RecentActivitySection({ brandId, onOpenActionItems, onOpenMeetin
 
   if (eventsQ.isLoading) {
     return (
-      <div className="text-xs text-m-fg-muted px-1 py-2">Loading activity…</div>
+      <div className="text-xs text-muted-foreground px-1 py-2">Loading activity…</div>
     );
   }
 
@@ -45,11 +45,11 @@ export function RecentActivitySection({ brandId, onOpenActionItems, onOpenMeetin
     <div>
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-m-fg-secondary font-semibold hover:text-m-fg-strong transition"
+        className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-foreground font-semibold hover:text-foreground transition"
       >
         {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         Recent activity
-        <span className="text-m-fg-muted normal-case tracking-normal font-normal">
+        <span className="text-muted-foreground normal-case tracking-normal font-normal">
           ({events.length})
         </span>
       </button>
@@ -68,7 +68,7 @@ export function RecentActivitySection({ brandId, onOpenActionItems, onOpenMeetin
             <li>
               <button
                 onClick={() => setShowAll(true)}
-                className="text-xs text-accent hover:underline pl-7"
+                className="text-xs text-primary hover:underline pl-7"
               >
                 Show {hiddenCount} more
               </button>
@@ -113,17 +113,17 @@ function ActivityRow({
         disabled={!clickable}
         className={
           clickable
-            ? 'w-full text-left flex items-start gap-2.5 rounded-md px-2 py-1.5 hover:bg-m-surface-60 transition cursor-pointer'
+            ? 'w-full text-left flex items-start gap-2.5 rounded-md px-2 py-1.5 hover:bg-card/60 transition cursor-pointer'
             : 'w-full text-left flex items-start gap-2.5 rounded-md px-2 py-1.5 cursor-default'
         }
       >
         <Avatar user={event.actor} size="sm" showTooltip={false} className="mt-0.5" />
         <div className="flex-1 min-w-0 text-sm">
-          <div className="text-m-fg-secondary leading-snug break-words">
-            <span className="text-m-fg-strong">{event.actor.displayName || event.actor.email}</span>{' '}
+          <div className="text-foreground leading-snug break-words">
+            <span className="text-foreground">{event.actor.displayName || event.actor.email}</span>{' '}
             {description}
           </div>
-          <div className="text-[10px] text-m-fg-dim mt-0.5">
+          <div className="text-[10px] text-muted-foreground/70 mt-0.5">
             {formatTimeAgo(event.createdAt)}
           </div>
         </div>

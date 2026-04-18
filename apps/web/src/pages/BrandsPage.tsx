@@ -131,11 +131,11 @@ export function BrandsPage() {
         {!selectedBrandId && (
           <div className="h-full flex flex-col items-center justify-center text-center">
             <div className="relative mb-6">
-              <div className="w-16 h-16 rounded-2xl border-2 border-dashed border-m-border flex items-center justify-center">
-                <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/30" />
+              <div className="w-16 h-16 rounded-2xl border-2 border-dashed border-border flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/30" />
               </div>
             </div>
-            <p className="text-sm text-m-fg-muted">
+            <p className="text-sm text-muted-foreground">
               Select a brand or create a new one.
             </p>
           </div>

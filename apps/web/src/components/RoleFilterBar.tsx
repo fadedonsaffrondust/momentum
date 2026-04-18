@@ -16,8 +16,8 @@ export function RoleFilterBar() {
         className={clsx(
           'px-3 py-1 rounded-full text-xs border transition',
           roleFilter === null
-            ? 'border-accent text-accent bg-accent/10'
-            : 'border-m-border text-m-fg-muted hover:text-m-fg-secondary',
+            ? 'border-primary text-primary bg-primary/10'
+            : 'border-border text-muted-foreground hover:text-foreground',
         )}
       >
         All
@@ -31,10 +31,10 @@ export function RoleFilterBar() {
             onClick={() => setRoleFilter(active ? null : r.id)}
             className={clsx(
               'px-3 py-1 rounded-full text-xs border transition',
-              active ? 'text-m-fg' : 'text-m-fg-tertiary hover:text-m-fg',
+              active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
             )}
             style={{
-              borderColor: active ? r.color : 'var(--m-border)',
+              borderColor: active ? r.color : 'hsl(var(--border))',
               backgroundColor: active ? r.color + '22' : 'transparent',
             }}
           >

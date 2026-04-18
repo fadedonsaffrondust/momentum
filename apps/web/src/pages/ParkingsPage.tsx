@@ -73,8 +73,8 @@ export function ParkingsPage() {
   return (
     <div className="h-full flex flex-col gap-4 px-6 py-5 overflow-hidden">
       <div>
-        <h1 className="text-lg text-accent">Parkings</h1>
-        <p className="text-xs text-m-fg-muted mt-0.5">
+        <h1 className="text-lg text-primary">Parkings</h1>
+        <p className="text-xs text-muted-foreground mt-0.5">
           Topics to bring up at upcoming dailies.
         </p>
       </div>
@@ -87,13 +87,16 @@ export function ParkingsPage() {
       <div className="flex-1 min-h-0 overflow-y-auto pr-2">
         <div className="max-w-3xl space-y-6">
           {groups.length === 0 && (
-            <p className="text-sm text-m-fg-muted py-8 text-center">
-              Nothing parked. Type above to capture a topic for the next daily.
-            </p>
+            <div className="flex flex-col items-center gap-1 py-12 text-center">
+              <p className="text-sm text-muted-foreground">Nothing parked.</p>
+              <p className="text-2xs text-muted-foreground/70">
+                Press <kbd className="font-mono">/</kbd> or <kbd className="font-mono">n</kbd> to capture a topic for the next daily.
+              </p>
+            </div>
           )}
           {groups.map((group) => (
             <section key={group.key}>
-              <h2 className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold mb-2">
+              <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
                 {group.label} · {group.items.length}
               </h2>
               <ul className="space-y-2">

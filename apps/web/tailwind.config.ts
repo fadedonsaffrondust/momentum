@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import tailwindcssAnimate from 'tailwindcss-animate';
 
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
@@ -6,36 +7,99 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        sans: [
+          '"Geist Variable"',
+          '"Geist"',
+          'Inter',
+          'ui-sans-serif',
+          'system-ui',
+          '-apple-system',
+          'sans-serif',
+        ],
+        mono: [
+          '"Geist Mono Variable"',
+          '"Geist Mono"',
+          '"JetBrains Mono"',
+          'ui-monospace',
+          'SFMono-Regular',
+          'Menlo',
+          'monospace',
+        ],
+      },
+      fontSize: {
+        '2xs': ['11px', { lineHeight: '16px' }],
+        xs: ['12px', { lineHeight: '18px' }],
+        sm: ['13px', { lineHeight: '20px' }],
+        base: ['14px', { lineHeight: '22px' }],
+        lg: ['16px', { lineHeight: '24px' }],
+        xl: ['20px', { lineHeight: '28px' }],
+        '2xl': ['24px', { lineHeight: '32px' }],
+      },
+      borderRadius: {
+        sm: '3px',
+        DEFAULT: '6px',
+        md: '8px',
+      },
+      boxShadow: {
+        xs: '0 1px 2px rgba(0, 0, 0, 0.08)',
+        sm: '0 2px 4px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08)',
+        md: '0 8px 24px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.08)',
+      },
+      transitionDuration: {
+        100: '100ms',
+        150: '150ms',
+        200: '200ms',
       },
       colors: {
-        // accent.* utilities are declared manually in src/index.css @layer utilities
-        // so they can resolve to theme-aware CSS variables (see Tailwind JIT
-        // CSS-variable color bug — m-* utilities follow the same pattern).
-        m: {
-          bg: 'var(--m-bg)',
-          'bg-60': 'var(--m-bg-60)',
-          'bg-30': 'var(--m-bg-30)',
-          surface: 'var(--m-surface)',
-          'surface-95': 'var(--m-surface-95)',
-          'surface-60': 'var(--m-surface-60)',
-          'surface-50': 'var(--m-surface-50)',
-          'surface-40': 'var(--m-surface-40)',
-          'surface-hover': 'var(--m-surface-hover)',
-          'surface-raised': 'var(--m-surface-raised)',
-          fg: 'var(--m-fg)',
-          'fg-strong': 'var(--m-fg-strong)',
-          'fg-secondary': 'var(--m-fg-secondary)',
-          'fg-tertiary': 'var(--m-fg-tertiary)',
-          'fg-muted': 'var(--m-fg-muted)',
-          'fg-dim': 'var(--m-fg-dim)',
-          border: 'var(--m-border)',
-          'border-strong': 'var(--m-border-strong)',
-          'border-subtle': 'var(--m-border-subtle)',
-          overlay: 'var(--m-overlay)',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
         },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
+        },
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
+        },
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+      },
+      keyframes: {
+        'accordion-down': {
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
+        },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
+        },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 150ms ease-out',
+        'accordion-up': 'accordion-up 150ms ease-in',
       },
     },
   },
-  plugins: [],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

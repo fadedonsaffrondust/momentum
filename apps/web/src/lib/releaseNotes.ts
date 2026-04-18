@@ -25,6 +25,69 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.9.0',
+    date: '2026-04-17',
+    headline: 'Every surface now runs on the new design tokens',
+    summary:
+      'The rest of the app has caught up to the new tokens: Today, Backlog, Brands, Feature Requests, Meeting notes, Team, Inbox, Parkings, Settings, and every modal now render through the shadcn-based color system. Dark and light modes are contrast-checked across the board. Empty states on the Today columns got a small upgrade telling you exactly which key to press.',
+    items: [
+      {
+        title: 'Consistent tokens across the whole app',
+        description:
+          'Every surface now reads from the same shadcn-compatible semantic tokens (background / foreground / primary / secondary / muted / border / ring). Light and dark themes switch as a single operation. If you noticed subtle visual drift between surfaces before, that\'s gone.',
+      },
+      {
+        title: 'Today columns tell you what to press',
+        description:
+          'Empty columns now show a purposeful empty state: "No tasks up next. Press / or n to add one." Same treatment on In Progress and Done. The shortcut hint is rendered as actual keycaps so it\'s easy to spot.',
+        shortcuts: ['/', 'n'],
+      },
+      {
+        title: 'Context-aware commands on Today',
+        description:
+          'Opening the command palette on Today or Backlog now surfaces "New task" and "Show everyone\'s tasks / Show only my tasks" in a new Today section. More surfaces will register their own commands as they get deeper rebuilds.',
+        shortcuts: ['Cmd', 'K'],
+      },
+    ],
+  },
+  {
+    version: '0.8.0',
+    date: '2026-04-17',
+    headline: 'New shell, new command palette, better keyboard discovery',
+    summary:
+      'The first visible phase of the frontend overhaul lands: Momentum now runs on Geist Sans for UI chrome, the sidebar shows hover tooltips with keyboard hints, the command palette got a big upgrade with icons, descriptions, shortcut hints, context awareness, and a "Recent" section, and a global `n` shortcut creates a new thing wherever you are.',
+    items: [
+      {
+        title: 'New typography and shell',
+        description:
+          'The app shell and navigation rail now use Geist Sans for UI text; mono is reserved for keycaps, counters, and IDs. Dark and light themes both shipped with refreshed tokens. Existing surfaces keep their current style until they\'re rebuilt one by one in later phases.',
+      },
+      {
+        title: 'Command palette — now worth opening',
+        description:
+          'Every command has a lucide icon, a short description, and its keyboard shortcut rendered as keycaps. Commands are grouped by section (Daily, Navigate, Data, Preferences, Help). A "Recent" row at the top remembers your last few picks across sessions. Surfaces can register their own commands as they get rebuilt, and context-specific ones will start showing up on the relevant routes.',
+        shortcuts: ['Cmd', 'K'],
+        howTo: 'Press Cmd+K from anywhere, type what you want, and hit Enter.',
+      },
+      {
+        title: 'Sidebar tooltips show the shortcut',
+        description:
+          'Hovering any nav item reveals a tooltip with the item label and its keyboard chord — e.g. Inbox → "g i", Shortcuts → "?". No more hunting through the Shortcuts modal to learn bindings.',
+      },
+      {
+        title: '`n` creates a new thing, everywhere',
+        description:
+          'Press `n` from any surface to create a new thing in context. On views with an input bar (Today, Backlog, Parkings), `n` focuses the input — same as `/`. On views without an input, `n` triggers the surface\'s "new" action (feature requests, for example). Typing `n` inside an input still works normally.',
+        shortcuts: ['n'],
+      },
+      {
+        title: 'Vendor-neutral copy across the app',
+        description:
+          'Toast messages, modal titles, hints, and release notes now use generic terms — "spreadsheet", "recording", "AI extraction" — instead of naming third-party services. The integration layer stays invisible.',
+      },
+    ],
+  },
+  {
     version: '0.7.0',
     date: '2026-04-17',
     headline: 'Momentum is now a team space',
@@ -157,9 +220,9 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   {
     version: '0.6.0',
     date: '2026-04-16',
-    headline: 'Feature Requests — Google Sheets two-way sync',
+    headline: 'Feature Requests — spreadsheet two-way sync',
     summary:
-      'Each brand now has a Feature Requests tab that syncs bidirectionally with a Google Spreadsheet. View, edit, and manage client feature requests directly from Momentum.',
+      'Each brand now has a Feature Requests tab that syncs bidirectionally with an external spreadsheet. View, edit, and manage client feature requests directly from Momentum.',
     items: [
       {
         title: 'Feature Requests Tab',
@@ -169,10 +232,10 @@ export const RELEASE_NOTES: ReleaseNote[] = [
         howTo: 'Open any brand and click the Feature Requests tab, or press 3 or f.',
       },
       {
-        title: 'Google Sheets Connection',
+        title: 'Spreadsheet connection',
         description:
-          'Connect a Google Sheet URL per brand. Momentum analyzes the column structure, optionally standardizes headers, and imports all existing rows. Changes sync both ways — edits in Momentum push to the sheet, and edits in the sheet pull into Momentum.',
-        howTo: 'Go to the Feature Requests tab and click "Connect Google Sheet", then paste the sheet URL.',
+          'Connect a spreadsheet URL per brand. Momentum analyzes the column structure, optionally standardizes headers, and imports all existing rows. Changes sync both ways — edits in Momentum push to the sheet, and edits in the sheet pull into Momentum.',
+        howTo: 'Go to the Feature Requests tab and click "Connect spreadsheet", then paste the URL.',
       },
       {
         title: 'Inline Editing',
@@ -314,7 +377,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       {
         title: 'AI-powered brand import',
         description:
-          'Upload a .md or .txt file of client notes and the server uses OpenAI to extract meetings, stakeholders, action items, goals, and success definition. Processing is async — you can keep working while it runs.',
+          'Upload a .md or .txt file of client notes and the server uses AI extraction to pull out meetings, stakeholders, action items, goals, and success definition. Processing is async — you can keep working while it runs.',
         howTo:
           'Click "Import from file" in the Brands sidebar, select a file, click Analyze. The brand appears in the list with an importing spinner and auto-navigates to the detail view when done.',
       },

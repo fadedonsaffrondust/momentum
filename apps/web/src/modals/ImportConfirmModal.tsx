@@ -12,7 +12,7 @@ export function ImportConfirmModal() {
   if (!pending) {
     return (
       <Modal title="Import data" onClose={close}>
-        <p className="text-sm text-m-fg-muted">No file selected.</p>
+        <p className="text-sm text-muted-foreground">No file selected.</p>
       </Modal>
     );
   }
@@ -38,13 +38,13 @@ export function ImportConfirmModal() {
 
   return (
     <Modal title="Import data" onClose={close}>
-      <div className="space-y-4 text-sm text-m-fg-secondary">
+      <div className="space-y-4 text-sm text-foreground">
         <p>
-          This file contains <span className="text-accent">{pending.tasks.length}</span> tasks,{' '}
-          <span className="text-accent">{pending.roles.length}</span> roles, and{' '}
-          <span className="text-accent">{pending.dailyLogs.length}</span> daily logs.
+          This file contains <span className="text-primary">{pending.tasks.length}</span> tasks,{' '}
+          <span className="text-primary">{pending.roles.length}</span> roles, and{' '}
+          <span className="text-primary">{pending.dailyLogs.length}</span> daily logs.
         </p>
-        <p className="text-xs text-m-fg-muted">
+        <p className="text-xs text-muted-foreground">
           Choose <strong>Replace</strong> to wipe your current data and load this file, or{' '}
           <strong>Merge</strong> to keep existing data and add new entries.
         </p>
@@ -52,14 +52,14 @@ export function ImportConfirmModal() {
         <div className="flex gap-2 pt-2">
           <button
             onClick={close}
-            className="flex-1 py-2 rounded-md border border-m-border text-sm hover:bg-m-surface-hover"
+            className="flex-1 py-2 rounded-md border border-border text-sm hover:bg-secondary"
           >
             Cancel
           </button>
           <button
             onClick={() => apply('merge')}
             disabled={importData.isPending}
-            className="flex-1 py-2 rounded-md border border-accent text-accent hover:bg-accent/10 disabled:opacity-50"
+            className="flex-1 py-2 rounded-md border border-primary text-primary hover:bg-primary/10 disabled:opacity-50"
           >
             Merge
           </button>

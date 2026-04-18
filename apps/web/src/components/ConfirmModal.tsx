@@ -72,15 +72,15 @@ export function ConfirmModal({ message, onResult }: Props) {
         if (e.target === e.currentTarget) onResult(false);
       }}
     >
-      <div className="w-full max-w-sm rounded-xl border border-m-border bg-m-bg shadow-2xl animate-scaleIn">
+      <div className="w-full max-w-sm rounded-xl border border-border bg-background shadow-2xl animate-scaleIn">
         <div className="px-5 py-5">
-          <p className="text-sm text-m-fg-strong leading-relaxed">{message}</p>
+          <p className="text-sm text-foreground leading-relaxed">{message}</p>
         </div>
-        <footer className="flex items-center justify-end gap-2 px-5 py-3 border-t border-m-border-subtle">
+        <footer className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border/60">
           <button
             ref={cancelRef}
             onClick={() => onResult(false)}
-            className="px-4 py-2 rounded-md border border-m-border text-sm text-m-fg-secondary hover:bg-m-surface-hover transition focus:outline-none focus:border-accent"
+            className="px-4 py-2 rounded-md border border-border text-sm text-foreground hover:bg-secondary transition focus:outline-none focus:border-primary"
           >
             Cancel
           </button>

@@ -93,9 +93,9 @@ export function TeamPage() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-m-border-subtle">
+      <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-border/60">
         <div className="flex items-center gap-4">
-          <h1 className="text-lg text-accent">Team</h1>
+          <h1 className="text-lg text-primary">Team</h1>
           <RoleFilterBar />
         </div>
         <DateScopeChip value={scope} onChange={setScope} />
@@ -103,10 +103,10 @@ export function TeamPage() {
 
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
         {tasksQ.isLoading && (
-          <p className="text-sm text-m-fg-muted">Loading team…</p>
+          <p className="text-sm text-muted-foreground">Loading team…</p>
         )}
         {!tasksQ.isLoading && sections.length === 0 && (
-          <p className="text-sm text-m-fg-muted">No active teammates yet.</p>
+          <p className="text-sm text-muted-foreground">No active teammates yet.</p>
         )}
 
         {sections.map((section) => {
@@ -177,25 +177,25 @@ function SectionHeader({
     <button
       type="button"
       onClick={onToggleCollapse}
-      className="w-full flex items-center gap-3 text-left hover:bg-m-surface-40 rounded-lg px-2 py-1.5 transition"
+      className="w-full flex items-center gap-3 text-left hover:bg-card/40 rounded-lg px-2 py-1.5 transition"
     >
       <Avatar user={section.user} size="md" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-m-fg-strong truncate">
+          <span className="text-sm font-semibold text-foreground truncate">
             {section.user.displayName || section.user.email}
           </span>
           {isMe && (
-            <span className="text-[10px] uppercase tracking-widest text-accent">
+            <span className="text-[10px] uppercase tracking-widest text-primary">
               You
             </span>
           )}
         </div>
-        <div className="text-[11px] text-m-fg-muted">
+        <div className="text-2xs text-muted-foreground">
           {stats.inProgress} in progress · {stats.upNext} up next · {stats.doneToday} done today
         </div>
       </div>
-      <span className="text-xs text-m-fg-dim shrink-0">{isCollapsed ? '▸' : '▾'}</span>
+      <span className="text-xs text-muted-foreground/70 shrink-0">{isCollapsed ? '▸' : '▾'}</span>
     </button>
   );
 }
@@ -217,10 +217,10 @@ function TeamColumn({
   const setSelectedTaskId = useUiStore((s) => s.setSelectedTaskId);
 
   return (
-    <div className="bg-m-surface-40 rounded-lg p-2 min-h-[80px] space-y-2">
-      <div className="text-[10px] uppercase tracking-wide text-m-fg-muted font-semibold px-1 flex items-center justify-between">
+    <div className="bg-card/40 rounded-lg p-2 min-h-[80px] space-y-2">
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold px-1 flex items-center justify-between">
         <span>{COLUMN_LABELS[column]}</span>
-        <span className="text-m-fg-dim font-mono">{tasks.length}</span>
+        <span className="text-muted-foreground/70 font-mono">{tasks.length}</span>
       </div>
       {tasks.map((t) => (
         <TaskCard
@@ -242,7 +242,7 @@ function DateScopeChip({ value, onChange }: { value: DateScope; onChange: (v: Da
     <div
       role="radiogroup"
       aria-label="Date scope"
-      className="inline-flex items-center gap-0.5 rounded-lg border border-m-border bg-m-surface-40 p-0.5 text-xs"
+      className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-card/40 p-0.5 text-xs"
     >
       {(['today', 'week', 'all'] as const).map((opt) => {
         const active = value === opt;
@@ -256,8 +256,8 @@ function DateScopeChip({ value, onChange }: { value: DateScope; onChange: (v: Da
             className={clsx(
               'px-2.5 py-1 rounded-md transition font-medium',
               active
-                ? 'bg-accent/20 text-accent'
-                : 'text-m-fg-tertiary hover:text-m-fg-strong',
+                ? 'bg-primary/20 text-primary'
+                : 'text-muted-foreground hover:text-foreground',
             )}
           >
             {SCOPE_LABELS[opt]}

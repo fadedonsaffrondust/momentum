@@ -17,6 +17,7 @@ const SECTIONS: Section[] = [
     description: 'Work from anywhere in the app.',
     rows: [
       { keys: ['/'], label: 'Focus input bar' },
+      { keys: ['n'], label: 'New thing (focus input or fire "new" in context)' },
       { keys: ['Esc'], label: 'Blur input / close modal' },
       { keys: ['?'], label: 'Show this help' },
       { keys: ['⌘', 'K'], label: 'Command palette' },
@@ -108,7 +109,7 @@ const SECTIONS: Section[] = [
       { keys: ['n'], label: 'New feature request' },
       { keys: ['j', '/', 'k'], label: 'Navigate rows' },
       { keys: ['Space'], label: 'Toggle resolved' },
-      { keys: ['r'], label: 'Sync with Google Sheet' },
+      { keys: ['r'], label: 'Sync with spreadsheet' },
       { keys: ['Esc'], label: 'Deselect row' },
     ],
   },
@@ -174,38 +175,38 @@ export function ShortcutsModal() {
         if (e.target === e.currentTarget) close();
       }}
     >
-      <div className="relative w-full max-w-3xl max-h-[85vh] rounded-2xl border border-m-border bg-m-bg shadow-2xl animate-scaleIn overflow-hidden">
+      <div className="relative w-full max-w-3xl max-h-[85vh] rounded-2xl border border-border bg-background shadow-2xl animate-scaleIn overflow-hidden">
         {/* accent glow */}
         <div
           aria-hidden
           className="pointer-events-none absolute -top-24 -left-24 w-72 h-72 rounded-full blur-3xl opacity-30"
           style={{
-            background: 'radial-gradient(circle, var(--m-glow-accent) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, var(--glow-accent) 0%, transparent 70%)',
           }}
         />
         <div
           aria-hidden
           className="pointer-events-none absolute -bottom-24 -right-24 w-72 h-72 rounded-full blur-3xl opacity-20"
           style={{
-            background: 'radial-gradient(circle, var(--m-glow-secondary) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, var(--glow-secondary) 0%, transparent 70%)',
           }}
         />
 
-        <header className="relative flex items-start justify-between px-6 pt-6 pb-5 border-b border-m-border-subtle">
+        <header className="relative flex items-start justify-between px-6 pt-6 pb-5 border-b border-border/60">
           <div>
-            <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full border border-accent/40 text-[10px] uppercase tracking-widest text-accent mb-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full border border-primary/40 text-[10px] uppercase tracking-widest text-primary mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               Keyboard-first
             </div>
-            <h2 className="text-xl font-semibold text-m-fg">Shortcuts</h2>
-            <p className="text-xs text-m-fg-muted mt-1">
+            <h2 className="text-xl font-semibold text-foreground">Shortcuts</h2>
+            <p className="text-xs text-muted-foreground mt-1">
               Press{' '}
               <Kbd subtle>?</Kbd> anywhere to reopen this. Press <Kbd subtle>Esc</Kbd> to close.
             </p>
           </div>
           <button
             onClick={close}
-            className="text-m-fg-muted hover:text-m-fg transition"
+            className="text-muted-foreground hover:text-foreground transition"
             aria-label="Close"
           >
             ✕
@@ -220,17 +221,17 @@ export function ShortcutsModal() {
                 className="animate-slideUp"
                 style={{ animationDelay: `${80 + sectionIdx * 60}ms` }}
               >
-                <h3 className="text-xs uppercase tracking-widest text-m-fg-tertiary font-semibold">
+                <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
                   {section.title}
                 </h3>
-                <p className="text-xs text-m-fg-dim mt-0.5 mb-3">{section.description}</p>
+                <p className="text-xs text-muted-foreground/70 mt-0.5 mb-3">{section.description}</p>
                 <ul className="space-y-2">
                   {section.rows.map((row) => (
                     <li
                       key={row.label}
                       className="flex items-center justify-between gap-4 text-sm"
                     >
-                      <span className="text-m-fg-tertiary">{row.label}</span>
+                      <span className="text-muted-foreground">{row.label}</span>
                       <span className="flex items-center gap-1 shrink-0">
                         {row.keys.map((k, i) => (
                           <Kbd key={i}>{k}</Kbd>
@@ -253,8 +254,8 @@ function Kbd({ children, subtle = false }: { children: React.ReactNode; subtle?:
     <kbd
       className={
         subtle
-          ? 'inline-flex items-center justify-center min-w-[1.4rem] h-5 px-1.5 rounded border border-m-border bg-m-surface text-[10px] font-mono text-m-fg-tertiary'
-          : 'inline-flex items-center justify-center min-w-[1.6rem] h-6 px-1.5 rounded-md border border-m-border-strong bg-gradient-to-b from-[var(--m-kbd-from)] to-[var(--m-kbd-to)] text-[11px] font-mono text-m-fg shadow-[inset_0_-1px_0_rgba(0,0,0,0.2),0_1px_0_rgba(255,255,255,0.05)]'
+          ? 'inline-flex items-center justify-center min-w-[1.4rem] h-5 px-1.5 rounded border border-border bg-card text-[10px] font-mono text-muted-foreground'
+          : 'inline-flex items-center justify-center min-w-[1.6rem] h-6 px-1.5 rounded-md border border-border bg-gradient-to-b from-[var(--kbd-from)] to-[var(--kbd-to)] text-2xs font-mono text-foreground shadow-[inset_0_-1px_0_rgba(0,0,0,0.2),0_1px_0_rgba(255,255,255,0.05)]'
       }
     >
       {children}

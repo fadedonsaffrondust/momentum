@@ -71,12 +71,12 @@ export function ImportBrandModal({ onClose, onImportStarted }: Props) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-lg rounded-2xl border border-m-border bg-m-bg shadow-2xl animate-scaleIn overflow-hidden">
-        <header className="flex items-center justify-between px-6 py-4 border-b border-m-border-subtle">
-          <h2 className="text-sm text-m-fg-secondary">Import Brand from File</h2>
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-background shadow-2xl animate-scaleIn overflow-hidden">
+        <header className="flex items-center justify-between px-6 py-4 border-b border-border/60">
+          <h2 className="text-sm text-foreground">Import Brand from File</h2>
           <button
             onClick={onClose}
-            className="text-m-fg-muted hover:text-m-fg transition"
+            className="text-muted-foreground hover:text-foreground transition"
             aria-label="Close"
           >
             <X size={18} />
@@ -84,9 +84,9 @@ export function ImportBrandModal({ onClose, onImportStarted }: Props) {
         </header>
 
         <div className="p-6 space-y-5">
-          <p className="text-xs text-m-fg-muted">
-            Upload a <code className="text-m-fg-tertiary">.md</code> or{' '}
-            <code className="text-m-fg-tertiary">.txt</code> file with client notes. The server
+          <p className="text-xs text-muted-foreground">
+            Upload a <code className="text-muted-foreground">.md</code> or{' '}
+            <code className="text-muted-foreground">.txt</code> file with client notes. The server
             will analyze it with AI and create a structured brand with meetings,
             stakeholders, and action items.
           </p>
@@ -94,14 +94,14 @@ export function ImportBrandModal({ onClose, onImportStarted }: Props) {
           {/* File picker */}
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-m-border hover:border-m-border-strong rounded-xl p-8 text-center cursor-pointer transition"
+            className="border-2 border-dashed border-border hover:border-border rounded-xl p-8 text-center cursor-pointer transition"
           >
             {fileName ? (
               <div className="flex items-center justify-center gap-3">
-                <FileText size={20} className="text-accent" />
+                <FileText size={20} className="text-primary" />
                 <div className="text-left">
-                  <div className="text-sm text-m-fg-strong">{fileName}</div>
-                  <div className="text-[10px] text-m-fg-muted">
+                  <div className="text-sm text-foreground">{fileName}</div>
+                  <div className="text-[10px] text-muted-foreground">
                     {fileContent ? `${(fileContent.length / 1000).toFixed(1)}k characters` : ''}
                     {truncated && (
                       <span className="text-amber-400 ml-2">
@@ -113,8 +113,8 @@ export function ImportBrandModal({ onClose, onImportStarted }: Props) {
               </div>
             ) : (
               <div className="space-y-2">
-                <Upload size={24} className="mx-auto text-m-fg-dim" />
-                <p className="text-xs text-m-fg-muted">
+                <Upload size={24} className="mx-auto text-muted-foreground/70" />
+                <p className="text-xs text-muted-foreground">
                   Click to select a file
                 </p>
               </div>
@@ -136,20 +136,20 @@ export function ImportBrandModal({ onClose, onImportStarted }: Props) {
           )}
 
           <div className="flex items-center justify-between pt-2">
-            <p className="text-[10px] text-m-fg-dim">
-              Requires <code className="text-m-fg-muted">OPENAI_API_KEY</code> on the server.
+            <p className="text-[10px] text-muted-foreground/70">
+              Requires AI extraction to be configured on the server.
             </p>
             <div className="flex gap-2">
               <button
                 onClick={onClose}
-                className="px-4 py-2 rounded-md border border-m-border text-sm hover:bg-m-surface-hover transition"
+                className="px-4 py-2 rounded-md border border-border text-sm hover:bg-secondary transition"
               >
                 Cancel
               </button>
               <button
                 onClick={() => void handleAnalyze()}
                 disabled={!fileContent || importBrand.isPending}
-                className="px-4 py-2 rounded-md bg-accent hover:bg-accent-hover text-sm transition disabled:opacity-50"
+                className="px-4 py-2 rounded-md bg-primary hover:bg-primary/90 text-sm transition disabled:opacity-50"
               >
                 {importBrand.isPending ? 'Sending…' : 'Analyze'}
               </button>

@@ -27,7 +27,7 @@ export function TaskAssigneeFilter({
       role="radiogroup"
       aria-label="Filter tasks by assignee"
       data-person-filter="true"
-      className="inline-flex items-center gap-0.5 rounded-lg border border-m-border bg-m-surface-40 p-0.5 text-xs"
+      className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-card/40 p-0.5 text-xs"
     >
       {options.map((opt) => {
         const active = current === opt;
@@ -41,8 +41,8 @@ export function TaskAssigneeFilter({
             className={clsx(
               'px-2.5 py-1 rounded-md transition font-medium',
               active
-                ? 'bg-accent/20 text-accent'
-                : 'text-m-fg-tertiary hover:text-m-fg-strong',
+                ? 'bg-primary/20 text-primary'
+                : 'text-muted-foreground hover:text-foreground',
             )}
           >
             {LABELS[opt]}

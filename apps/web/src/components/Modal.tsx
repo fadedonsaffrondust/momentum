@@ -32,15 +32,15 @@ export function Modal({ title, onClose, children, className }: Props) {
         ref={ref}
         tabIndex={-1}
         className={clsx(
-          'w-full max-w-2xl rounded-xl border border-m-border bg-m-bg shadow-2xl focus:outline-none',
+          'w-full max-w-2xl rounded-xl border border-border bg-background shadow-2xl focus:outline-none',
           className,
         )}
       >
-        <header className="px-5 py-3 border-b border-m-border-subtle flex items-center justify-between">
-          <h2 className="text-sm text-m-fg-secondary">{title}</h2>
+        <header className="px-5 py-3 border-b border-border/60 flex items-center justify-between">
+          <h2 className="text-sm text-foreground">{title}</h2>
           <button
             onClick={onClose}
-            className="text-m-fg-muted hover:text-m-fg-strong"
+            className="text-muted-foreground hover:text-foreground"
             aria-label="Close"
           >
             ✕

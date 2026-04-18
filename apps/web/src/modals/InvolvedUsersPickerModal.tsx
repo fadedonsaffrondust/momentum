@@ -140,9 +140,9 @@ export function InvolvedUsersPickerModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-sm rounded-xl border border-m-border bg-m-bg shadow-2xl p-4 animate-scaleIn">
+      <div className="w-full max-w-sm rounded-xl border border-border bg-background shadow-2xl p-4 animate-scaleIn">
         <div className="mb-3">
-          <div className="text-[10px] uppercase tracking-widest text-m-fg-muted">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
             {title}
           </div>
           <input
@@ -155,17 +155,17 @@ export function InvolvedUsersPickerModal({
               setQuery(e.target.value);
               setCursor(0);
             }}
-            className="mt-2 w-full bg-transparent text-sm px-0 py-1 border-b border-m-border-subtle focus:outline-none focus:border-accent"
+            className="mt-2 w-full bg-transparent text-sm px-0 py-1 border-b border-border/60 focus:outline-none focus:border-primary"
           />
-          <div className="mt-2 text-[10px] text-m-fg-dim">
+          <div className="mt-2 text-[10px] text-muted-foreground/70">
             {selected.size} selected
           </div>
         </div>
 
         {usersQ.isLoading ? (
-          <p className="text-sm text-m-fg-muted px-1 py-2">Loading team…</p>
+          <p className="text-sm text-muted-foreground px-1 py-2">Loading team…</p>
         ) : filtered.length === 0 ? (
-          <p className="text-sm text-m-fg-muted px-1 py-2">
+          <p className="text-sm text-muted-foreground px-1 py-2">
             {query ? 'No matches.' : 'No teammates to add.'}
           </p>
         ) : (
@@ -179,7 +179,7 @@ export function InvolvedUsersPickerModal({
                   onClick={() => toggle(u.id)}
                   className={clsx(
                     'flex items-center justify-between gap-3 rounded-md px-2 py-1.5 text-sm cursor-pointer transition',
-                    cursor === i ? 'bg-m-surface text-m-fg' : 'text-m-fg-tertiary hover:bg-m-surface-60',
+                    cursor === i ? 'bg-card text-foreground' : 'text-muted-foreground hover:bg-card/60',
                   )}
                 >
                   <span className="flex items-center gap-2 min-w-0">
@@ -188,7 +188,7 @@ export function InvolvedUsersPickerModal({
                     <span className="truncate">{u.displayName || u.email}</span>
                   </span>
                   {i < 9 && (
-                    <span className="text-[10px] text-m-fg-dim font-mono">{i + 1}</span>
+                    <span className="text-[10px] text-muted-foreground/70 font-mono">{i + 1}</span>
                   )}
                 </li>
               );
@@ -196,7 +196,7 @@ export function InvolvedUsersPickerModal({
           </ul>
         )}
 
-        <div className="mt-3 pt-3 border-t border-m-border-subtle text-[10px] text-m-fg-dim flex items-center justify-between">
+        <div className="mt-3 pt-3 border-t border-border/60 text-[10px] text-muted-foreground/70 flex items-center justify-between">
           <span>
             <Kbd>Space</Kbd> toggle · <Kbd>1</Kbd>–<Kbd>9</Kbd> jump
           </span>
@@ -219,8 +219,8 @@ function Checkbox({ checked }: { checked: boolean }) {
       className={clsx(
         'inline-flex items-center justify-center w-3.5 h-3.5 rounded border',
         checked
-          ? 'bg-accent border-accent text-white'
-          : 'border-m-border-strong',
+          ? 'bg-primary border-primary text-white'
+          : 'border-border',
       )}
     >
       {checked && <span className="text-[8px] leading-none">✓</span>}
@@ -235,7 +235,7 @@ function isTypingInSearch(e: KeyboardEvent): boolean {
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex items-center justify-center min-w-[1.2rem] h-4 px-1 rounded border border-m-border bg-m-surface text-[9px] font-mono text-m-fg-tertiary">
+    <kbd className="inline-flex items-center justify-center min-w-[1.2rem] h-4 px-1 rounded border border-border bg-card text-[9px] font-mono text-muted-foreground">
       {children}
     </kbd>
   );

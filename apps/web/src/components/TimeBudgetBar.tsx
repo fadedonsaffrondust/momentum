@@ -21,9 +21,9 @@ export function TimeBudgetBar({ tasks, capacityMinutes }: Props) {
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-between text-xs text-m-fg-muted">
+      <div className="flex justify-between text-xs text-muted-foreground">
         <span>
-          Planned: <span className="text-m-fg-secondary">{formatMinutes(planned)}</span> /{' '}
+          Planned: <span className="text-foreground">{formatMinutes(planned)}</span> /{' '}
           {formatMinutes(capacityMinutes)}
         </span>
         {state === 'over' && (
@@ -34,10 +34,10 @@ export function TimeBudgetBar({ tasks, capacityMinutes }: Props) {
         {state === 'warn' && <span className="text-amber-400">Full day. Protect focus.</span>}
         {state === 'ok' && <span className="text-emerald-400">Room to breathe.</span>}
       </div>
-      <div className="h-2 rounded-full bg-m-surface overflow-hidden">
+      <div className="h-2 rounded-full bg-card overflow-hidden">
         <div
           className={clsx(
-            'h-full transition-all duration-200',
+            'h-full transition-[width,background-color] duration-150',
             state === 'ok' && 'bg-emerald-500/80',
             state === 'warn' && 'bg-amber-500/80',
             state === 'over' && 'bg-red-500/80',

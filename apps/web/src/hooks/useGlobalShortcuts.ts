@@ -144,6 +144,28 @@ export function useGlobalShortcuts(): void {
         return;
       }
 
+      // `n` creates a new thing in whatever context you're in. Two modes:
+      //
+      // 1. If the page exposes a `[data-task-input]` input, focus it and
+      //    consume — same affordance as `/`, just a different letter.
+      // 2. Otherwise, dispatch `momentum:new-thing` on the window so
+      //    surface-specific handlers (feature requests, inbox, etc.) can
+      //    react. We intentionally do NOT consume in this branch so that
+      //    page-level bubble-phase handlers that bind directly to `n`
+      //    continue to work.
+      if (e.key === 'n' && !e.shiftKey) {
+        const target = document.querySelector<HTMLInputElement>(
+          '[data-task-input="true"]',
+        );
+        if (target) {
+          consume(e);
+          target.focus();
+          return;
+        }
+        window.dispatchEvent(new CustomEvent('momentum:new-thing'));
+        return;
+      }
+
       // `@` focuses the page's person-filter chip group, if present.
       // No-op on views without a person filter (e.g. /brands, /inbox,
       // /team — each owns its own chip taxonomy). The first button

@@ -17,10 +17,10 @@ export function TeamPulseStrip() {
   const pct = Math.round(teamCompletionRate * 100);
 
   return (
-    <div className="mt-4 pt-3 border-t border-m-border-subtle flex items-center justify-between text-[11px] text-m-fg-muted">
+    <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-2xs text-muted-foreground">
       <span>
         Team today:{' '}
-        <span className="text-m-fg-secondary font-medium">{pct}% completion</span>
+        <span className="text-foreground font-medium">{pct}% completion</span>
       </span>
       <span>
         {usersWithInProgressCount === 0

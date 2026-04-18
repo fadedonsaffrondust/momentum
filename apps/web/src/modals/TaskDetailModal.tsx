@@ -117,9 +117,9 @@ export function TaskDetailModal() {
         if (e.target === e.currentTarget) close();
       }}
     >
-      <div className="w-full max-w-lg rounded-xl border border-m-border bg-m-bg shadow-2xl p-5 animate-scaleIn">
+      <div className="w-full max-w-lg rounded-xl border border-border bg-background shadow-2xl p-5 animate-scaleIn">
         <header className="mb-4">
-          <div className="text-[10px] uppercase tracking-widest text-m-fg-muted">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
             Task detail
           </div>
           <input
@@ -127,7 +127,7 @@ export function TaskDetailModal() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             autoFocus
-            className="mt-1 w-full bg-transparent text-lg text-m-fg-strong font-medium px-0 py-1 border-b border-m-border-subtle focus:outline-none focus:border-accent"
+            className="mt-1 w-full bg-transparent text-lg text-foreground font-medium px-0 py-1 border-b border-border/60 focus:outline-none focus:border-primary"
           />
         </header>
 
@@ -142,30 +142,30 @@ export function TaskDetailModal() {
                 currentAssigneeId: task.assigneeId,
               })
             }
-            className="flex items-center gap-2 text-left rounded-md border border-m-border-subtle px-3 py-2 hover:border-accent/40 hover:bg-m-surface-60 transition"
+            className="flex items-center gap-2 text-left rounded-md border border-border/60 px-3 py-2 hover:border-primary/40 hover:bg-card/60 transition"
           >
             {assignee ? (
               <Avatar user={assignee} size="sm" showTooltip={false} />
             ) : (
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full border border-dashed border-m-border-strong text-[9px] text-m-fg-dim">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full border border-dashed border-border text-[9px] text-muted-foreground/70">
                 ?
               </span>
             )}
             <div className="min-w-0">
-              <div className="text-[10px] uppercase text-m-fg-muted">Assignee</div>
-              <div className="text-m-fg-strong truncate">
+              <div className="text-[10px] uppercase text-muted-foreground">Assignee</div>
+              <div className="text-foreground truncate">
                 {assignee ? assignee.displayName || assignee.email : 'Unassigned'}
               </div>
             </div>
           </button>
 
           {/* Priority */}
-          <label className="flex flex-col gap-1 rounded-md border border-m-border-subtle px-3 py-2">
-            <span className="text-[10px] uppercase text-m-fg-muted">Priority</span>
+          <label className="flex flex-col gap-1 rounded-md border border-border/60 px-3 py-2">
+            <span className="text-[10px] uppercase text-muted-foreground">Priority</span>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value as Priority)}
-              className="bg-transparent text-m-fg-strong focus:outline-none"
+              className="bg-transparent text-foreground focus:outline-none"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
@@ -174,12 +174,12 @@ export function TaskDetailModal() {
           </label>
 
           {/* Role */}
-          <label className="flex flex-col gap-1 rounded-md border border-m-border-subtle px-3 py-2">
-            <span className="text-[10px] uppercase text-m-fg-muted">Role</span>
+          <label className="flex flex-col gap-1 rounded-md border border-border/60 px-3 py-2">
+            <span className="text-[10px] uppercase text-muted-foreground">Role</span>
             <select
               value={roleId ?? ''}
               onChange={(e) => setRoleId(e.target.value || null)}
-              className="bg-transparent text-m-fg-strong focus:outline-none"
+              className="bg-transparent text-foreground focus:outline-none"
               style={selectedRole ? { color: selectedRole.color } : undefined}
             >
               <option value="">No role</option>
@@ -192,8 +192,8 @@ export function TaskDetailModal() {
           </label>
 
           {/* Estimate */}
-          <label className="flex flex-col gap-1 rounded-md border border-m-border-subtle px-3 py-2">
-            <span className="text-[10px] uppercase text-m-fg-muted">Estimate</span>
+          <label className="flex flex-col gap-1 rounded-md border border-border/60 px-3 py-2">
+            <span className="text-[10px] uppercase text-muted-foreground">Estimate</span>
             <input
               type="number"
               min={0}
@@ -203,29 +203,29 @@ export function TaskDetailModal() {
                 setEstimate(e.target.value === '' ? null : Number(e.target.value))
               }
               placeholder="minutes"
-              className="bg-transparent text-m-fg-strong focus:outline-none placeholder:text-m-fg-dim"
+              className="bg-transparent text-foreground focus:outline-none placeholder:text-muted-foreground/70"
             />
             {estimate !== null && estimate > 0 && (
-              <span className="text-[10px] text-m-fg-muted">
+              <span className="text-[10px] text-muted-foreground">
                 {formatMinutes(estimate)}
               </span>
             )}
           </label>
 
           {/* Scheduled date */}
-          <label className="col-span-2 flex flex-col gap-1 rounded-md border border-m-border-subtle px-3 py-2">
-            <span className="text-[10px] uppercase text-m-fg-muted">Scheduled</span>
+          <label className="col-span-2 flex flex-col gap-1 rounded-md border border-border/60 px-3 py-2">
+            <span className="text-[10px] uppercase text-muted-foreground">Scheduled</span>
             <div className="flex items-center gap-2">
               <input
                 type="date"
                 value={scheduledDate ?? ''}
                 onChange={(e) => setScheduledDate(e.target.value || null)}
-                className="bg-transparent text-m-fg-strong focus:outline-none"
+                className="bg-transparent text-foreground focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => setScheduledDate(todayIso())}
-                className="text-[11px] text-accent hover:underline"
+                className="text-2xs text-primary hover:underline"
               >
                 today
               </button>
@@ -233,7 +233,7 @@ export function TaskDetailModal() {
                 <button
                   type="button"
                   onClick={() => setScheduledDate(null)}
-                  className="text-[11px] text-m-fg-dim hover:text-m-fg-strong"
+                  className="text-2xs text-muted-foreground/70 hover:text-foreground"
                 >
                   unschedule
                 </button>
@@ -243,12 +243,12 @@ export function TaskDetailModal() {
         </div>
 
         {/* Meta row (read-only) */}
-        <div className="mt-4 pt-3 border-t border-m-border-subtle grid grid-cols-2 gap-2 text-[11px] text-m-fg-muted">
+        <div className="mt-4 pt-3 border-t border-border/60 grid grid-cols-2 gap-2 text-2xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
             {creator && <Avatar user={creator} size="xs" showTooltip={false} />}
             <span>
               Created by{' '}
-              <span className="text-m-fg-secondary">
+              <span className="text-foreground">
                 {creator ? creator.displayName || creator.email : 'Unknown'}
               </span>{' '}
               · {formatTimeAgo(task.createdAt)}
@@ -267,14 +267,14 @@ export function TaskDetailModal() {
 
         {/* Actions */}
         <div className="mt-4 flex items-center justify-between">
-          <div className="text-[10px] text-m-fg-dim">
+          <div className="text-[10px] text-muted-foreground/70">
             Esc to close · save commits edits
           </div>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={close}
-              className="px-3 py-1.5 rounded-md border border-m-border hover:bg-m-surface-hover text-sm transition"
+              className="px-3 py-1.5 rounded-md border border-border hover:bg-secondary text-sm transition"
             >
               Close
             </button>
@@ -282,7 +282,7 @@ export function TaskDetailModal() {
               type="button"
               onClick={save}
               disabled={!dirty || updateTask.isPending}
-              className="px-3 py-1.5 rounded-md bg-accent hover:bg-accent-hover text-sm transition disabled:opacity-50"
+              className="px-3 py-1.5 rounded-md bg-primary hover:bg-primary/90 text-sm transition disabled:opacity-50"
             >
               {updateTask.isPending ? 'Saving…' : 'Save'}
             </button>

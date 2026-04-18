@@ -86,40 +86,40 @@ export function SettingsModal() {
         if (e.target === e.currentTarget) close();
       }}
     >
-      <div className="w-full max-w-md rounded-xl border border-m-border bg-m-bg shadow-2xl p-5 animate-scaleIn">
+      <div className="w-full max-w-md rounded-xl border border-border bg-background shadow-2xl p-5 animate-scaleIn">
         <header className="flex items-center gap-3 mb-5">
           {meQ.data && <Avatar user={meQ.data} size="md" showTooltip={false} />}
           <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-widest text-m-fg-muted">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Settings
             </div>
-            <div className="text-sm text-m-fg-strong truncate">
+            <div className="text-sm text-foreground truncate">
               {meQ.data?.email ?? '—'}
             </div>
           </div>
         </header>
 
         {loading ? (
-          <p className="text-sm text-m-fg-muted">Loading…</p>
+          <p className="text-sm text-muted-foreground">Loading…</p>
         ) : (
           <div className="space-y-5">
             <label className="block text-sm">
-              <span className="text-m-fg-tertiary">Display name</span>
+              <span className="text-muted-foreground">Display name</span>
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 maxLength={64}
                 autoFocus
-                className="mt-1 w-full px-3 py-2 bg-m-bg border border-m-border rounded-md focus:outline-none focus:border-accent"
+                className="mt-1 w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:border-primary"
               />
-              <span className="mt-1 block text-[11px] text-m-fg-muted">
+              <span className="mt-1 block text-2xs text-muted-foreground">
                 Your teammates see this on tasks, parkings, and inbox events.
               </span>
             </label>
 
             <label className="block text-sm">
-              <span className="text-m-fg-tertiary">
+              <span className="text-muted-foreground">
                 Daily capacity — {capacityHours}h
               </span>
               <input
@@ -129,15 +129,15 @@ export function SettingsModal() {
                 step={1}
                 value={capacityHours}
                 onChange={(e) => setCapacityHours(Number(e.target.value))}
-                className="mt-2 w-full accent-accent"
+                className="mt-2 w-full accent-primary"
               />
             </label>
 
             <div className="flex items-center justify-between text-sm">
-              <span className="text-m-fg-tertiary">Theme</span>
+              <span className="text-muted-foreground">Theme</span>
               <button
                 onClick={toggleTheme}
-                className="px-3 py-1.5 rounded-md border border-m-border hover:bg-m-surface-60 text-xs"
+                className="px-3 py-1.5 rounded-md border border-border hover:bg-card/60 text-xs"
               >
                 {theme === 'dark' ? 'Switch to light' : 'Switch to dark'}
               </button>
@@ -152,14 +152,14 @@ export function SettingsModal() {
             <div className="flex gap-2 pt-2">
               <button
                 onClick={close}
-                className="flex-1 py-2 rounded-md border border-m-border hover:bg-m-surface-hover text-sm transition"
+                className="flex-1 py-2 rounded-md border border-border hover:bg-secondary text-sm transition"
               >
                 Close
               </button>
               <button
                 onClick={save}
                 disabled={!dirty || updateMe.isPending || updateSettings.isPending}
-                className="flex-1 py-2 rounded-md bg-accent hover:bg-accent-hover text-sm transition disabled:opacity-50"
+                className="flex-1 py-2 rounded-md bg-primary hover:bg-primary/90 text-sm transition disabled:opacity-50"
               >
                 {updateMe.isPending || updateSettings.isPending ? 'Saving…' : 'Save'}
               </button>

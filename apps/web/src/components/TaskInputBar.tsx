@@ -88,18 +88,18 @@ export const TaskInputBar = forwardRef<HTMLInputElement>((_props, ref) => {
         onChange={(e) => setValue(e.target.value)}
         data-task-input="true"
         placeholder="Type a task… (~30m for time, #role for context, !h for priority, +tomorrow, @teammate to assign)"
-        className="w-full px-4 py-3 bg-m-surface-60 border border-m-border rounded-lg focus:outline-none focus:border-accent text-m-fg placeholder:text-m-fg-dim"
+        className="w-full px-4 py-3 bg-card/60 border border-border rounded-lg focus:outline-none focus:border-primary text-foreground placeholder:text-muted-foreground/70"
       />
 
       {parsed.assigneeToken && (
-        <div className="mt-1.5 flex items-center gap-2 text-[11px]">
+        <div className="mt-1.5 flex items-center gap-2 text-2xs">
           {resolvedAssignee ? (
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
               <Avatar user={resolvedAssignee} size="xs" showTooltip={false} />
               <span>Assign to {resolvedAssignee.displayName || resolvedAssignee.email}</span>
             </span>
           ) : (
-            <span className="text-m-fg-dim">
+            <span className="text-muted-foreground/70">
               @{parsed.assigneeToken} doesn't match any teammate — will stay in the title.
             </span>
           )}

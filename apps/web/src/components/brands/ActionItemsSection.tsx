@@ -70,27 +70,27 @@ export function ActionItemsSection({ brandId, actionItems }: Props) {
 
   return (
     <section>
-      <h2 className="text-sm font-semibold text-m-fg-strong mb-3">
+      <h2 className="text-sm font-semibold text-foreground mb-3">
         Action Items
-        <span className="ml-2 text-xs text-m-fg-muted font-normal">
+        <span className="ml-2 text-xs text-muted-foreground font-normal">
           {openItems.length} open, {doneItems.length} done
         </span>
       </h2>
 
       {/* Tabs */}
-      <div className="flex items-center gap-4 mb-4 border-b border-m-border-subtle">
+      <div className="flex items-center gap-4 mb-4 border-b border-border/60">
         {(['open', 'done'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={clsx(
               'relative pb-2 text-sm transition',
-              activeTab === tab ? 'text-m-fg font-medium' : 'text-m-fg-muted hover:text-m-fg-secondary',
+              activeTab === tab ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground',
             )}
           >
             {tab === 'open' ? `Open (${openItems.length})` : `Done (${doneItems.length})`}
             {activeTab === tab && (
-              <span className="absolute left-0 right-0 -bottom-px h-[2px] rounded-full bg-accent" />
+              <span className="absolute left-0 right-0 -bottom-px h-[2px] rounded-full bg-primary" />
             )}
           </button>
         ))}
@@ -110,14 +110,14 @@ export function ActionItemsSection({ brandId, actionItems }: Props) {
                   if (e.key === 'Enter') submitNew();
                   if (e.key === 'Escape') setAdding(false);
                 }}
-                className="flex-1 bg-m-bg border border-m-border rounded px-3 py-2 text-sm focus:outline-none focus:border-accent"
+                className="flex-1 bg-background border border-border rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
                 placeholder="Action item text"
               />
               <input
                 type="text"
                 value={draftOwner}
                 onChange={(e) => setDraftOwner(e.target.value)}
-                className="w-28 bg-m-bg border border-m-border rounded px-3 py-2 text-sm focus:outline-none focus:border-accent"
+                className="w-28 bg-background border border-border rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
                 placeholder="Owner"
               />
               <input
@@ -125,13 +125,13 @@ export function ActionItemsSection({ brandId, actionItems }: Props) {
                 value={draftDue}
                 onChange={(e) => setDraftDue(e.target.value)}
                 onBlur={submitNew}
-                className="w-36 bg-m-bg border border-m-border rounded px-3 py-2 text-sm focus:outline-none focus:border-accent"
+                className="w-36 bg-background border border-border rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
               />
             </div>
           ) : (
             <button
               onClick={() => setAdding(true)}
-              className="flex items-center gap-1.5 text-sm text-m-fg-muted hover:text-accent transition mb-4"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition mb-4"
             >
               <Plus size={14} /> Add action item
             </button>
@@ -141,7 +141,7 @@ export function ActionItemsSection({ brandId, actionItems }: Props) {
 
       {/* List */}
       {items.length === 0 && (
-        <p className="text-sm text-m-fg-muted py-4 text-center">
+        <p className="text-sm text-muted-foreground py-4 text-center">
           {activeTab === 'open' ? 'No open items.' : 'No completed items.'}
         </p>
       )}

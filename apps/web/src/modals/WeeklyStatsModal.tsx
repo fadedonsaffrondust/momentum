@@ -31,14 +31,14 @@ export function WeeklyStatsModal() {
 
   return (
     <Modal title="Weekly Stats" onClose={close} className="max-w-2xl">
-      <div className="flex items-center gap-1 mb-5 border-b border-m-border-subtle">
+      <div className="flex items-center gap-1 mb-5 border-b border-border/60">
         <TabButton active={tab === 'mine'} onClick={() => setTab('mine')}>
           Mine
         </TabButton>
         <TabButton active={tab === 'team'} onClick={() => setTab('team')}>
           Team
         </TabButton>
-        <span className="ml-auto text-[10px] text-m-fg-dim pb-2">
+        <span className="ml-auto text-[10px] text-muted-foreground/70 pb-2">
           <Kbd>[</Kbd> <Kbd>]</Kbd> switch tabs
         </span>
       </div>
@@ -61,8 +61,8 @@ function TabButton({
       onClick={onClick}
       className={
         active
-          ? 'px-3 py-2 text-sm font-medium text-m-fg border-b-2 border-accent -mb-px'
-          : 'px-3 py-2 text-sm text-m-fg-muted hover:text-m-fg-secondary transition'
+          ? 'px-3 py-2 text-sm font-medium text-foreground border-b-2 border-primary -mb-px'
+          : 'px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition'
       }
     >
       {children}
@@ -75,7 +75,7 @@ function MinePanel() {
   const rolesQ = useRoles();
 
   if (!statsQ.data) {
-    return <p className="text-sm text-m-fg-muted">Loading…</p>;
+    return <p className="text-sm text-muted-foreground">Loading…</p>;
   }
 
   const stats = statsQ.data;
@@ -91,12 +91,12 @@ function MinePanel() {
             <div key={d.date} className="flex-1 flex flex-col items-center gap-2">
               <div className="w-full flex-1 flex items-end">
                 <div
-                  className="w-full bg-accent/70 rounded-t"
+                  className="w-full bg-primary/70 rounded-t"
                   style={{ height: `${Math.max(4, h)}%` }}
                   title={`${d.tasksCompleted}/${d.tasksPlanned}`}
                 />
               </div>
-              <div className="text-[10px] text-m-fg-dim">
+              <div className="text-[10px] text-muted-foreground/70">
                 {new Date(d.date + 'T00:00:00').toLocaleDateString(undefined, {
                   weekday: 'short',
                 })}
@@ -129,21 +129,21 @@ function TeamPanel() {
   const rolesQ = useRoles();
 
   if (!statsQ.data) {
-    return <p className="text-sm text-m-fg-muted">Loading…</p>;
+    return <p className="text-sm text-muted-foreground">Loading…</p>;
   }
 
   const rows = statsQ.data.users;
   const roles = rolesQ.data ?? [];
 
   if (rows.length === 0) {
-    return <p className="text-sm text-m-fg-muted">No teammates yet.</p>;
+    return <p className="text-sm text-muted-foreground">No teammates yet.</p>;
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-m-border-subtle">
+    <div className="overflow-hidden rounded-lg border border-border/60">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-m-surface-60 text-[10px] uppercase tracking-wider text-m-fg-muted">
+          <tr className="bg-card/60 text-[10px] uppercase tracking-wider text-muted-foreground">
             <th className="text-left px-3 py-2 font-medium">Teammate</th>
             <th className="text-right px-3 py-2 font-medium">Completion</th>
             <th className="text-right px-3 py-2 font-medium">Est. accuracy</th>
@@ -159,29 +159,29 @@ function TeamPanel() {
             return (
               <tr
                 key={r.user.id}
-                className="border-t border-m-border-subtle hover:bg-m-surface-60 transition"
+                className="border-t border-border/60 hover:bg-card/60 transition"
               >
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <Avatar user={r.user} size="sm" showTooltip={false} />
-                    <span className="truncate text-m-fg-strong">
+                    <span className="truncate text-foreground">
                       {r.user.displayName || r.user.email}
                     </span>
                   </div>
                 </td>
-                <td className="text-right px-3 py-2 text-m-fg-secondary tabular-nums">
+                <td className="text-right px-3 py-2 text-foreground tabular-nums">
                   {Math.round(r.completionRate * 100)}%
                 </td>
-                <td className="text-right px-3 py-2 text-m-fg-secondary tabular-nums">
+                <td className="text-right px-3 py-2 text-foreground tabular-nums">
                   {r.estimationAccuracy != null ? `${r.estimationAccuracy.toFixed(2)}×` : '—'}
                 </td>
-                <td className="text-right px-3 py-2 text-m-fg-secondary tabular-nums">
+                <td className="text-right px-3 py-2 text-foreground tabular-nums">
                   {r.streak}d
                 </td>
                 <td className="px-3 py-2">
                   {role ? (
                     <span
-                      className="inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full border"
+                      className="inline-flex items-center gap-1.5 text-2xs px-2 py-0.5 rounded-full border"
                       style={{
                         color: role.color,
                         borderColor: `${role.color}55`,
@@ -191,7 +191,7 @@ function TeamPanel() {
                       {role.name}
                     </span>
                   ) : (
-                    <span className="text-m-fg-dim text-xs">—</span>
+                    <span className="text-muted-foreground/70 text-xs">—</span>
                   )}
                 </td>
               </tr>
@@ -205,16 +205,16 @@ function TeamPanel() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-m-border rounded-lg py-3">
-      <div className="text-lg font-semibold text-m-fg">{value}</div>
-      <div className="text-xs text-m-fg-muted mt-1">{label}</div>
+    <div className="border border-border rounded-lg py-3">
+      <div className="text-lg font-semibold text-foreground">{value}</div>
+      <div className="text-xs text-muted-foreground mt-1">{label}</div>
     </div>
   );
 }
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 rounded border border-m-border bg-m-surface text-[9px] font-mono text-m-fg-tertiary">
+    <kbd className="inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 rounded border border-border bg-card text-[9px] font-mono text-muted-foreground">
       {children}
     </kbd>
   );

@@ -16,8 +16,8 @@ function Tab({ to, label, end }: TabProps) {
         clsx(
           'relative px-4 py-2 text-sm rounded-md transition',
           isActive
-            ? 'text-m-fg'
-            : 'text-m-fg-muted hover:text-m-fg-strong',
+            ? 'text-foreground'
+            : 'text-muted-foreground hover:text-foreground',
         )
       }
     >
@@ -25,7 +25,7 @@ function Tab({ to, label, end }: TabProps) {
         <>
           <span>{label}</span>
           {isActive && (
-            <span className="absolute left-3 right-3 -bottom-px h-[2px] rounded-full bg-accent" />
+            <span className="absolute left-3 right-3 -bottom-px h-[2px] rounded-full bg-primary" />
           )}
         </>
       )}
@@ -36,8 +36,8 @@ function Tab({ to, label, end }: TabProps) {
 export function TasksLayout() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <div className="px-6 pt-4 pb-3 border-b border-m-border-subtle flex items-center gap-1">
-        <h1 className="text-xs uppercase tracking-widest text-m-fg-dim font-semibold mr-3">
+      <div className="px-6 pt-4 pb-3 border-b border-border/60 flex items-center gap-1">
+        <h1 className="text-xs uppercase tracking-widest text-muted-foreground/70 font-semibold mr-3">
           Tasks
         </h1>
         <Tab to="/" label="Today" end />

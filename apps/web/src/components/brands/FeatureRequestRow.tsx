@@ -73,16 +73,16 @@ export function FeatureRequestRow({ fr, rowIndex, isFocused, onUpdate, onDelete,
   return (
     <div
       className={clsx(
-        'group grid gap-x-3 border-b border-m-border-subtle px-3 py-2 transition',
-        rowIndex % 2 === 1 && 'bg-m-surface/30',
+        'group grid gap-x-3 border-b border-border/60 px-3 py-2 transition',
+        rowIndex % 2 === 1 && 'bg-card/30',
         fr.resolved && 'opacity-50',
-        isFocused && 'ring-1 ring-inset ring-accent/40 bg-accent/5',
+        isFocused && 'ring-1 ring-inset ring-primary/40 bg-primary/5',
       )}
       style={{ gridTemplateColumns: '70px 1fr 1fr 32px 52px' }}
     >
       {/* Date */}
       <div
-        className="text-[11px] font-mono text-m-fg-muted whitespace-nowrap pt-0.5 cursor-pointer"
+        className="text-2xs font-mono text-muted-foreground whitespace-nowrap pt-0.5 cursor-pointer"
         onDoubleClick={() => startEdit('date')}
       >
         {editing === 'date' ? (
@@ -93,7 +93,7 @@ export function FeatureRequestRow({ fr, rowIndex, isFocused, onUpdate, onDelete,
             onChange={(e) => setEditValue(e.target.value)}
             onBlur={commitEdit}
             onKeyDown={handleKeyDown}
-            className="w-full bg-m-bg border border-accent/50 rounded px-1.5 py-0.5 text-[11px] font-mono focus:outline-none"
+            className="w-full bg-background border border-primary/50 rounded px-1.5 py-0.5 text-2xs font-mono focus:outline-none"
           />
         ) : (
           formatDate(fr.date)
@@ -113,11 +113,11 @@ export function FeatureRequestRow({ fr, rowIndex, isFocused, onUpdate, onDelete,
             onChange={(e) => setEditValue(e.target.value)}
             onBlur={commitEdit}
             onKeyDown={handleKeyDown}
-            className="w-full bg-m-bg border border-accent/50 rounded px-2 py-0.5 text-xs focus:outline-none"
+            className="w-full bg-background border border-primary/50 rounded px-2 py-0.5 text-xs focus:outline-none"
           />
         ) : (
           <p className={clsx(
-            'text-xs leading-relaxed text-m-fg',
+            'text-xs leading-relaxed text-foreground',
             fr.resolved && 'line-through',
           )}>
             {fr.request}
@@ -138,12 +138,12 @@ export function FeatureRequestRow({ fr, rowIndex, isFocused, onUpdate, onDelete,
             onBlur={commitEdit}
             onKeyDown={handleKeyDown}
             rows={2}
-            className="w-full bg-m-bg border border-accent/50 rounded px-2 py-0.5 text-xs focus:outline-none resize-none"
+            className="w-full bg-background border border-primary/50 rounded px-2 py-0.5 text-xs focus:outline-none resize-none"
           />
         ) : fr.response ? (
-          <p className="text-xs leading-relaxed text-m-fg-secondary">{fr.response}</p>
+          <p className="text-xs leading-relaxed text-foreground">{fr.response}</p>
         ) : (
-          <span className="text-m-fg-muted italic text-[11px]">—</span>
+          <span className="text-muted-foreground italic text-2xs">—</span>
         )}
       </div>
 
@@ -154,8 +154,8 @@ export function FeatureRequestRow({ fr, rowIndex, isFocused, onUpdate, onDelete,
           className={clsx(
             'inline-flex items-center justify-center w-3.5 h-3.5 rounded border-[1.5px] transition',
             fr.resolved
-              ? 'bg-accent border-accent text-white'
-              : 'border-m-border bg-transparent hover:border-accent/50',
+              ? 'bg-primary border-primary text-white'
+              : 'border-border bg-transparent hover:border-primary/50',
           )}
           aria-label={fr.resolved ? 'Mark unresolved' : 'Mark resolved'}
         >
@@ -166,7 +166,7 @@ export function FeatureRequestRow({ fr, rowIndex, isFocused, onUpdate, onDelete,
       {/* Actions */}
       <div className="flex items-start gap-0.5 pt-0.5 opacity-0 group-hover:opacity-100 transition">
         {isPending ? (
-          <Loader2 size={12} className="animate-spin text-m-fg-muted" />
+          <Loader2 size={12} className="animate-spin text-muted-foreground" />
         ) : fr.syncStatus === 'error' ? (
           <span title="Sync failed"><AlertTriangle size={12} className="text-amber-400" /></span>
         ) : (
@@ -174,7 +174,7 @@ export function FeatureRequestRow({ fr, rowIndex, isFocused, onUpdate, onDelete,
             {!fr.resolved && (
               <button
                 onClick={onConvert}
-                className="p-0.5 text-m-fg-dim hover:text-accent"
+                className="p-0.5 text-muted-foreground/70 hover:text-primary"
                 title="Create Action Item"
               >
                 <ArrowRight size={12} />
@@ -182,14 +182,14 @@ export function FeatureRequestRow({ fr, rowIndex, isFocused, onUpdate, onDelete,
             )}
             <button
               onClick={() => startEdit('request')}
-              className="p-0.5 text-m-fg-dim hover:text-m-fg-strong"
+              className="p-0.5 text-muted-foreground/70 hover:text-foreground"
               title="Edit"
             >
               <Pencil size={12} />
             </button>
             <button
               onClick={onDelete}
-              className="p-0.5 text-m-fg-dim hover:text-red-400"
+              className="p-0.5 text-muted-foreground/70 hover:text-red-400"
               title="Delete"
             >
               <Trash2 size={12} />

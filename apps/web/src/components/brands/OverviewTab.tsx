@@ -102,32 +102,32 @@ export function OverviewTab({
   return (
     <div className="py-6 px-6 space-y-6 animate-slideUp">
       {/* Health Card */}
-      <div className="bg-m-surface rounded-xl p-6 border border-m-border-subtle">
+      <div className="bg-card rounded-xl p-6 border border-border/60">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Activity Stats */}
           <div className="space-y-3">
-            <h3 className="text-xs uppercase tracking-wide text-m-fg-secondary font-semibold">
+            <h3 className="text-xs uppercase tracking-wide text-foreground font-semibold">
               Activity
             </h3>
             <div className="space-y-1.5">
-              <div className="text-sm text-m-fg-secondary">
+              <div className="text-sm text-foreground">
                 {lastMeeting ? (
                   <>
-                    <span className="text-m-fg-muted">Last meeting:</span>{' '}
-                    <span className="text-m-fg-strong">{daysSince(lastMeeting.date)}</span>
+                    <span className="text-muted-foreground">Last meeting:</span>{' '}
+                    <span className="text-foreground">{daysSince(lastMeeting.date)}</span>
                     {' — '}
                     {lastMeeting.title}
                   </>
                 ) : (
-                  <span className="text-m-fg-muted">No meetings logged</span>
+                  <span className="text-muted-foreground">No meetings logged</span>
                 )}
               </div>
               {cadence !== null && (
-                <div className="text-sm text-m-fg-muted">
+                <div className="text-sm text-muted-foreground">
                   Avg {cadence} days between meetings
                 </div>
               )}
-              <div className="text-sm text-m-fg-muted">
+              <div className="text-sm text-muted-foreground">
                 {totalMeetings} meeting{totalMeetings !== 1 ? 's' : ''} logged
               </div>
             </div>
@@ -135,26 +135,26 @@ export function OverviewTab({
 
           {/* Top Open Items */}
           <div className="space-y-3">
-            <h3 className="text-xs uppercase tracking-wide text-m-fg-secondary font-semibold">
+            <h3 className="text-xs uppercase tracking-wide text-foreground font-semibold">
               Open items
               {openCount > 0 && (
-                <span className="ml-1 text-m-fg-muted">({openCount})</span>
+                <span className="ml-1 text-muted-foreground">({openCount})</span>
               )}
             </h3>
             {topOpenItems.length === 0 ? (
-              <p className="text-sm text-m-fg-muted">No open action items.</p>
+              <p className="text-sm text-muted-foreground">No open action items.</p>
             ) : (
               <ul className="space-y-2">
                 {topOpenItems.map((item) => (
                   <li key={item.id} className="flex items-start gap-2 text-sm group">
-                    <span className="flex-1 text-m-fg-secondary leading-snug">
+                    <span className="flex-1 text-foreground leading-snug">
                       {item.text}
                     </span>
-                    <span className="shrink-0 text-xs text-m-fg-muted">{itemAge(item.createdAt)}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{itemAge(item.createdAt)}</span>
                     <div className="shrink-0 flex gap-1.5 opacity-0 group-hover:opacity-100 transition">
                       <button
                         onClick={() => onSendToToday(item.id)}
-                        className="text-xs text-accent hover:underline"
+                        className="text-xs text-primary hover:underline"
                         title="Send to Today"
                       >
                         +Today
@@ -172,7 +172,7 @@ export function OverviewTab({
               </ul>
             )}
             {openCount > 3 && (
-              <p className="text-xs text-accent">
+              <p className="text-xs text-primary">
                 +{openCount - 3} more open items
               </p>
             )}
@@ -180,26 +180,26 @@ export function OverviewTab({
 
           {/* Feature Requests */}
           <div className="space-y-3">
-            <h3 className="text-xs uppercase tracking-wide text-m-fg-secondary font-semibold">
+            <h3 className="text-xs uppercase tracking-wide text-foreground font-semibold">
               Feature Requests
             </h3>
             {featureRequests.length === 0 ? (
-              <p className="text-sm text-m-fg-muted">No feature requests yet.</p>
+              <p className="text-sm text-muted-foreground">No feature requests yet.</p>
             ) : (
               <div className="space-y-1.5">
-                <div className="text-sm text-m-fg-secondary">
-                  <span className="text-m-fg-strong font-medium">
+                <div className="text-sm text-foreground">
+                  <span className="text-foreground font-medium">
                     {featureRequests.filter((r) => !r.resolved).length}
                   </span>{' '}
-                  <span className="text-m-fg-muted">open</span>
+                  <span className="text-muted-foreground">open</span>
                   {', '}
-                  <span className="text-m-fg-strong font-medium">
+                  <span className="text-foreground font-medium">
                     {featureRequests.filter((r) => r.resolved).length}
                   </span>{' '}
-                  <span className="text-m-fg-muted">resolved</span>
+                  <span className="text-muted-foreground">resolved</span>
                 </div>
                 {brand.featureRequestsConfig?.connected && (
-                  <div className="text-xs text-m-fg-muted">
+                  <div className="text-xs text-muted-foreground">
                     Sheet connected
                   </div>
                 )}
@@ -207,7 +207,7 @@ export function OverviewTab({
             )}
             <button
               onClick={onSwitchToFeatureRequests}
-              className="text-xs text-accent hover:underline"
+              className="text-xs text-primary hover:underline"
             >
               View all →
             </button>
@@ -217,10 +217,10 @@ export function OverviewTab({
 
       {/* Stakeholders Grid */}
       <div>
-        <h3 className="text-xs uppercase tracking-wide text-m-fg-secondary font-semibold mb-3">
+        <h3 className="text-xs uppercase tracking-wide text-foreground font-semibold mb-3">
           Key Stakeholders
           {stakeholders.length > 0 && (
-            <span className="ml-1 text-m-fg-muted">({stakeholders.length})</span>
+            <span className="ml-1 text-muted-foreground">({stakeholders.length})</span>
           )}
         </h3>
         <StakeholdersGrid
@@ -232,7 +232,7 @@ export function OverviewTab({
 
       {/* North Star */}
       <div>
-        <h3 className="text-xs uppercase tracking-wide text-m-fg-secondary font-semibold mb-3">
+        <h3 className="text-xs uppercase tracking-wide text-foreground font-semibold mb-3">
           North Star
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -305,9 +305,9 @@ function EditableCard({
   };
 
   return (
-    <div className="bg-m-surface rounded-lg p-5 border border-m-border-subtle">
+    <div className="bg-card rounded-lg p-5 border border-border/60">
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs text-m-fg-secondary font-medium">{label}</span>
+        <span className="text-xs text-foreground font-medium">{label}</span>
         {saved && <Check size={14} className="text-emerald-500" />}
       </div>
       <textarea
@@ -316,7 +316,7 @@ function EditableCard({
         onBlur={commit}
         rows={3}
         placeholder={`Add ${label.toLowerCase()}…`}
-        className="w-full bg-m-bg border border-m-border rounded-lg px-3 py-2 text-sm text-m-fg-strong focus:outline-none focus:border-accent resize-none placeholder:text-m-fg-dim"
+        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary resize-none placeholder:text-muted-foreground/70"
       />
     </div>
   );
@@ -391,7 +391,7 @@ function StakeholdersGrid({
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <button
           onClick={() => setAdding(true)}
-          className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-m-border p-4 text-sm text-m-fg-muted hover:text-accent hover:border-accent transition"
+          className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground hover:text-primary hover:border-primary transition"
         >
           <Plus size={16} />
           Add stakeholder
@@ -405,7 +405,7 @@ function StakeholdersGrid({
       {stakeholders.map((s, i) => (
         <div
           key={s.id}
-          className="group bg-m-surface rounded-lg p-4 border border-m-border-subtle flex items-start gap-3 relative"
+          className="group bg-card rounded-lg p-4 border border-border/60 flex items-start gap-3 relative"
         >
           {editingId === s.id ? (
             <div className="flex-1 flex flex-col gap-2">
@@ -418,7 +418,7 @@ function StakeholdersGrid({
                   if (e.key === 'Enter') commitEdit(s.id);
                   if (e.key === 'Escape') setEditingId(null);
                 }}
-                className="w-full bg-m-bg border border-m-border rounded px-2 py-1.5 text-sm focus:outline-none focus:border-accent"
+                className="w-full bg-background border border-border rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary"
                 placeholder="Name"
               />
               <input
@@ -429,7 +429,7 @@ function StakeholdersGrid({
                   if (e.key === 'Enter') commitEdit(s.id);
                   if (e.key === 'Escape') setEditingId(null);
                 }}
-                className="w-full bg-m-bg border border-m-border rounded px-2 py-1.5 text-sm focus:outline-none focus:border-accent"
+                className="w-full bg-background border border-border rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary"
                 placeholder="Role"
               />
               <input
@@ -441,7 +441,7 @@ function StakeholdersGrid({
                   if (e.key === 'Escape') setEditingId(null);
                 }}
                 onBlur={() => commitEdit(s.id)}
-                className="w-full bg-m-bg border border-m-border rounded px-2 py-1.5 text-sm focus:outline-none focus:border-accent"
+                className="w-full bg-background border border-border rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary"
                 placeholder="Email"
               />
             </div>
@@ -453,21 +453,21 @@ function StakeholdersGrid({
                 lastMentionDate={lastMentionByStakeholder.get(s.name.toLowerCase()) ?? null}
               />
               <div className="flex-1 min-w-0">
-                <div className="text-sm text-m-fg-strong font-medium truncate">{s.name}</div>
-                {s.role && <div className="text-xs text-m-fg-muted truncate">{s.role}</div>}
-                {s.email && <div className="text-xs text-m-fg-muted truncate">{s.email}</div>}
+                <div className="text-sm text-foreground font-medium truncate">{s.name}</div>
+                {s.role && <div className="text-xs text-muted-foreground truncate">{s.role}</div>}
+                {s.email && <div className="text-xs text-muted-foreground truncate">{s.email}</div>}
               </div>
               <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
                 <button
                   onClick={() => startEdit(s)}
-                  className="p-1 text-m-fg-dim hover:text-m-fg-strong rounded"
+                  className="p-1 text-muted-foreground/70 hover:text-foreground rounded"
                   title="Edit"
                 >
                   <Pencil size={12} />
                 </button>
                 <button
                   onClick={() => deleteStakeholder.mutate(s.id)}
-                  className="p-1 text-m-fg-dim hover:text-red-400 rounded"
+                  className="p-1 text-muted-foreground/70 hover:text-red-400 rounded"
                   title="Remove"
                 >
                   <Trash2 size={12} />
@@ -479,7 +479,7 @@ function StakeholdersGrid({
       ))}
 
       {adding ? (
-        <div className="bg-m-surface rounded-lg p-4 border border-accent/30 flex flex-col gap-2">
+        <div className="bg-card rounded-lg p-4 border border-primary/30 flex flex-col gap-2">
           <input
             ref={addInputRef}
             type="text"
@@ -489,7 +489,7 @@ function StakeholdersGrid({
               if (e.key === 'Enter') submitNew();
               if (e.key === 'Escape') setAdding(false);
             }}
-            className="w-full bg-m-bg border border-m-border rounded px-2 py-1.5 text-sm focus:outline-none focus:border-accent"
+            className="w-full bg-background border border-border rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary"
             placeholder="Name"
           />
           <input
@@ -500,7 +500,7 @@ function StakeholdersGrid({
               if (e.key === 'Enter') submitNew();
               if (e.key === 'Escape') setAdding(false);
             }}
-            className="w-full bg-m-bg border border-m-border rounded px-2 py-1.5 text-sm focus:outline-none focus:border-accent"
+            className="w-full bg-background border border-border rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary"
             placeholder="Role"
           />
           <input
@@ -512,14 +512,14 @@ function StakeholdersGrid({
               if (e.key === 'Escape') setAdding(false);
             }}
             onBlur={submitNew}
-            className="w-full bg-m-bg border border-m-border rounded px-2 py-1.5 text-sm focus:outline-none focus:border-accent"
+            className="w-full bg-background border border-border rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary"
             placeholder="Email"
           />
         </div>
       ) : (
         <button
           onClick={() => setAdding(true)}
-          className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-m-border p-4 text-sm text-m-fg-muted hover:text-accent hover:border-accent transition"
+          className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground hover:text-primary hover:border-primary transition"
         >
           <Plus size={16} />
           Add stakeholder
@@ -542,14 +542,14 @@ function RawContextCollapsible({
     <div>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 text-xs text-m-fg-dim hover:text-m-fg-muted transition"
+        className="flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-muted-foreground transition"
       >
         {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
         Imported context
-        {source && <span className="text-m-fg-dim">({source})</span>}
+        {source && <span className="text-muted-foreground/70">({source})</span>}
       </button>
       {open && (
-        <pre className="mt-2 p-3 bg-m-surface-60 border border-m-border-subtle rounded-lg text-xs text-m-fg-tertiary whitespace-pre-wrap font-mono max-h-48 overflow-y-auto leading-relaxed animate-slideUp">
+        <pre className="mt-2 p-3 bg-card/60 border border-border/60 rounded-lg text-xs text-muted-foreground whitespace-pre-wrap font-mono max-h-48 overflow-y-auto leading-relaxed animate-slideUp">
           {content}
         </pre>
       )}

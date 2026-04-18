@@ -1,92 +1,143 @@
-import { Command } from 'cmdk';
-import { useNavigate } from 'react-router-dom';
-import { useUiStore } from '../store/ui';
-import { useUpdateSettings, useSettings } from '../api/hooks';
+import { useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
+import {
+  CommandDialog,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandShortcut,
+} from '@/components/ui/command';
+import { Kbd } from '@/components/ui/kbd';
+import { useUiStore } from '@/store/ui';
+import { useCommands } from '@/lib/commands/context';
+import { loadRecents, pushRecent } from '@/lib/commands/recents';
+import type { Command } from '@/lib/commands/types';
+
+const RECENT_SECTION = 'Recent';
+
+function renderShortcut(shortcut: string | undefined) {
+  if (!shortcut) return null;
+  const tokens = shortcut.split(' ').filter(Boolean);
+  return (
+    <CommandShortcut>
+      <span className="inline-flex items-center gap-1">
+        {tokens.map((t, i) => (
+          <Kbd key={`${t}-${i}`}>{t}</Kbd>
+        ))}
+      </span>
+    </CommandShortcut>
+  );
+}
+
+function CommandRow({
+  command,
+  onRun,
+}: {
+  command: Command;
+  onRun: (c: Command) => void;
+}) {
+  const Icon = command.icon;
+  // cmdk uses textContent for fuzzy-match scoring. The `value` prop makes
+  // id + label + description all searchable regardless of rendering.
+  const value = [command.id, command.label, command.description ?? '']
+    .join(' ')
+    .toLowerCase();
+  return (
+    <CommandItem value={value} onSelect={() => onRun(command)}>
+      {Icon ? (
+        <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+      ) : null}
+      <div className="flex min-w-0 flex-col">
+        <span className="truncate text-foreground">{command.label}</span>
+        {command.description ? (
+          <span className="truncate text-2xs text-muted-foreground">
+            {command.description}
+          </span>
+        ) : null}
+      </div>
+      {renderShortcut(command.shortcut)}
+    </CommandItem>
+  );
+}
+
+function groupBySection(commands: readonly Command[]): Map<string, Command[]> {
+  const groups = new Map<string, Command[]>();
+  for (const c of commands) {
+    const list = groups.get(c.section);
+    if (list) list.push(c);
+    else groups.set(c.section, [c]);
+  }
+  for (const list of groups.values()) {
+    list.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+  }
+  return groups;
+}
 
 export function CommandPaletteModal() {
-  const close = useUiStore((s) => s.closeModal);
-  const openModal = useUiStore((s) => s.openModal);
-  const navigate = useNavigate();
-  const settingsQ = useSettings();
-  const updateSettings = useUpdateSettings();
+  const activeModal = useUiStore((s) => s.activeModal);
+  const closeModal = useUiStore((s) => s.closeModal);
+  const allCommands = useCommands();
+  const location = useLocation();
 
-  const run = (fn: () => void) => () => {
-    fn();
-    close();
+  const visible = useMemo(
+    () => allCommands.filter((c) => !c.when || c.when(location.pathname)),
+    [allCommands, location.pathname],
+  );
+
+  const recents = useMemo(() => {
+    const ids = loadRecents();
+    const byId = new Map(visible.map((c) => [c.id, c] as const));
+    const list: Command[] = [];
+    for (const id of ids) {
+      const cmd = byId.get(id);
+      if (cmd) list.push(cmd);
+    }
+    return list;
+  }, [visible, activeModal]);
+
+  const groups = useMemo(() => groupBySection(visible), [visible]);
+
+  const handleRun = (command: Command) => {
+    pushRecent(command.id);
+    closeModal();
+    // Defer run() to next tick so the dialog fully unmounts before any
+    // navigation or state change — avoids flicker and Radix focus warnings.
+    queueMicrotask(() => command.run());
   };
 
-  const toggleTheme = () => {
-    const theme = settingsQ.data?.theme === 'dark' ? 'light' : 'dark';
-    updateSettings.mutate({ theme });
-  };
+  const open = activeModal === 'command-palette';
 
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-start justify-center pt-24 px-4 bg-black/60 backdrop-blur-sm"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) close();
+    <CommandDialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) closeModal();
       }}
     >
-      <Command
-        label="Command Palette"
-        className="w-full max-w-xl rounded-xl border border-m-border bg-m-bg shadow-2xl overflow-hidden"
-      >
-        <Command.Input
-          autoFocus
-          placeholder="Type a command…"
-          className="w-full px-4 py-3 bg-transparent border-b border-m-border-subtle text-m-fg placeholder:text-m-fg-dim focus:outline-none"
-        />
-        <Command.List className="max-h-80 overflow-y-auto py-2">
-          <Command.Empty className="px-4 py-6 text-center text-sm text-m-fg-muted">
-            No commands match.
-          </Command.Empty>
-
-          <Command.Group heading="Daily">
-            <Command.Item onSelect={run(() => openModal('plan-my-day'))}>
-              Plan My Day
-            </Command.Item>
-            <Command.Item onSelect={run(() => openModal('end-of-day'))}>
-              End of Day Review
-            </Command.Item>
-            <Command.Item onSelect={run(() => openModal('weekly-stats'))}>
-              Weekly Stats
-            </Command.Item>
-          </Command.Group>
-
-          <Command.Group heading="Navigation">
-            <Command.Item onSelect={run(() => navigate('/'))}>Go to Today</Command.Item>
-            <Command.Item onSelect={run(() => navigate('/backlog'))}>
-              Go to Backlog
-            </Command.Item>
-          </Command.Group>
-
-          <Command.Group heading="Data">
-            <Command.Item
-              onSelect={run(() => window.dispatchEvent(new CustomEvent('momentum:export')))}
-            >
-              Export Data (JSON)
-            </Command.Item>
-            <Command.Item
-              onSelect={run(() => window.dispatchEvent(new CustomEvent('momentum:import')))}
-            >
-              Import Data (JSON)
-            </Command.Item>
-          </Command.Group>
-
-          <Command.Group heading="Preferences">
-            <Command.Item onSelect={run(toggleTheme)}>Toggle Dark Mode</Command.Item>
-          </Command.Group>
-
-          <Command.Group heading="Help">
-            <Command.Item onSelect={run(() => openModal('shortcuts'))}>
-              Keyboard Shortcuts
-            </Command.Item>
-            <Command.Item onSelect={run(() => openModal('release-notes'))}>
-              What's New
-            </Command.Item>
-          </Command.Group>
-        </Command.List>
-      </Command>
-    </div>
+      <CommandInput placeholder="What do you want to do?" />
+      <CommandList>
+        <CommandEmpty>No commands match.</CommandEmpty>
+        {recents.length > 0 ? (
+          <CommandGroup heading={RECENT_SECTION}>
+            {recents.map((c) => (
+              <CommandRow
+                key={`recent-${c.id}`}
+                command={c}
+                onRun={handleRun}
+              />
+            ))}
+          </CommandGroup>
+        ) : null}
+        {Array.from(groups.entries()).map(([section, cmds]) => (
+          <CommandGroup key={section} heading={section}>
+            {cmds.map((c) => (
+              <CommandRow key={c.id} command={c} onRun={handleRun} />
+            ))}
+          </CommandGroup>
+        ))}
+      </CommandList>
+    </CommandDialog>
   );
 }

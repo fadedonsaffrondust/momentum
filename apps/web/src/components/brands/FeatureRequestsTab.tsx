@@ -211,19 +211,19 @@ export function FeatureRequestsTab({
   if (!config?.connected && featureRequests.length === 0) {
     return (
       <div className="py-16 px-6 flex flex-col items-center gap-4 animate-slideUp">
-        <p className="text-m-fg-muted text-sm">
-          No feature requests for this brand. Connect a Google Sheet or add one manually.
+        <p className="text-muted-foreground text-sm">
+          No feature requests for this brand. Connect a spreadsheet or add one manually.
         </p>
         <div className="flex items-center gap-3">
           <button
             onClick={onConnect}
-            className="px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition"
+            className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition"
           >
-            Connect Google Sheet
+            Connect spreadsheet
           </button>
           <button
             onClick={startAdding}
-            className="px-4 py-2 rounded-lg border border-m-border-subtle text-sm text-m-fg-secondary hover:bg-m-surface-hover transition"
+            className="px-4 py-2 rounded-lg border border-border/60 text-sm text-foreground hover:bg-secondary transition"
           >
             Add Manually
           </button>
@@ -237,28 +237,28 @@ export function FeatureRequestsTab({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-base font-semibold text-m-fg">Feature Requests</h2>
-          <span className="text-xs text-m-fg-muted">
+          <h2 className="text-base font-semibold text-foreground">Feature Requests</h2>
+          <span className="text-xs text-muted-foreground">
             {openCount} open, {resolvedCount} resolved
           </span>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={startAdding}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-accent hover:bg-accent/10 transition"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-primary hover:bg-primary/10 transition"
           >
             <Plus size={14} />
             New Request
           </button>
           {config?.connected && (
             <>
-              <span className="text-[11px] text-m-fg-muted">
+              <span className="text-2xs text-muted-foreground">
                 {config.lastSyncedAt ? `Synced ${timeAgo(config.lastSyncedAt)}` : 'Not synced yet'}
               </span>
               <button
                 onClick={onSync}
                 disabled={isSyncing}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-m-fg-secondary hover:bg-m-surface-hover transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-foreground hover:bg-secondary transition disabled:opacity-50"
               >
                 <RefreshCw size={13} className={isSyncing ? 'animate-spin' : ''} />
                 Sync
@@ -267,10 +267,10 @@ export function FeatureRequestsTab({
                 href={config.sheetUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs text-m-fg-muted hover:text-m-fg-secondary hover:bg-m-surface-hover transition"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition"
               >
                 <ExternalLink size={12} />
-                Open in Sheets
+                Open spreadsheet
               </a>
             </>
           )}
@@ -279,7 +279,7 @@ export function FeatureRequestsTab({
 
       {/* Filter bar */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center rounded-lg border border-m-border-subtle overflow-hidden">
+        <div className="flex items-center rounded-lg border border-border/60 overflow-hidden">
           {(['open', 'resolved', 'all'] as const).map((f) => (
             <button
               key={f}
@@ -287,8 +287,8 @@ export function FeatureRequestsTab({
               className={clsx(
                 'px-3 py-1.5 text-xs capitalize transition',
                 statusFilter === f
-                  ? 'bg-accent text-white font-medium'
-                  : 'text-m-fg-muted hover:text-m-fg-secondary',
+                  ? 'bg-primary text-white font-medium'
+                  : 'text-muted-foreground hover:text-foreground',
               )}
             >
               {f}
@@ -297,29 +297,29 @@ export function FeatureRequestsTab({
         </div>
 
         <div className="relative flex-1 max-w-xs">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-m-fg-muted" />
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search requests…"
-            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-m-border-subtle bg-m-bg text-sm text-m-fg placeholder:text-m-fg-muted focus:outline-none focus:border-accent/50"
+            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-border/60 bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
           />
         </div>
 
         <button
           onClick={() => setSortMode((s) => (s === 'date' ? 'status' : 'date'))}
-          className="px-3 py-1.5 rounded-lg border border-m-border-subtle text-xs text-m-fg-muted hover:text-m-fg-secondary transition"
+          className="px-3 py-1.5 rounded-lg border border-border/60 text-xs text-muted-foreground hover:text-foreground transition"
         >
           Sort: {sortMode === 'date' ? 'Newest' : 'Status'}
         </button>
       </div>
 
       {/* Table */}
-      <div className="border border-m-border-subtle rounded-lg overflow-hidden">
+      <div className="border border-border/60 rounded-lg overflow-hidden">
         {/* Header */}
         <div
-          className="grid gap-x-3 px-3 py-2 border-b border-m-border-subtle bg-m-surface/50 text-[11px] font-medium text-m-fg-muted"
+          className="grid gap-x-3 px-3 py-2 border-b border-border/60 bg-card/50 text-2xs font-medium text-muted-foreground"
           style={{ gridTemplateColumns: '70px 1fr 1fr 32px 52px' }}
         >
           <div>Date</div>
@@ -332,10 +332,10 @@ export function FeatureRequestsTab({
         {/* New request row */}
         {adding && (
           <div
-            className="grid gap-x-3 px-3 py-2 border-b border-m-border-subtle bg-accent/5"
+            className="grid gap-x-3 px-3 py-2 border-b border-border/60 bg-primary/5"
             style={{ gridTemplateColumns: '70px 1fr 1fr 32px 52px' }}
           >
-            <div className="text-[11px] font-mono text-m-fg-muted pt-0.5">{todayDate()}</div>
+            <div className="text-2xs font-mono text-muted-foreground pt-0.5">{todayDate()}</div>
             <div>
               <input
                 ref={addInputRef}
@@ -351,7 +351,7 @@ export function FeatureRequestsTab({
                   }
                 }}
                 placeholder="What's the request?"
-                className="w-full bg-m-bg border border-accent/50 rounded px-2 py-0.5 text-xs focus:outline-none placeholder:text-m-fg-muted"
+                className="w-full bg-background border border-primary/50 rounded px-2 py-0.5 text-xs focus:outline-none placeholder:text-muted-foreground"
               />
             </div>
             <div>
@@ -365,11 +365,11 @@ export function FeatureRequestsTab({
                   if (e.key === 'Escape') setAdding(false);
                 }}
                 placeholder="Response (optional)"
-                className="w-full bg-m-bg border border-m-border-subtle rounded px-2 py-0.5 text-xs focus:outline-none focus:border-accent/50 placeholder:text-m-fg-muted"
+                className="w-full bg-background border border-border/60 rounded px-2 py-0.5 text-xs focus:outline-none focus:border-primary/50 placeholder:text-muted-foreground"
               />
             </div>
             <div className="flex items-start justify-center pt-0.5">
-              <span className="inline-block w-3.5 h-3.5 rounded border-[1.5px] border-m-border bg-transparent" />
+              <span className="inline-block w-3.5 h-3.5 rounded border-[1.5px] border-border bg-transparent" />
             </div>
             <div />
           </div>
@@ -377,7 +377,7 @@ export function FeatureRequestsTab({
 
         {/* Rows */}
         {visible.length === 0 && !adding ? (
-          <div className="px-4 py-8 text-center text-xs text-m-fg-muted">
+          <div className="px-4 py-8 text-center text-xs text-muted-foreground">
             {search ? 'No requests match your search.' : 'No feature requests to show.'}
           </div>
         ) : (
@@ -401,7 +401,7 @@ export function FeatureRequestsTab({
         <div className="flex justify-center">
           <button
             onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-            className="px-4 py-2 rounded-lg text-xs text-m-fg-muted hover:text-m-fg-secondary hover:bg-m-surface-hover transition"
+            className="px-4 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition"
           >
             Load more ({filtered.length - visibleCount} remaining)
           </button>

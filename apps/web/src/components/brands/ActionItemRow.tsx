@@ -64,14 +64,14 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
   };
 
   return (
-    <div className="group flex items-start gap-2 py-1.5 px-1 rounded hover:bg-m-surface-40 transition text-sm">
+    <div className="group flex items-start gap-2 py-1.5 px-1 rounded hover:bg-card/40 transition text-sm">
       <button
         onClick={onToggleDone}
         className={clsx(
           'mt-0.5 w-4 h-4 shrink-0 rounded border flex items-center justify-center transition',
           isDone
             ? 'border-emerald-500 bg-emerald-500/20 text-emerald-400'
-            : 'border-m-border-strong hover:border-accent',
+            : 'border-border hover:border-primary',
         )}
         aria-label={isDone ? 'Reopen' : 'Mark done'}
       >
@@ -97,20 +97,20 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
                 setEditing(false);
               }
             }}
-            className="w-full bg-m-bg border border-m-border rounded px-2 py-0.5 text-xs focus:outline-none focus:border-accent"
+            className="w-full bg-background border border-border rounded px-2 py-0.5 text-xs focus:outline-none focus:border-primary"
           />
         ) : (
           <span
             className={clsx(
-              'text-m-fg-strong break-words',
-              isDone && 'line-through text-m-fg-muted',
+              'text-foreground break-words',
+              isDone && 'line-through text-muted-foreground',
             )}
           >
             {item.text}
           </span>
         )}
 
-        <div className="flex items-center gap-2 mt-0.5 text-xs text-m-fg-muted">
+        <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
           {item.owner && <span>{item.owner}</span>}
           {item.dueDate && (
             <span className={item.dueDate < new Date().toISOString().slice(0, 10) ? 'text-red-400' : ''}>
@@ -119,7 +119,7 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
           )}
           <span>{dateLabel}</span>
           {item.linkedTaskId && (
-            <span className="text-accent">In Today</span>
+            <span className="text-primary">In Today</span>
           )}
         </div>
       </div>
@@ -130,7 +130,7 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
       <button
         type="button"
         onClick={openPicker}
-        className="shrink-0 mt-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-accent/40"
+        className="shrink-0 mt-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40"
         title={
           assignee
             ? `Assigned to ${assignee.displayName || assignee.email}`
@@ -141,7 +141,7 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
         {assignee ? (
           <Avatar user={assignee} size="xs" showTooltip={false} />
         ) : (
-          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-dashed border-m-border text-[8px] text-m-fg-dim hover:border-accent hover:text-accent transition">
+          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-dashed border-border text-[8px] text-muted-foreground/70 hover:border-primary hover:text-primary transition">
             +
           </span>
         )}
@@ -151,7 +151,7 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
         {!isDone && !item.linkedTaskId && (
           <button
             onClick={onSendToToday}
-            className="p-1 text-m-fg-dim hover:text-accent"
+            className="p-1 text-muted-foreground/70 hover:text-primary"
             title="Send to Today"
           >
             <ArrowRight size={14} />
@@ -159,14 +159,14 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
         )}
         <button
           onClick={() => setEditing(true)}
-          className="p-1 text-m-fg-dim hover:text-m-fg-strong"
+          className="p-1 text-muted-foreground/70 hover:text-foreground"
           title="Edit"
         >
           <Pencil size={14} />
         </button>
         <button
           onClick={onDelete}
-          className="p-1 text-m-fg-dim hover:text-red-400"
+          className="p-1 text-muted-foreground/70 hover:text-red-400"
           title="Delete"
         >
           <Trash2 size={14} />

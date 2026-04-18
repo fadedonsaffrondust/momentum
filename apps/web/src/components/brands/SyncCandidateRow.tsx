@@ -29,8 +29,8 @@ export function SyncCandidateRow({ candidate, checked, focused, onToggle }: Prop
       onClick={onToggle}
       className={`w-full text-left flex items-start gap-3 px-4 py-3 rounded-lg border transition ${
         focused
-          ? 'border-accent/50 bg-accent/5'
-          : 'border-m-border/50 hover:bg-m-surface-40'
+          ? 'border-primary/50 bg-primary/5'
+          : 'border-border/50 hover:bg-card/40'
       }`}
     >
       <input
@@ -38,12 +38,12 @@ export function SyncCandidateRow({ candidate, checked, focused, onToggle }: Prop
         checked={checked}
         onChange={onToggle}
         onClick={(e) => e.stopPropagation()}
-        className="mt-1 shrink-0 accent-accent"
+        className="mt-1 shrink-0 accent-primary"
       />
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-m-fg-strong truncate">
+          <span className="text-sm font-medium text-foreground truncate">
             {meeting.name}
           </span>
           <span
@@ -57,7 +57,7 @@ export function SyncCandidateRow({ candidate, checked, focused, onToggle }: Prop
           </span>
         </div>
 
-        <div className="flex items-center gap-3 mt-1 text-xs text-m-fg-muted">
+        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
           <span>{date} at {time}</span>
           {meeting.duration != null && (
             <span>{Math.round(meeting.duration / 60)} min</span>
@@ -69,13 +69,13 @@ export function SyncCandidateRow({ candidate, checked, focused, onToggle }: Prop
             {attendeeNames.map((name, i) => (
               <span
                 key={i}
-                className="text-[10px] px-1.5 py-0.5 rounded bg-m-surface-raised text-m-fg-tertiary"
+                className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground"
               >
                 {name}
               </span>
             ))}
             {meeting.invitees.length > 5 && (
-              <span className="text-[10px] text-m-fg-dim">
+              <span className="text-[10px] text-muted-foreground/70">
                 +{meeting.invitees.length - 5} more
               </span>
             )}
@@ -83,7 +83,7 @@ export function SyncCandidateRow({ candidate, checked, focused, onToggle }: Prop
         )}
 
         {reasons.length > 0 && (
-          <div className="mt-1.5 text-[11px] text-m-fg-muted italic">
+          <div className="mt-1.5 text-2xs text-muted-foreground italic">
             {reasons.slice(0, 2).join(' · ')}
           </div>
         )}

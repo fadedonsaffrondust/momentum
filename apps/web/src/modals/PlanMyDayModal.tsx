@@ -67,16 +67,16 @@ export function PlanMyDayModal() {
   return (
     <Modal title="Plan My Day" onClose={close} className="max-w-3xl">
       <div className="space-y-4">
-        <div className="flex items-center gap-2 text-xs text-m-fg-muted">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {['Leftovers', 'Backlog', 'Summary'].map((label, i) => (
             <div
               key={label}
               className={`flex-1 px-3 py-1 rounded border ${
                 i === step
-                  ? 'border-accent text-accent'
+                  ? 'border-primary text-primary'
                   : i < step
-                    ? 'border-m-border-strong text-m-fg-tertiary'
-                    : 'border-m-border-subtle text-m-fg-dim'
+                    ? 'border-border text-muted-foreground'
+                    : 'border-border/60 text-muted-foreground/70'
               }`}
             >
               {i + 1}. {label}
@@ -86,27 +86,27 @@ export function PlanMyDayModal() {
 
         {step === 0 && (
           <section className="space-y-2">
-            <p className="text-sm text-m-fg-tertiary">
+            <p className="text-sm text-muted-foreground">
               Yesterday's leftovers — {leftovers.length} incomplete.
             </p>
             {leftovers.length === 0 && (
-              <p className="text-xs text-m-fg-dim">Nothing left behind. Nice.</p>
+              <p className="text-xs text-muted-foreground/70">Nothing left behind. Nice.</p>
             )}
             {leftovers.map((t) => (
               <div
                 key={t.id}
-                className="flex items-center justify-between rounded border border-m-border px-3 py-2 text-sm"
+                className="flex items-center justify-between rounded border border-border px-3 py-2 text-sm"
               >
-                <span className="text-m-fg-strong">{t.title}</span>
+                <span className="text-foreground">{t.title}</span>
                 <div className="flex gap-2">
                   <button
-                    className="text-xs text-accent hover:underline"
+                    className="text-xs text-primary hover:underline"
                     onClick={() => moveToToday(t.id)}
                   >
                     Move to today
                   </button>
                   <button
-                    className="text-xs text-m-fg-muted hover:text-m-fg-secondary"
+                    className="text-xs text-muted-foreground hover:text-foreground"
                     onClick={() =>
                       deferTask.mutate(t.id)
                     }
@@ -127,23 +127,23 @@ export function PlanMyDayModal() {
 
         {step === 1 && (
           <section className="space-y-2">
-            <p className="text-sm text-m-fg-tertiary">Top {backlogSuggestions.length} from backlog</p>
+            <p className="text-sm text-muted-foreground">Top {backlogSuggestions.length} from backlog</p>
             {backlogSuggestions.length === 0 && (
-              <p className="text-xs text-m-fg-dim">Backlog is clean.</p>
+              <p className="text-xs text-muted-foreground/70">Backlog is clean.</p>
             )}
             {backlogSuggestions.map((t) => (
               <div
                 key={t.id}
-                className="flex items-center justify-between rounded border border-m-border px-3 py-2 text-sm"
+                className="flex items-center justify-between rounded border border-border px-3 py-2 text-sm"
               >
                 <div>
-                  <div className="text-m-fg-strong">{t.title}</div>
-                  <div className="text-xs text-m-fg-dim">
+                  <div className="text-foreground">{t.title}</div>
+                  <div className="text-xs text-muted-foreground/70">
                     {t.priority} · {formatMinutes(t.estimateMinutes)}
                   </div>
                 </div>
                 <button
-                  className="text-xs text-accent hover:underline"
+                  className="text-xs text-primary hover:underline"
                   onClick={() => moveToToday(t.id)}
                 >
                   Pull to today
@@ -155,14 +155,14 @@ export function PlanMyDayModal() {
 
         {step === 2 && (
           <section className="space-y-3">
-            <p className="text-sm text-m-fg-tertiary">
+            <p className="text-sm text-muted-foreground">
               {todayTasks.length} tasks planned · {formatMinutes(totalMinutes)} /{' '}
               {formatMinutes(capacity)}
             </p>
-            <p className="text-m-fg-strong">{message}</p>
+            <p className="text-foreground">{message}</p>
             <ul className="space-y-1">
               {todayTasks.map((t) => (
-                <li key={t.id} className="text-xs text-m-fg-tertiary">
+                <li key={t.id} className="text-xs text-muted-foreground">
                   • {t.title}
                 </li>
               ))}
@@ -173,13 +173,13 @@ export function PlanMyDayModal() {
         <div className="flex gap-2 pt-2">
           <button
             onClick={() => (step === 0 ? close() : setStep(step - 1))}
-            className="flex-1 py-2 rounded-md border border-m-border text-sm hover:bg-m-surface-hover"
+            className="flex-1 py-2 rounded-md border border-border text-sm hover:bg-secondary"
           >
             {step === 0 ? 'Close' : 'Back'}
           </button>
           <button
             onClick={() => (step === 2 ? close() : setStep(step + 1))}
-            className="flex-1 py-2 rounded-md bg-accent hover:bg-accent-hover text-sm"
+            className="flex-1 py-2 rounded-md bg-primary hover:bg-primary/90 text-sm"
           >
             {step === 2 ? 'Start the day' : 'Next'}
           </button>

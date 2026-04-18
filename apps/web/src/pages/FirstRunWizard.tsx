@@ -44,23 +44,23 @@ export function FirstRunWizard() {
     <WizardShell>
       <div className="w-full max-w-md space-y-6">
         <header>
-          <h1 className="text-2xl font-semibold text-accent">Welcome to Momentum</h1>
-          <p className="text-sm text-m-fg-tertiary mt-1">Step {step + 1} of 2</p>
+          <h1 className="text-2xl font-semibold text-primary">Welcome to Momentum</h1>
+          <p className="text-sm text-muted-foreground mt-1">Step {step + 1} of 2</p>
         </header>
 
         {step === 0 && (
           <section className="space-y-4">
             <label className="block text-sm">
-              <span className="text-m-fg-tertiary">What should I call you?</span>
+              <span className="text-muted-foreground">What should I call you?</span>
               <input
                 type="text"
                 autoFocus
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 maxLength={64}
-                className="mt-1 w-full px-3 py-2 bg-m-bg border border-m-border rounded-md focus:outline-none focus:border-accent"
+                className="mt-1 w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:border-primary"
               />
-              <span className="mt-1 block text-xs text-m-fg-muted">
+              <span className="mt-1 block text-xs text-muted-foreground">
                 Your teammates will see this name on tasks, parkings, and inbox events.
               </span>
             </label>
@@ -74,7 +74,7 @@ export function FirstRunWizard() {
             <button
               onClick={saveNameAndNext}
               disabled={!displayName.trim() || updateMe.isPending}
-              className="w-full py-2 rounded-md bg-accent hover:bg-accent-hover transition disabled:opacity-50"
+              className="w-full py-2 rounded-md bg-primary hover:bg-primary/90 transition disabled:opacity-50"
             >
               Continue
             </button>
@@ -85,7 +85,7 @@ export function FirstRunWizard() {
           <section className="space-y-4">
             <div>
               <label className="block text-sm">
-                <span className="text-m-fg-tertiary">
+                <span className="text-muted-foreground">
                   How many focused hours per day?
                 </span>
                 <input
@@ -95,12 +95,12 @@ export function FirstRunWizard() {
                   step={1}
                   value={capacity}
                   onChange={(e) => setCapacity(Number(e.target.value))}
-                  className="mt-3 w-full accent-accent"
+                  className="mt-3 w-full accent-primary"
                 />
-                <div className="text-center text-3xl font-semibold text-accent mt-2">
+                <div className="text-center text-3xl font-semibold text-primary mt-2">
                   {capacity}h
                 </div>
-                <span className="mt-2 block text-xs text-m-fg-muted text-center">
+                <span className="mt-2 block text-xs text-muted-foreground text-center">
                   You can change this any time in Settings.
                 </span>
               </label>
@@ -115,14 +115,14 @@ export function FirstRunWizard() {
             <div className="flex gap-2">
               <button
                 onClick={() => setStep(0)}
-                className="flex-1 py-2 rounded-md border border-m-border hover:bg-m-surface-hover transition"
+                className="flex-1 py-2 rounded-md border border-border hover:bg-secondary transition"
               >
                 Back
               </button>
               <button
                 onClick={finish}
                 disabled={updateSettings.isPending}
-                className="flex-1 py-2 rounded-md bg-accent hover:bg-accent-hover transition disabled:opacity-50"
+                className="flex-1 py-2 rounded-md bg-primary hover:bg-primary/90 transition disabled:opacity-50"
               >
                 Start
               </button>
@@ -134,7 +134,7 @@ export function FirstRunWizard() {
           {[0, 1].map((i) => (
             <div
               key={i}
-              className={`h-1 flex-1 rounded-full ${i <= step ? 'bg-accent' : 'bg-m-border'}`}
+              className={`h-1 flex-1 rounded-full ${i <= step ? 'bg-primary' : 'bg-border'}`}
             />
           ))}
         </div>
@@ -145,7 +145,7 @@ export function FirstRunWizard() {
 
 function WizardShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-m-bg text-m-fg font-mono p-6">
+    <div className="min-h-screen flex items-center justify-center bg-background text-foreground font-mono p-6">
       {children}
     </div>
   );

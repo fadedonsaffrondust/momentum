@@ -79,11 +79,11 @@ export function InboxPage() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-m-border-subtle">
+      <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-border/60">
         <div className="flex items-center gap-3">
-          <h1 className="text-lg text-accent">Inbox</h1>
+          <h1 className="text-lg text-primary">Inbox</h1>
           {unread > 0 && (
-            <span className="text-[10px] uppercase tracking-widest text-m-fg-muted">
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
               {unread} unread
             </span>
           )}
@@ -93,7 +93,7 @@ export function InboxPage() {
           <button
             onClick={() => markAllRead.mutate()}
             disabled={unread === 0 || markAllRead.isPending}
-            className="text-xs px-3 py-1.5 rounded-md border border-m-border hover:bg-m-surface-hover transition disabled:opacity-40"
+            className="text-xs px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition disabled:opacity-40"
           >
             Mark all read
           </button>
@@ -102,17 +102,17 @@ export function InboxPage() {
 
       <div className="flex-1 overflow-y-auto">
         {inboxQ.isLoading && (
-          <p className="text-sm text-m-fg-muted px-6 py-4">Loading inbox…</p>
+          <p className="text-sm text-muted-foreground px-6 py-4">Loading inbox…</p>
         )}
         {!inboxQ.isLoading && events.length === 0 && (
           <div className="px-6 py-10 text-center">
-            <p className="text-sm text-m-fg-muted">
+            <p className="text-sm text-muted-foreground">
               {filter === 'unread' ? 'No unread events.' : 'No inbox events yet.'}
             </p>
             {filter === 'unread' && (
               <button
                 onClick={() => setFilter('all')}
-                className="mt-2 text-xs text-accent hover:underline"
+                className="mt-2 text-xs text-primary hover:underline"
               >
                 See all events →
               </button>
@@ -165,13 +165,13 @@ function InboxRow({
       onMouseEnter={onSelect}
       onClick={onOpen}
       className={clsx(
-        'w-full flex items-start gap-3 px-6 py-3 text-left border-b border-m-border-subtle transition',
-        isSelected ? 'bg-m-surface' : 'hover:bg-m-surface-60',
+        'w-full flex items-start gap-3 px-6 py-3 text-left border-b border-border/60 transition',
+        isSelected ? 'bg-card' : 'hover:bg-card/60',
       )}
     >
       {unread && (
         <span
-          className="mt-1.5 w-1.5 h-1.5 rounded-full bg-accent shrink-0"
+          className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0"
           aria-label="Unread"
         />
       )}
@@ -181,19 +181,19 @@ function InboxRow({
         <div
           className={clsx(
             'text-sm leading-snug break-words',
-            unread ? 'text-m-fg font-medium' : 'text-m-fg-tertiary',
+            unread ? 'text-foreground font-medium' : 'text-muted-foreground',
           )}
         >
-          <span className="text-m-fg-strong">
+          <span className="text-foreground">
             {event.actor.displayName || event.actor.email}
           </span>{' '}
           {description}
         </div>
         {preview && (
-          <div className="text-xs text-m-fg-muted mt-0.5 truncate">{preview}</div>
+          <div className="text-xs text-muted-foreground mt-0.5 truncate">{preview}</div>
         )}
       </div>
-      <div className="text-[10px] text-m-fg-dim shrink-0 mt-1">
+      <div className="text-[10px] text-muted-foreground/70 shrink-0 mt-1">
         {formatTimeAgo(event.createdAt)}
       </div>
     </button>
@@ -211,7 +211,7 @@ function FilterChip({
     <div
       role="radiogroup"
       aria-label="Inbox filter"
-      className="inline-flex items-center gap-0.5 rounded-lg border border-m-border bg-m-surface-40 p-0.5 text-xs"
+      className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-card/40 p-0.5 text-xs"
     >
       {(['unread', 'all'] as const).map((opt) => {
         const active = value === opt;
@@ -225,8 +225,8 @@ function FilterChip({
             className={clsx(
               'px-2.5 py-1 rounded-md transition font-medium',
               active
-                ? 'bg-accent/20 text-accent'
-                : 'text-m-fg-tertiary hover:text-m-fg-strong',
+                ? 'bg-primary/20 text-primary'
+                : 'text-muted-foreground hover:text-foreground',
             )}
           >
             {opt === 'unread' ? 'Unread' : 'All'}

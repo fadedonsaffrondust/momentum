@@ -30,21 +30,21 @@ export function BrandListRail({
   }, [brands, search]);
 
   return (
-    <aside className="w-[280px] shrink-0 border-r border-m-border-subtle flex flex-col h-full bg-m-bg-60">
-      <div className="p-3 border-b border-m-border-subtle">
+    <aside className="w-[280px] shrink-0 border-r border-border/60 flex flex-col h-full bg-background/85">
+      <div className="p-3 border-b border-border/60">
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search brands…"
           data-task-input="true"
-          className="w-full px-3 py-2 bg-m-surface-60 border border-m-border rounded-md text-sm focus:outline-none focus:border-accent text-m-fg placeholder:text-m-fg-dim"
+          className="w-full px-3 py-2 bg-card/60 border border-border rounded-md text-sm focus:outline-none focus:border-primary text-foreground placeholder:text-muted-foreground/70"
         />
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
         {filtered.length === 0 && (
-          <p className="text-xs text-m-fg-dim text-center py-8">
+          <p className="text-xs text-muted-foreground/70 text-center py-8">
             {search ? 'No brands match.' : 'No brands yet.'}
           </p>
         )}
@@ -60,16 +60,16 @@ export function BrandListRail({
         ))}
       </div>
 
-      <div className="p-3 border-t border-m-border-subtle space-y-2">
+      <div className="p-3 border-t border-border/60 space-y-2">
         <button
           onClick={onNewBrand}
-          className="w-full py-2 rounded-md bg-accent hover:bg-accent-hover text-sm transition"
+          className="w-full py-2 rounded-md bg-primary hover:bg-primary/90 text-sm transition"
         >
           + New Brand
         </button>
         <button
           onClick={onImport}
-          className="w-full py-2 rounded-md border border-m-border text-xs text-m-fg-muted hover:text-m-fg-strong hover:bg-m-surface-hover transition"
+          className="w-full py-2 rounded-md border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition"
         >
           Import from file
         </button>

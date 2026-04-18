@@ -172,7 +172,7 @@ export function MeetingNoteModal({
       }}
     >
       <div
-        className="w-full max-w-4xl my-12 mx-4 rounded-2xl border border-m-border bg-m-bg shadow-2xl animate-scaleIn"
+        className="w-full max-w-4xl my-12 mx-4 rounded-2xl border border-border bg-background shadow-2xl animate-scaleIn"
         onKeyDown={(e) => {
           if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
             e.preventDefault();
@@ -180,13 +180,13 @@ export function MeetingNoteModal({
           }
         }}
       >
-        <header className="flex items-center justify-between px-6 py-4 border-b border-m-border-subtle">
-          <h2 className="text-sm text-m-fg-secondary">
+        <header className="flex items-center justify-between px-6 py-4 border-b border-border/60">
+          <h2 className="text-sm text-foreground">
             {isEdit ? 'Edit Meeting Note' : 'New Meeting Note'}
           </h2>
           <button
             onClick={handleClose}
-            className="text-m-fg-muted hover:text-m-fg transition"
+            className="text-muted-foreground hover:text-foreground transition"
             aria-label="Close"
           >
             <X size={18} />
@@ -196,7 +196,7 @@ export function MeetingNoteModal({
         <div className="p-6 space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
                 Date
               </span>
               <input
@@ -206,12 +206,12 @@ export function MeetingNoteModal({
                   setDate(e.target.value);
                   markDirty();
                 }}
-                className="mt-1 w-full bg-m-surface border border-m-border rounded-lg px-3 py-2 text-sm text-m-fg focus:outline-none focus:border-accent"
+                className="mt-1 w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
               />
             </label>
 
             <label className="block relative">
-              <span className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
                 Title
               </span>
               <input
@@ -241,10 +241,10 @@ export function MeetingNoteModal({
                   }
                 }}
                 placeholder="e.g. Weekly sync"
-                className="mt-1 w-full bg-m-surface border border-m-border rounded-lg px-3 py-2 text-sm text-m-fg focus:outline-none focus:border-accent"
+                className="mt-1 w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
               />
               {titleSuggestions.length > 0 && (
-                <ul className="absolute z-10 left-0 right-0 mt-1 border border-m-border bg-m-bg rounded-lg shadow-xl py-1 max-h-40 overflow-y-auto">
+                <ul className="absolute z-10 left-0 right-0 mt-1 border border-border bg-background rounded-lg shadow-xl py-1 max-h-40 overflow-y-auto">
                   {titleSuggestions.map((s, i) => (
                     <li key={s}>
                       <button
@@ -252,8 +252,8 @@ export function MeetingNoteModal({
                         onMouseEnter={() => setTitleHighlight(i)}
                         onClick={() => pickTitleSuggestion(s)}
                         className={clsx(
-                          'w-full text-left px-3 py-1.5 text-xs text-m-fg-secondary',
-                          i === titleHighlight ? 'bg-m-surface-hover' : 'hover:bg-m-surface-hover',
+                          'w-full text-left px-3 py-1.5 text-xs text-foreground',
+                          i === titleHighlight ? 'bg-secondary' : 'hover:bg-secondary',
                         )}
                       >
                         {s}
@@ -267,14 +267,14 @@ export function MeetingNoteModal({
 
           {/* Attendees chip input */}
           <div>
-            <span className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
               Attendees
             </span>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5 bg-m-surface border border-m-border rounded-lg px-3 py-2 min-h-[40px]">
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 bg-card border border-border rounded-lg px-3 py-2 min-h-[40px]">
               {attendees.map((a) => (
                 <span
                   key={a}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs"
                 >
                   {a}
                   <button
@@ -315,10 +315,10 @@ export function MeetingNoteModal({
                     }
                   }}
                   placeholder={attendees.length === 0 ? 'Type a name…' : ''}
-                  className="w-full bg-transparent text-xs text-m-fg focus:outline-none"
+                  className="w-full bg-transparent text-xs text-foreground focus:outline-none"
                 />
                 {attendeeSuggestions.length > 0 && (
-                  <ul className="absolute z-10 left-0 right-0 mt-2 border border-m-border bg-m-bg rounded-lg shadow-xl py-1 max-h-32 overflow-y-auto">
+                  <ul className="absolute z-10 left-0 right-0 mt-2 border border-border bg-background rounded-lg shadow-xl py-1 max-h-32 overflow-y-auto">
                     {attendeeSuggestions.map((s, i) => (
                       <li key={s}>
                         <button
@@ -326,8 +326,8 @@ export function MeetingNoteModal({
                           onMouseEnter={() => setAttendeeHighlight(i)}
                           onClick={() => addAttendee(s)}
                           className={clsx(
-                            'w-full text-left px-3 py-1.5 text-xs text-m-fg-secondary',
-                            i === attendeeHighlight ? 'bg-m-surface-hover' : 'hover:bg-m-surface-hover',
+                            'w-full text-left px-3 py-1.5 text-xs text-foreground',
+                            i === attendeeHighlight ? 'bg-secondary' : 'hover:bg-secondary',
                           )}
                         >
                           {s}
@@ -341,14 +341,14 @@ export function MeetingNoteModal({
           </div>
 
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
               Notes
             </span>
-            <p className="text-[10px] text-m-fg-dim mt-0.5 mb-1">
-              Type <code className="text-m-fg-muted">/todo</code> for action items.{' '}
-              <code className="text-m-fg-muted">- </code> or{' '}
-              <code className="text-m-fg-muted">1. </code> for lists.{' '}
-              <code className="text-m-fg-muted">Tab</code> to indent.
+            <p className="text-[10px] text-muted-foreground/70 mt-0.5 mb-1">
+              Type <code className="text-muted-foreground">/todo</code> for action items.{' '}
+              <code className="text-muted-foreground">- </code> or{' '}
+              <code className="text-muted-foreground">1. </code> for lists.{' '}
+              <code className="text-muted-foreground">Tab</code> to indent.
             </p>
             <textarea
               value={notes}
@@ -356,13 +356,13 @@ export function MeetingNoteModal({
               onKeyDown={smartNotes.onKeyDown}
               rows={10}
               placeholder="Meeting notes…"
-              className="w-full bg-m-surface border border-m-border rounded-lg px-3 py-2 text-sm text-m-fg focus:outline-none focus:border-accent resize-y font-mono"
+              className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary resize-y font-mono"
             />
           </label>
 
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
-              Decisions <span className="text-m-fg-dim">(optional)</span>
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+              Decisions <span className="text-muted-foreground/70">(optional)</span>
             </span>
             <textarea
               value={decisions}
@@ -372,14 +372,14 @@ export function MeetingNoteModal({
               }}
               rows={3}
               placeholder="One decision per line…"
-              className="w-full bg-m-surface border border-m-border rounded-lg px-3 py-2 text-sm text-m-fg focus:outline-none focus:border-accent resize-y"
+              className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary resize-y"
             />
           </label>
         </div>
 
-        <footer className="flex items-center justify-between px-6 py-4 border-t border-m-border-subtle">
-          <span className="text-[10px] text-m-fg-dim">
-            <kbd className="px-1 py-0.5 rounded border border-m-border bg-m-surface text-m-fg-tertiary font-mono text-[9px]">
+        <footer className="flex items-center justify-between px-6 py-4 border-t border-border/60">
+          <span className="text-[10px] text-muted-foreground/70">
+            <kbd className="px-1 py-0.5 rounded border border-border bg-card text-muted-foreground font-mono text-[9px]">
               ⌘ Enter
             </kbd>{' '}
             to save
@@ -387,14 +387,14 @@ export function MeetingNoteModal({
           <div className="flex gap-2">
             <button
               onClick={handleClose}
-              className="px-4 py-2 rounded-md border border-m-border text-sm hover:bg-m-surface-hover transition"
+              className="px-4 py-2 rounded-md border border-border text-sm hover:bg-secondary transition"
             >
               Cancel
             </button>
             <button
               onClick={() => void save()}
               disabled={createMeeting.isPending || updateMeeting.isPending}
-              className="px-4 py-2 rounded-md bg-accent hover:bg-accent-hover text-sm transition disabled:opacity-50"
+              className="px-4 py-2 rounded-md bg-primary hover:bg-primary/90 text-sm transition disabled:opacity-50"
             >
               {isEdit ? 'Update' : 'Save Meeting'}
             </button>

@@ -65,9 +65,9 @@ export function TaskCard({ task, role, selected, onSelect, editing, onEditDone }
       onClick={onSelect}
       style={{ borderLeftColor: priorityColor[task.priority] }}
       className={clsx(
-        'group rounded-lg border-l-4 border border-m-border bg-m-surface-60 p-3 cursor-pointer transition',
-        'hover:border-m-border-strong',
-        selected && 'ring-2 ring-accent/80 border-m-border-strong',
+        'group rounded-lg border-l-4 border border-border bg-card/60 p-3 cursor-pointer transition',
+        'hover:border-border',
+        selected && 'ring-2 ring-primary/80 border-border',
         task.status === 'done' && 'opacity-60',
       )}
     >
@@ -89,14 +89,14 @@ export function TaskCard({ task, role, selected, onSelect, editing, onEditDone }
             }
             e.stopPropagation();
           }}
-          className="w-full bg-m-bg border border-m-border rounded px-2 py-1 text-sm text-m-fg focus:outline-none focus:border-accent"
+          className="w-full bg-background border border-border rounded px-2 py-1 text-sm text-foreground focus:outline-none focus:border-primary"
           data-task-edit-input="true"
         />
       ) : (
         <div className="flex items-start gap-2">
           <div
             className={clsx(
-              'flex-1 min-w-0 text-sm text-m-fg leading-snug break-words',
+              'flex-1 min-w-0 text-sm text-foreground leading-snug break-words',
               task.status === 'done' && 'line-through',
             )}
           >
@@ -108,7 +108,7 @@ export function TaskCard({ task, role, selected, onSelect, editing, onEditDone }
         </div>
       )}
 
-      <div className="mt-2 flex items-center gap-2 flex-wrap text-xs text-m-fg-muted">
+      <div className="mt-2 flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
         {role && (
           <span
             className="px-2 py-0.5 rounded-full"
@@ -118,14 +118,14 @@ export function TaskCard({ task, role, selected, onSelect, editing, onEditDone }
           </span>
         )}
         {task.estimateMinutes != null && (
-          <span className="text-m-fg-tertiary">{formatMinutes(task.estimateMinutes)}</span>
+          <span className="text-muted-foreground">{formatMinutes(task.estimateMinutes)}</span>
         )}
         {task.status === 'done' && task.actualMinutes != null && (
           <span className="text-emerald-500">
             actual {formatMinutes(task.actualMinutes)}
           </span>
         )}
-        <span className="ml-auto text-m-fg-dim">{formatTimeAgo(task.createdAt)}</span>
+        <span className="ml-auto text-muted-foreground/70">{formatTimeAgo(task.createdAt)}</span>
       </div>
     </div>
   );

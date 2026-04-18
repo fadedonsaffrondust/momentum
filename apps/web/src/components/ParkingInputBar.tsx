@@ -71,7 +71,7 @@ export const ParkingInputBar = forwardRef<HTMLInputElement>((_props, ref) => {
               ? 'Park a private topic (only you can see it)…'
               : 'Park a topic for the next daily… (#role, !h, +mon)'
           }
-          className="flex-1 px-4 py-3 bg-m-surface-60 border border-m-border rounded-lg focus:outline-none focus:border-accent text-m-fg placeholder:text-m-fg-dim"
+          className="flex-1 px-4 py-3 bg-card/60 border border-border rounded-lg focus:outline-none focus:border-primary text-foreground placeholder:text-muted-foreground/70"
         />
         <button
           type="button"
@@ -86,7 +86,7 @@ export const ParkingInputBar = forwardRef<HTMLInputElement>((_props, ref) => {
           aria-label={
             visibility === 'private' ? 'Make team-visible' : 'Make private'
           }
-          className="shrink-0 px-3 rounded-lg border border-m-border bg-m-surface-60 text-m-fg-muted hover:text-m-fg-strong hover:border-m-border-strong transition flex items-center gap-1.5 text-xs"
+          className="shrink-0 px-3 rounded-lg border border-border bg-card/60 text-muted-foreground hover:text-foreground hover:border-border transition flex items-center gap-1.5 text-xs"
         >
           {visibility === 'private' ? <LockIcon /> : <TeamIcon />}
           <span>{visibility === 'private' ? 'Private' : 'Team'}</span>

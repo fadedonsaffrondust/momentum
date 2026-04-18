@@ -23,28 +23,28 @@ export function BrandListItem({ brand, meetings, actionItems, selected, onClick 
       className={clsx(
         'group w-full text-left px-3 py-2.5 rounded-lg transition',
         selected
-          ? 'bg-accent/10 border border-accent/30'
-          : 'border border-transparent hover:bg-m-surface-60',
+          ? 'bg-primary/10 border border-primary/30'
+          : 'border border-transparent hover:bg-card/60',
         brand.status === 'importing' && 'opacity-60',
       )}
     >
       <div className="flex items-center gap-2">
         <HealthPill status={health} />
-        <span className="flex-1 text-sm text-m-fg truncate font-medium">
+        <span className="flex-1 text-sm text-foreground truncate font-medium">
           {brand.name}
         </span>
         {hasUnseen && !selected && (
           <span
-            className="w-1.5 h-1.5 rounded-full bg-accent shrink-0"
+            className="w-1.5 h-1.5 rounded-full bg-primary shrink-0"
             aria-label="New activity"
             title="New activity since your last visit"
           />
         )}
         {brand.status === 'importing' && (
-          <span className="text-[9px] text-accent animate-pulse">importing…</span>
+          <span className="text-[9px] text-primary animate-pulse">importing…</span>
         )}
       </div>
-      <div className="mt-0.5 pl-[14px] text-[10px] text-m-fg-dim">
+      <div className="mt-0.5 pl-[14px] text-[10px] text-muted-foreground/70">
         {brand.status === 'import_failed'
           ? 'Import failed'
           : formatTimeAgo(brand.updatedAt)}

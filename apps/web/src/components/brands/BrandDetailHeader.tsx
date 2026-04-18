@@ -59,7 +59,7 @@ export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting, 
   };
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between gap-4 px-6 py-4 border-b border-m-border-subtle bg-m-bg/90 backdrop-blur">
+    <header className="sticky top-0 z-20 flex items-center justify-between gap-4 px-6 py-4 border-b border-border/60 bg-background/90 backdrop-blur">
       <div className="flex items-center gap-3 min-w-0">
         <HealthPill status={health} showLabel />
         {editing ? (
@@ -76,11 +76,11 @@ export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting, 
                 setEditing(false);
               }
             }}
-            className="text-xl font-semibold text-m-fg bg-transparent border-b border-accent focus:outline-none min-w-0"
+            className="text-xl font-semibold text-foreground bg-transparent border-b border-primary focus:outline-none min-w-0"
           />
         ) : (
           <h1
-            className="text-xl font-semibold text-m-fg truncate cursor-pointer hover:text-accent transition"
+            className="text-xl font-semibold text-foreground truncate cursor-pointer hover:text-primary transition"
             onDoubleClick={() => setEditing(true)}
             title="Double-click to rename"
           >
@@ -88,7 +88,7 @@ export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting, 
           </h1>
         )}
         {brand.status === 'importing' && (
-          <span className="text-xs text-accent animate-pulse px-2 py-0.5 rounded-full border border-accent/30 bg-accent/5">
+          <span className="text-xs text-primary animate-pulse px-2 py-0.5 rounded-full border border-primary/30 bg-primary/5">
             Importing…
           </span>
         )}
@@ -102,14 +102,14 @@ export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting, 
       <div className="flex items-center gap-2 shrink-0">
         <button
           onClick={onNewMeeting}
-          className="px-3 py-1.5 rounded-md bg-accent hover:bg-accent-hover text-sm transition"
+          className="px-3 py-1.5 rounded-md bg-primary hover:bg-primary/90 text-sm transition"
         >
           + New Meeting Note
         </button>
 
         <button
           onClick={onSyncRecordings}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-m-border hover:bg-m-surface-hover text-sm text-m-fg-tertiary hover:text-m-fg transition"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border hover:bg-secondary text-sm text-muted-foreground hover:text-foreground transition"
           title="Sync meeting recordings"
         >
           <RefreshCw size={14} />
@@ -118,7 +118,7 @@ export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting, 
 
         <button
           onClick={onSyncSettings}
-          className="w-8 h-8 flex items-center justify-center rounded-md border border-m-border hover:bg-m-surface-hover text-m-fg-tertiary hover:text-m-fg transition"
+          className="w-8 h-8 flex items-center justify-center rounded-md border border-border hover:bg-secondary text-muted-foreground hover:text-foreground transition"
           aria-label="Recording sync settings"
           title="Recording sync settings"
         >
@@ -128,7 +128,7 @@ export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting, 
         <div className="relative">
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="w-8 h-8 flex items-center justify-center rounded-md border border-m-border hover:bg-m-surface-hover text-m-fg-tertiary hover:text-m-fg transition"
+            className="w-8 h-8 flex items-center justify-center rounded-md border border-border hover:bg-secondary text-muted-foreground hover:text-foreground transition"
             aria-label="More actions"
           >
             ⋯
@@ -139,19 +139,19 @@ export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting, 
                 className="fixed inset-0 z-20"
                 onClick={() => setMenuOpen(false)}
               />
-              <div className="absolute right-0 top-10 z-30 w-40 rounded-lg border border-m-border bg-m-bg shadow-xl py-1 animate-scaleIn">
+              <div className="absolute right-0 top-10 z-30 w-40 rounded-lg border border-border bg-background shadow-xl py-1 animate-scaleIn">
                 <button
                   onClick={() => {
                     setEditing(true);
                     setMenuOpen(false);
                   }}
-                  className="w-full text-left px-3 py-1.5 text-sm text-m-fg-secondary hover:bg-m-surface-hover"
+                  className="w-full text-left px-3 py-1.5 text-sm text-foreground hover:bg-secondary"
                 >
                   Rename
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="w-full text-left px-3 py-1.5 text-sm text-red-400 hover:bg-m-surface-hover"
+                  className="w-full text-left px-3 py-1.5 text-sm text-red-400 hover:bg-secondary"
                 >
                   Delete brand
                 </button>

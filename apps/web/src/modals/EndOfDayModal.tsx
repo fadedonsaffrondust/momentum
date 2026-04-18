@@ -44,29 +44,29 @@ export function EndOfDayModal() {
         </div>
 
         <section>
-          <h3 className="text-xs uppercase tracking-wider text-m-fg-muted mb-2">Done</h3>
+          <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Done</h3>
           <ul className="space-y-1 text-sm">
             {done.map((t) => (
               <li key={t.id} className="flex justify-between">
-                <span className="text-m-fg-secondary line-through">{t.title}</span>
-                <span className="text-xs text-m-fg-dim">
+                <span className="text-foreground line-through">{t.title}</span>
+                <span className="text-xs text-muted-foreground/70">
                   {formatMinutes(t.actualMinutes)} / {formatMinutes(t.estimateMinutes)}
                 </span>
               </li>
             ))}
-            {done.length === 0 && <li className="text-xs text-m-fg-dim">Nothing done.</li>}
+            {done.length === 0 && <li className="text-xs text-muted-foreground/70">Nothing done.</li>}
           </ul>
         </section>
 
         <section>
-          <h3 className="text-xs uppercase tracking-wider text-m-fg-muted mb-2">Incomplete</h3>
+          <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Incomplete</h3>
           <ul className="space-y-1 text-sm">
             {incomplete.map((t) => (
               <li key={t.id} className="flex items-center justify-between gap-3">
-                <span className="text-m-fg-secondary">{t.title}</span>
+                <span className="text-foreground">{t.title}</span>
                 <div className="flex gap-2 text-xs">
                   <button
-                    className="text-accent hover:underline"
+                    className="text-primary hover:underline"
                     onClick={() => deferTask.mutate(t.id)}
                   >
                     Defer
@@ -81,18 +81,18 @@ export function EndOfDayModal() {
               </li>
             ))}
             {incomplete.length === 0 && (
-              <li className="text-xs text-m-fg-dim">Clean slate for tomorrow.</li>
+              <li className="text-xs text-muted-foreground/70">Clean slate for tomorrow.</li>
             )}
           </ul>
         </section>
 
         <label className="block">
-          <span className="text-xs text-m-fg-muted">One thing you learned today?</span>
+          <span className="text-xs text-muted-foreground">One thing you learned today?</span>
           <textarea
             value={journal}
             onChange={(e) => setJournal(e.target.value)}
             rows={3}
-            className="mt-1 w-full bg-m-bg border border-m-border rounded px-3 py-2 text-sm text-m-fg focus:outline-none focus:border-accent resize-none"
+            className="mt-1 w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary resize-none"
             placeholder="Write a sentence…"
           />
         </label>
@@ -100,14 +100,14 @@ export function EndOfDayModal() {
         <div className="flex gap-2">
           <button
             onClick={close}
-            className="flex-1 py-2 rounded-md border border-m-border text-sm hover:bg-m-surface-hover"
+            className="flex-1 py-2 rounded-md border border-border text-sm hover:bg-secondary"
           >
             Cancel
           </button>
           <button
             onClick={save}
             disabled={saveLog.isPending}
-            className="flex-1 py-2 rounded-md bg-accent hover:bg-accent-hover text-sm disabled:opacity-50"
+            className="flex-1 py-2 rounded-md bg-primary hover:bg-primary/90 text-sm disabled:opacity-50"
           >
             Save review
           </button>
@@ -123,9 +123,9 @@ export function EndOfDayModal() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-m-border rounded-lg py-3">
-      <div className="text-2xl font-semibold text-m-fg">{value}</div>
-      <div className="text-xs text-m-fg-muted mt-1">{label}</div>
+    <div className="border border-border rounded-lg py-3">
+      <div className="text-2xl font-semibold text-foreground">{value}</div>
+      <div className="text-xs text-muted-foreground mt-1">{label}</div>
     </div>
   );
 }

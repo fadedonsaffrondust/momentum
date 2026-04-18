@@ -129,9 +129,9 @@ export function AssigneePickerModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-sm rounded-xl border border-m-border bg-m-bg shadow-2xl p-4 animate-scaleIn">
+      <div className="w-full max-w-sm rounded-xl border border-border bg-background shadow-2xl p-4 animate-scaleIn">
         <div className="mb-3">
-          <div className="text-[10px] uppercase tracking-widest text-m-fg-muted">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
             {title}
           </div>
           <input
@@ -144,14 +144,14 @@ export function AssigneePickerModal({
               setQuery(e.target.value);
               setCursor(0);
             }}
-            className="mt-2 w-full bg-transparent text-sm px-0 py-1 border-b border-m-border-subtle focus:outline-none focus:border-accent"
+            className="mt-2 w-full bg-transparent text-sm px-0 py-1 border-b border-border/60 focus:outline-none focus:border-primary"
           />
         </div>
 
         {usersQ.isLoading ? (
-          <p className="text-sm text-m-fg-muted px-1 py-2">Loading team…</p>
+          <p className="text-sm text-muted-foreground px-1 py-2">Loading team…</p>
         ) : options.length === 0 ? (
-          <p className="text-sm text-m-fg-muted px-1 py-2">
+          <p className="text-sm text-muted-foreground px-1 py-2">
             {query ? 'No matches.' : 'No active team members.'}
           </p>
         ) : (
@@ -168,7 +168,7 @@ export function AssigneePickerModal({
                   onClick={() => commit(opt)}
                   className={clsx(
                     'flex items-center justify-between gap-3 rounded-md px-2 py-1.5 text-sm cursor-pointer transition',
-                    cursor === i ? 'bg-m-surface text-m-fg' : 'text-m-fg-tertiary hover:bg-m-surface-60',
+                    cursor === i ? 'bg-card text-foreground' : 'text-muted-foreground hover:bg-card/60',
                   )}
                 >
                   {opt.kind === 'user' ? (
@@ -176,17 +176,17 @@ export function AssigneePickerModal({
                       <Avatar user={opt.user} size="sm" showTooltip={false} />
                       <span className="truncate">{opt.user.displayName || opt.user.email}</span>
                       {isCurrent && (
-                        <span className="text-[9px] text-m-fg-dim">· current</span>
+                        <span className="text-[9px] text-muted-foreground/70">· current</span>
                       )}
                     </span>
                   ) : (
-                    <span className="flex items-center gap-2 text-m-fg-tertiary">
-                      <span className="inline-block w-5 h-5 rounded-full border border-m-border-strong" />
+                    <span className="flex items-center gap-2 text-muted-foreground">
+                      <span className="inline-block w-5 h-5 rounded-full border border-border" />
                       No assignee
                     </span>
                   )}
                   {i < 9 && (
-                    <span className="text-[10px] text-m-fg-dim font-mono">{i + 1}</span>
+                    <span className="text-[10px] text-muted-foreground/70 font-mono">{i + 1}</span>
                   )}
                 </li>
               );
@@ -194,7 +194,7 @@ export function AssigneePickerModal({
           </ul>
         )}
 
-        <div className="mt-3 pt-3 border-t border-m-border-subtle text-[10px] text-m-fg-dim flex items-center justify-between">
+        <div className="mt-3 pt-3 border-t border-border/60 text-[10px] text-muted-foreground/70 flex items-center justify-between">
           <span>
             <Kbd>↑</Kbd> <Kbd>↓</Kbd> nav · <Kbd>Enter</Kbd> pick
           </span>
@@ -227,7 +227,7 @@ function filterUsers(users: readonly UserSummary[], query: string): UserSummary[
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex items-center justify-center min-w-[1.2rem] h-4 px-1 rounded border border-m-border bg-m-surface text-[9px] font-mono text-m-fg-tertiary">
+    <kbd className="inline-flex items-center justify-center min-w-[1.2rem] h-4 px-1 rounded border border-border bg-card text-[9px] font-mono text-muted-foreground">
       {children}
     </kbd>
   );

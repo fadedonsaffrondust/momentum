@@ -182,23 +182,23 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
     >
       <div
         ref={modalRef}
-        className="w-full max-w-[640px] max-h-[80vh] mx-4 rounded-xl border border-m-border bg-m-bg shadow-2xl flex flex-col"
+        className="w-full max-w-[640px] max-h-[80vh] mx-4 rounded-xl border border-border bg-background shadow-2xl flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-m-border">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
-            <h2 className="text-sm font-semibold text-m-fg">
+            <h2 className="text-sm font-semibold text-foreground">
               Sync Recordings for {brandName}
             </h2>
             {phase === 'review' && (
-              <p className="text-xs text-m-fg-muted mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Found {allCandidates.length} meeting{allCandidates.length !== 1 ? 's' : ''} {sinceText}
               </p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-m-fg-muted hover:text-m-fg-strong transition"
+            className="p-1 text-muted-foreground hover:text-foreground transition"
           >
             <X size={16} />
           </button>
@@ -208,8 +208,8 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {phase === 'loading' && (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <Loader2 size={24} className="text-accent animate-spin" />
-              <p className="text-sm text-m-fg-muted">Searching for recordings…</p>
+              <Loader2 size={24} className="text-primary animate-spin" />
+              <p className="text-sm text-muted-foreground">Searching for recordings…</p>
             </div>
           )}
 
@@ -218,7 +218,7 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
               <p className="text-sm text-red-400">{errorMessage}</p>
               <button
                 onClick={onClose}
-                className="text-xs text-m-fg-muted hover:text-m-fg-secondary transition"
+                className="text-xs text-muted-foreground hover:text-foreground transition"
               >
                 Close
               </button>
@@ -227,9 +227,9 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
 
           {phase === 'syncing' && (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <Loader2 size={24} className="text-accent animate-spin" />
-              <p className="text-sm text-m-fg-tertiary">{syncProgress}</p>
-              <p className="text-xs text-m-fg-dim">
+              <Loader2 size={24} className="text-primary animate-spin" />
+              <p className="text-sm text-muted-foreground">{syncProgress}</p>
+              <p className="text-xs text-muted-foreground/70">
                 Fetching transcripts and extracting content…
               </p>
             </div>
@@ -241,11 +241,11 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
               <div className="flex items-start gap-3">
                 <CheckCircle2 size={18} className="text-emerald-500 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-m-fg">
+                  <p className="text-sm font-medium text-foreground">
                     {syncResult.imported} recording{syncResult.imported !== 1 ? 's' : ''} synced
                   </p>
                   {syncResult.pendingTranscripts > 0 && (
-                    <p className="text-xs text-m-fg-muted mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {syncResult.pendingTranscripts} still processing — re-sync later to extract content
                     </p>
                   )}
@@ -255,9 +255,9 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
               {/* Action Items */}
               {syncResult.actionItemStats.extracted > 0 && (
                 <div className="flex items-start gap-3">
-                  <ArrowRight size={18} className="text-accent mt-0.5 shrink-0" />
+                  <ArrowRight size={18} className="text-primary mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-m-fg">
+                    <p className="text-sm font-medium text-foreground">
                       {syncResult.actionItemStats.extracted} action item{syncResult.actionItemStats.extracted !== 1 ? 's' : ''} extracted
                     </p>
                     <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
@@ -265,7 +265,7 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
                         {syncResult.actionItemStats.created} new
                       </span>
                       {syncResult.actionItemStats.skipped > 0 && (
-                        <span className="text-xs text-m-fg-muted">
+                        <span className="text-xs text-muted-foreground">
                           {syncResult.actionItemStats.skipped} duplicate{syncResult.actionItemStats.skipped !== 1 ? 's' : ''} skipped
                         </span>
                       )}
@@ -281,8 +281,8 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
 
               {syncResult.actionItemStats.extracted === 0 && syncResult.imported > 0 && (
                 <div className="flex items-start gap-3">
-                  <ArrowRight size={18} className="text-m-fg-dim mt-0.5 shrink-0" />
-                  <p className="text-sm text-m-fg-muted">No action items found in these recordings</p>
+                  <ArrowRight size={18} className="text-muted-foreground/70 mt-0.5 shrink-0" />
+                  <p className="text-sm text-muted-foreground">No action items found in these recordings</p>
                 </div>
               )}
 
@@ -291,12 +291,12 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
                 <div className="flex items-start gap-3">
                   <AlertTriangle size={18} className="text-amber-500 mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-m-fg">
+                    <p className="text-sm font-medium text-foreground">
                       {syncResult.errors.length} error{syncResult.errors.length !== 1 ? 's' : ''}
                     </p>
                     <ul className="mt-1 space-y-0.5">
                       {syncResult.errors.map((err, i) => (
-                        <li key={i} className="text-xs text-m-fg-muted">{err}</li>
+                        <li key={i} className="text-xs text-muted-foreground">{err}</li>
                       ))}
                     </ul>
                   </div>
@@ -307,10 +307,10 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
 
           {phase === 'review' && likely.length === 0 && possible.length === 0 && manual.length === 0 && (
             <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
-              <p className="text-sm text-m-fg-tertiary">
+              <p className="text-sm text-muted-foreground">
                 No new recordings found matching your rules for {brandName}.
               </p>
-              <p className="text-xs text-m-fg-dim">
+              <p className="text-xs text-muted-foreground/70">
                 Try adjusting your matching rules, or link a recording manually below.
               </p>
             </div>
@@ -356,7 +356,7 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
 
           {phase === 'review' && manual.length > 0 && (
             <div className="mb-4">
-              <h3 className="text-[10px] uppercase tracking-widest text-accent font-semibold mb-2">
+              <h3 className="text-[10px] uppercase tracking-widest text-primary font-semibold mb-2">
                 Manually Added ({manual.length})
               </h3>
               <div className="space-y-2">
@@ -374,10 +374,10 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
           )}
 
           {phase === 'review' && (
-            <div className="mt-4 pt-4 border-t border-m-border-subtle">
+            <div className="mt-4 pt-4 border-t border-border/60">
               <div className="flex items-center gap-2 mb-2">
-                <Link2 size={12} className="text-m-fg-dim" />
-                <span className="text-[10px] uppercase tracking-widest text-m-fg-muted font-semibold">
+                <Link2 size={12} className="text-muted-foreground/70" />
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
                   Link manually
                 </span>
               </div>
@@ -397,13 +397,13 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
                       handleManualLookup();
                     }
                   }}
-                  placeholder="Paste tldv URL or meeting ID"
-                  className="flex-1 bg-m-bg border border-m-border rounded px-2.5 py-1.5 text-xs text-m-fg focus:outline-none focus:border-accent placeholder:text-m-fg-dim"
+                  placeholder="Paste recording URL or meeting ID"
+                  className="flex-1 bg-background border border-border rounded px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary placeholder:text-muted-foreground/70"
                 />
                 <button
                   onClick={handleManualLookup}
                   disabled={!manualInput.trim() || lookupMeeting.isPending}
-                  className="px-3 py-1.5 rounded-md border border-m-border text-xs text-m-fg-tertiary hover:bg-m-surface-hover transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-3 py-1.5 rounded-md border border-border text-xs text-muted-foreground hover:bg-secondary transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {lookupMeeting.isPending ? (
                     <Loader2 size={12} className="animate-spin" />
@@ -421,14 +421,14 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
 
         {/* Footer */}
         {phase === 'done' && (
-          <div className="px-5 py-3 border-t border-m-border flex items-center justify-between">
-            <div className="text-[10px] text-m-fg-dim">
-              <kbd className="px-1 py-0.5 bg-m-surface-raised rounded text-m-fg-muted">Enter</kbd> or{' '}
-              <kbd className="px-1 py-0.5 bg-m-surface-raised rounded text-m-fg-muted ml-1">Esc</kbd> to close
+          <div className="px-5 py-3 border-t border-border flex items-center justify-between">
+            <div className="text-[10px] text-muted-foreground/70">
+              <kbd className="px-1 py-0.5 bg-secondary rounded text-muted-foreground">Enter</kbd> or{' '}
+              <kbd className="px-1 py-0.5 bg-secondary rounded text-muted-foreground ml-1">Esc</kbd> to close
             </div>
             <button
               onClick={onClose}
-              className="px-4 py-1.5 rounded-md bg-accent hover:bg-accent-hover text-sm transition"
+              className="px-4 py-1.5 rounded-md bg-primary hover:bg-primary/90 text-sm transition"
             >
               Done
             </button>
@@ -436,23 +436,23 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
         )}
 
         {phase === 'review' && (
-          <div className="px-5 py-3 border-t border-m-border flex items-center justify-between">
-            <div className="text-[10px] text-m-fg-dim">
-              <kbd className="px-1 py-0.5 bg-m-surface-raised rounded text-m-fg-muted">j/k</kbd> navigate{' '}
-              <kbd className="px-1 py-0.5 bg-m-surface-raised rounded text-m-fg-muted ml-1">Enter</kbd> toggle{' '}
-              <kbd className="px-1 py-0.5 bg-m-surface-raised rounded text-m-fg-muted ml-1">Cmd+Enter</kbd> sync
+          <div className="px-5 py-3 border-t border-border flex items-center justify-between">
+            <div className="text-[10px] text-muted-foreground/70">
+              <kbd className="px-1 py-0.5 bg-secondary rounded text-muted-foreground">j/k</kbd> navigate{' '}
+              <kbd className="px-1 py-0.5 bg-secondary rounded text-muted-foreground ml-1">Enter</kbd> toggle{' '}
+              <kbd className="px-1 py-0.5 bg-secondary rounded text-muted-foreground ml-1">Cmd+Enter</kbd> sync
             </div>
             <div className="flex gap-2">
               <button
                 onClick={onClose}
-                className="px-3 py-1.5 rounded-md border border-m-border text-sm text-m-fg-tertiary hover:bg-m-surface-hover transition"
+                className="px-3 py-1.5 rounded-md border border-border text-sm text-muted-foreground hover:bg-secondary transition"
               >
                 Skip All
               </button>
               <button
                 onClick={handleConfirm}
                 disabled={selected.size === 0}
-                className="px-4 py-1.5 rounded-md bg-accent hover:bg-accent-hover text-sm transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-1.5 rounded-md bg-primary hover:bg-primary/90 text-sm transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Sync Selected ({selected.size})
               </button>

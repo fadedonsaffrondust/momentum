@@ -57,20 +57,20 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
       role="dialog"
       aria-modal="true"
-      aria-label={`Connect Feature Requests Sheet for ${brandName}`}
+      aria-label={`Connect feature-request spreadsheet for ${brandName}`}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-[520px] mx-4 rounded-xl border border-m-border bg-m-bg shadow-2xl flex flex-col">
+      <div className="w-full max-w-[520px] mx-4 rounded-xl border border-border bg-background shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-m-border">
-          <h2 className="text-sm font-semibold text-m-fg">
-            Connect Google Sheet
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <h2 className="text-sm font-semibold text-foreground">
+            Connect spreadsheet
           </h2>
           <button
             onClick={onClose}
-            className="p-1 text-m-fg-muted hover:text-m-fg-strong transition"
+            className="p-1 text-muted-foreground hover:text-foreground transition"
           >
             <X size={16} />
           </button>
@@ -81,8 +81,8 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
           {phase === 'input' && (
             <>
               <div className="space-y-2">
-                <label className="block text-xs font-medium text-m-fg-secondary">
-                  Google Sheet URL
+                <label className="block text-xs font-medium text-foreground">
+                  Spreadsheet URL
                 </label>
                 <input
                   ref={inputRef}
@@ -95,10 +95,10 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
                     if (e.key === 'Escape') onClose();
                   }}
                   placeholder="https://docs.google.com/spreadsheets/d/..."
-                  className="w-full px-3 py-2 rounded-lg border border-m-border-subtle bg-m-bg text-sm text-m-fg placeholder:text-m-fg-muted focus:outline-none focus:border-accent/50"
+                  className="w-full px-3 py-2 rounded-lg border border-border/60 bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
                 />
                 {sheetUrl && !isValidUrl && (
-                  <p className="text-xs text-red-400">Enter a valid Google Sheets URL</p>
+                  <p className="text-xs text-red-400">Enter a valid spreadsheet URL</p>
                 )}
               </div>
 
@@ -108,17 +108,17 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
                   id="standardize"
                   checked={standardize}
                   onChange={(e) => setStandardize(e.target.checked)}
-                  className="mt-0.5 accent-accent"
+                  className="mt-0.5 accent-primary"
                 />
-                <label htmlFor="standardize" className="text-xs text-m-fg-secondary leading-relaxed">
+                <label htmlFor="standardize" className="text-xs text-foreground leading-relaxed">
                   <span className="font-medium">Standardize headers</span> — rewrite the sheet&apos;s
                   header row to &quot;Date, Request, Response, Resolved&quot; for consistency.
                   Existing data is preserved.
                 </label>
               </div>
 
-              <div className="rounded-lg bg-m-surface/50 px-3 py-2 text-xs text-m-fg-muted leading-relaxed">
-                <p className="font-medium text-m-fg-secondary mb-1">How it works</p>
+              <div className="rounded-lg bg-card/50 px-3 py-2 text-xs text-muted-foreground leading-relaxed">
+                <p className="font-medium text-foreground mb-1">How it works</p>
                 <ul className="list-disc pl-4 space-y-0.5">
                   <li>Momentum reads the sheet and detects columns (Date, Request, Response, Resolved)</li>
                   <li>All existing rows are imported as feature requests</li>
@@ -130,8 +130,8 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
 
           {phase === 'connecting' && (
             <div className="flex flex-col items-center gap-3 py-6">
-              <Loader2 size={28} className="animate-spin text-accent" />
-              <p className="text-sm text-m-fg-muted">
+              <Loader2 size={28} className="animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">
                 Reading sheet and importing data…
               </p>
             </div>
@@ -140,14 +140,14 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
           {phase === 'done' && (
             <div className="flex flex-col items-center gap-3 py-6">
               <CheckCircle2 size={28} className="text-emerald-400" />
-              <p className="text-sm text-m-fg">
+              <p className="text-sm text-foreground">
                 Connected successfully!
               </p>
-              <p className="text-xs text-m-fg-muted">
+              <p className="text-xs text-muted-foreground">
                 Imported {importedCount} feature request{importedCount !== 1 ? 's' : ''} from the sheet.
               </p>
               {originalHeaders.length > 0 && (
-                <p className="text-xs text-m-fg-muted">
+                <p className="text-xs text-muted-foreground">
                   Detected columns: {originalHeaders.join(', ')}
                 </p>
               )}
@@ -157,10 +157,10 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
           {phase === 'error' && (
             <div className="flex flex-col items-center gap-3 py-6">
               <AlertTriangle size={28} className="text-amber-400" />
-              <p className="text-sm text-m-fg">
+              <p className="text-sm text-foreground">
                 Connection failed
               </p>
-              <p className="text-xs text-m-fg-muted text-center max-w-sm">
+              <p className="text-xs text-muted-foreground text-center max-w-sm">
                 {errorMessage}
               </p>
             </div>
@@ -168,19 +168,19 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-m-border">
+        <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border">
           {phase === 'input' && (
             <>
               <button
                 onClick={onClose}
-                className="px-3 py-1.5 rounded-lg text-xs text-m-fg-muted hover:text-m-fg-secondary transition"
+                className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground transition"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConnect}
                 disabled={!isValidUrl}
-                className="px-4 py-1.5 rounded-lg bg-accent text-white text-xs font-medium hover:bg-accent/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-1.5 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Connect &amp; Import
               </button>
@@ -190,13 +190,13 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
             <>
               <button
                 onClick={() => setPhase('input')}
-                className="px-3 py-1.5 rounded-lg text-xs text-m-fg-muted hover:text-m-fg-secondary transition"
+                className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground transition"
               >
                 Try Again
               </button>
               <button
                 onClick={onClose}
-                className="px-4 py-1.5 rounded-lg bg-m-surface text-m-fg text-xs font-medium hover:bg-m-surface-hover transition"
+                className="px-4 py-1.5 rounded-lg bg-card text-foreground text-xs font-medium hover:bg-secondary transition"
               >
                 Close
               </button>
@@ -205,7 +205,7 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
           {phase === 'done' && (
             <button
               onClick={onClose}
-              className="px-4 py-1.5 rounded-lg bg-accent text-white text-xs font-medium hover:bg-accent/90 transition"
+              className="px-4 py-1.5 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 transition"
             >
               Done
             </button>

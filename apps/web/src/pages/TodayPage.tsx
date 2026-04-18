@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { Plus, UserSquare } from 'lucide-react';
 import { useRoles, useSettings, useTasks } from '../api/hooks';
 import { useUiStore } from '../store/ui';
 import { TaskInputBar } from '../components/TaskInputBar';
@@ -8,11 +9,13 @@ import { TimeBudgetBar } from '../components/TimeBudgetBar';
 import { KanbanColumn } from '../components/KanbanColumn';
 import { useKeyboardController } from '../hooks/useKeyboardController';
 import { todayIso } from '../lib/date';
+import { useRegisterCommands } from '@/lib/commands/context';
 
 export function TodayPage() {
   const settingsQ = useSettings();
   const rolesQ = useRoles();
   const assigneeFilter = useUiStore((s) => s.taskAssigneeFilter);
+  const setAssigneeFilter = useUiStore((s) => s.setTaskAssigneeFilter);
   // "Everyone" passes assigneeId=ALL to the backend for team-wide today
   // view. "Mine" relies on the backend's default current-user scoping.
   const tasksQ = useTasks({
@@ -45,6 +48,44 @@ export function TodayPage() {
     editingTaskId,
     setEditingTaskId,
   });
+
+  // Context commands registered for /today and /backlog.
+  const todayCommands = useMemo(
+    () => [
+      {
+        id: 'today:new-task',
+        label: 'New task',
+        description: 'Focus the Today task input',
+        icon: Plus,
+        shortcut: 'n',
+        section: 'Today',
+        priority: 100,
+        when: (p: string) => p === '/' || p === '/backlog',
+        run: () => {
+          const target = document.querySelector<HTMLInputElement>(
+            '[data-task-input="true"]',
+          );
+          target?.focus();
+        },
+      },
+      {
+        id: 'today:toggle-assignee',
+        label:
+          assigneeFilter === 'mine'
+            ? "Show everyone's tasks"
+            : 'Show only my tasks',
+        description: 'Flip the Mine / Everyone filter',
+        icon: UserSquare,
+        section: 'Today',
+        priority: 80,
+        when: (p: string) => p === '/' || p === '/backlog',
+        run: () =>
+          setAssigneeFilter(assigneeFilter === 'mine' ? 'everyone' : 'mine'),
+      },
+    ],
+    [assigneeFilter, setAssigneeFilter],
+  );
+  useRegisterCommands(todayCommands, [todayCommands]);
 
   // Not auto-focused on mount — `/` (handled globally) focuses the input.
 

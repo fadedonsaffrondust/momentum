@@ -2,122 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Tailwind JIT doesn't generate utilities for CSS-variable-based colors
-   through Vite's PostCSS pipeline, so we define them manually. */
-@layer utilities {
-  .bg-m-bg { background-color: var(--m-bg); }
-  .bg-m-bg-60 { background-color: var(--m-bg-60); }
-  .bg-m-bg-30 { background-color: var(--m-bg-30); }
-  .bg-m-surface { background-color: var(--m-surface); }
-  .bg-m-surface-95 { background-color: var(--m-surface-95); }
-  .bg-m-surface-60 { background-color: var(--m-surface-60); }
-  .bg-m-surface-50 { background-color: var(--m-surface-50); }
-  .bg-m-surface-40 { background-color: var(--m-surface-40); }
-  .bg-m-surface-hover { background-color: var(--m-surface-hover); }
-  .bg-m-surface-raised { background-color: var(--m-surface-raised); }
-  .bg-m-border { background-color: var(--m-border); }
-  .bg-m-border-strong { background-color: var(--m-border-strong); }
-  .bg-m-fg-dim { background-color: var(--m-fg-dim); }
-  .text-m-fg { color: var(--m-fg); }
-  .text-m-fg-strong { color: var(--m-fg-strong); }
-  .text-m-fg-secondary { color: var(--m-fg-secondary); }
-  .text-m-fg-tertiary { color: var(--m-fg-tertiary); }
-  .text-m-fg-muted { color: var(--m-fg-muted); }
-  .text-m-fg-dim { color: var(--m-fg-dim); }
-  .bg-m-bg\/80 { background-color: color-mix(in srgb, var(--m-bg) 80%, transparent); }
-  .bg-m-bg\/90 { background-color: color-mix(in srgb, var(--m-bg) 90%, transparent); }
-  .bg-m-surface\/70 { background-color: color-mix(in srgb, var(--m-surface) 70%, transparent); }
-  .border-m-border { border-color: var(--m-border); }
-  .border-m-border-strong { border-color: var(--m-border-strong); }
-  .border-m-border-subtle { border-color: var(--m-border-subtle); }
-  .border-m-border\/50 { border-color: color-mix(in srgb, var(--m-border) 50%, transparent); }
-
-  /* Accent (brand) — theme-aware via --m-accent / --m-accent-hover.
-     Declared manually (not via Tailwind's color config) because Tailwind's JIT
-     generates static hex values for CSS-variable colors, which defeats theme
-     switching. Mirror the m-* pattern above. */
-  .bg-accent { background-color: var(--m-accent); }
-  .bg-accent\/5 { background-color: color-mix(in srgb, var(--m-accent) 5%, transparent); }
-  .bg-accent\/10 { background-color: color-mix(in srgb, var(--m-accent) 10%, transparent); }
-  .bg-accent\/15 { background-color: color-mix(in srgb, var(--m-accent) 15%, transparent); }
-  .bg-accent\/70 { background-color: color-mix(in srgb, var(--m-accent) 70%, transparent); }
-  .bg-accent\/90 { background-color: color-mix(in srgb, var(--m-accent) 90%, transparent); }
-  .text-accent { color: var(--m-accent); }
-  .text-accent\/60 { color: color-mix(in srgb, var(--m-accent) 60%, transparent); }
-  .text-accent\/70 { color: color-mix(in srgb, var(--m-accent) 70%, transparent); }
-  .border-accent { border-color: var(--m-accent); }
-  .border-accent\/20 { border-color: color-mix(in srgb, var(--m-accent) 20%, transparent); }
-  .border-accent\/30 { border-color: color-mix(in srgb, var(--m-accent) 30%, transparent); }
-  .border-accent\/40 { border-color: color-mix(in srgb, var(--m-accent) 40%, transparent); }
-  .border-accent\/50 { border-color: color-mix(in srgb, var(--m-accent) 50%, transparent); }
-  .ring-accent\/40 { --tw-ring-color: color-mix(in srgb, var(--m-accent) 40%, transparent); }
-  .ring-accent\/80 { --tw-ring-color: color-mix(in srgb, var(--m-accent) 80%, transparent); }
-  .hover\:bg-accent-hover:hover { background-color: var(--m-accent-hover); }
-  .hover\:text-accent-hover:hover { color: var(--m-accent-hover); }
-  .focus\:border-accent:focus { border-color: var(--m-accent); }
-  .focus\:border-accent\/50:focus { border-color: color-mix(in srgb, var(--m-accent) 50%, transparent); }
-  .group:hover .group-hover\:border-accent { border-color: var(--m-accent); }
-  .group:hover .group-hover\:text-accent { color: var(--m-accent); }
-}
-
 @layer base {
   :root,
-  html[data-theme='dark'] {
-    --m-bg: #09090b;
-    --m-bg-60: rgba(9, 9, 11, 0.85);
-    --m-bg-30: rgba(9, 9, 11, 0.6);
-    --m-surface: #18181b;
-    --m-surface-95: rgba(24, 24, 27, 0.95);
-    --m-surface-60: rgba(24, 24, 27, 0.6);
-    --m-surface-50: rgba(24, 24, 27, 0.5);
-    --m-surface-40: rgba(24, 24, 27, 0.4);
-    --m-surface-hover: #27272a;
-    --m-surface-raised: #27272a;
-    --m-fg: #f4f4f5;
-    --m-fg-strong: #e4e4e7;
-    --m-fg-secondary: #d4d4d8;
-    --m-fg-tertiary: #a1a1aa;
-    --m-fg-muted: #71717a;
-    --m-fg-dim: #52525b;
-    --m-border: #27272a;
-    --m-border-strong: #3f3f46;
-    --m-border-subtle: #18181b;
-    --m-overlay: rgba(0, 0, 0, 0.7);
-    --m-kbd-from: #27272a;
-    --m-kbd-to: #18181b;
-    --m-accent: #0fb848;
-    --m-accent-hover: #18c956;
-    --m-glow-accent: #0fb848;
-    --m-glow-secondary: #b184f7;
+  html[data-theme='dark'],
+  html.dark {
+    /* shadcn-compatible tokens (HSL triplets, consumed as hsl(var(--…)))
+       These are the single source of truth for every surface. Tailwind's
+       `colors` map in tailwind.config.ts wires each of these to a utility
+       (bg-background, text-foreground, border-border, bg-primary, etc.). */
+    --background: 240 10% 4%;
+    --foreground: 240 5% 96%;
+    --card: 240 6% 10%;
+    --card-foreground: 240 5% 96%;
+    --popover: 240 6% 10%;
+    --popover-foreground: 240 5% 96%;
+    --primary: 140 85% 39%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 240 5% 96%;
+    --muted: 240 6% 10%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 240 4% 16%;
+    --accent-foreground: 240 5% 96%;
+    --destructive: 0 63% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 140 85% 39%;
+    --radius: 0.375rem;
+
+    /* Non-tokenized CSS variables used by decorative or gradient fills. */
+    --kbd-from: #27272a;
+    --kbd-to: #18181b;
+    --glow-accent: #0fb848;
+    --glow-secondary: #b184f7;
   }
 
   html[data-theme='light'] {
-    --m-bg: #fafafa;
-    --m-bg-60: rgba(250, 250, 250, 0.85);
-    --m-bg-30: rgba(250, 250, 250, 0.6);
-    --m-surface: #ffffff;
-    --m-surface-95: rgba(255, 255, 255, 0.95);
-    --m-surface-60: rgba(244, 244, 245, 0.9);
-    --m-surface-50: rgba(255, 255, 255, 0.75);
-    --m-surface-40: rgba(244, 244, 245, 0.75);
-    --m-surface-hover: #f4f4f5;
-    --m-surface-raised: #e4e4e7;
-    --m-fg: #18181b;
-    --m-fg-strong: #27272a;
-    --m-fg-secondary: #3f3f46;
-    --m-fg-tertiary: #52525b;
-    --m-fg-muted: #71717a;
-    --m-fg-dim: #a1a1aa;
-    --m-border: #e4e4e7;
-    --m-border-strong: #d4d4d8;
-    --m-border-subtle: #f4f4f5;
-    --m-overlay: rgba(0, 0, 0, 0.4);
-    --m-kbd-from: #e4e4e7;
-    --m-kbd-to: #f4f4f5;
-    --m-accent: #02862f;
-    --m-accent-hover: #05a53a;
-    --m-glow-accent: #02862f;
-    --m-glow-secondary: #b184f7;
+    --background: 0 0% 98%;
+    --foreground: 240 6% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 6% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 6% 10%;
+    --primary: 140 97% 27%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 10%;
+    --destructive: 0 84% 42%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 140 97% 27%;
+    --radius: 0.375rem;
+
+    --kbd-from: #e4e4e7;
+    --kbd-to: #f4f4f5;
+    --glow-accent: #02862f;
+    --glow-secondary: #b184f7;
+  }
+
+  html {
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
   }
 
   html,
@@ -127,9 +77,9 @@
   }
 
   body {
-    background-color: var(--m-bg);
-    color: var(--m-fg);
-    @apply antialiased font-mono;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    @apply antialiased font-sans;
   }
 }
 
@@ -166,14 +116,29 @@
 }
 
 .animate-fadeIn {
-  animation: fadeIn 160ms ease-out;
+  animation: fadeIn 150ms ease-out;
 }
 
 .animate-scaleIn {
-  animation: scaleIn 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: scaleIn 150ms ease-out;
 }
 
 .animate-slideUp {
-  animation: slideUp 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: slideUp 150ms ease-out both;
 }
 
+/* Respect OS-level reduced-motion preference. Framer Motion instances
+   should additionally call useReducedMotion() for the same reason. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeIn,
+  .animate-scaleIn,
+  .animate-slideUp {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.001ms !important;
+  }
+}

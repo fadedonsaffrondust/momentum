@@ -12,34 +12,37 @@ import { TeamPage } from './pages/TeamPage';
 import { InboxPage } from './pages/InboxPage';
 import { TasksLayout } from './layout/TasksLayout';
 import { Protected } from './components/Protected';
+import { CommandsProvider } from './lib/commands/context';
 
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route
-            path="/"
-            element={
-              <Protected>
-                <AppShell />
-              </Protected>
-            }
-          >
-            <Route element={<TasksLayout />}>
-              <Route index element={<TodayPage />} />
-              <Route path="backlog" element={<BacklogPage />} />
+      <CommandsProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/"
+              element={
+                <Protected>
+                  <AppShell />
+                </Protected>
+              }
+            >
+              <Route element={<TasksLayout />}>
+                <Route index element={<TodayPage />} />
+                <Route path="backlog" element={<BacklogPage />} />
+              </Route>
+              <Route path="parkings" element={<ParkingsPage />} />
+              <Route path="team" element={<TeamPage />} />
+              <Route path="inbox" element={<InboxPage />} />
+              <Route path="brands" element={<BrandsPage />} />
+              <Route path="brands/:id" element={<BrandsPage />} />
             </Route>
-            <Route path="parkings" element={<ParkingsPage />} />
-            <Route path="team" element={<TeamPage />} />
-            <Route path="inbox" element={<InboxPage />} />
-            <Route path="brands" element={<BrandsPage />} />
-            <Route path="brands/:id" element={<BrandsPage />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+          </Routes>
+        </BrowserRouter>
+      </CommandsProvider>
     </QueryClientProvider>
   );
 }

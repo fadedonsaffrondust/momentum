@@ -33,7 +33,7 @@ export function AvatarStack({ users, max = 4, size = 'xs', className }: Props) {
       {overflow > 0 && (
         <span
           className={clsx(
-            'inline-flex items-center justify-center rounded-full border border-m-border bg-m-surface text-m-fg-tertiary font-mono font-semibold select-none -ml-1.5',
+            'inline-flex items-center justify-center rounded-full border border-border bg-card text-muted-foreground font-mono font-semibold select-none -ml-1.5',
             OVERFLOW_SIZE[size],
           )}
           title={`${overflow} more`}
