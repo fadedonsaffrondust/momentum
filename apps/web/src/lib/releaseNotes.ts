@@ -25,6 +25,88 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.6.2',
+    date: '2026-04-17',
+    headline: 'Keyboard navigation for meeting form suggestions',
+    summary:
+      'The attendee and title suggestion dropdowns on the meeting form now support arrow-key navigation and Enter to add or pick the highlighted result.',
+    items: [
+      {
+        title: 'Arrow keys + Enter on attendee suggestions',
+        description:
+          'After typing a partial name, use ↑ / ↓ to move through the suggestion list and Enter to add the highlighted stakeholder. Enter with no matching suggestion still adds the typed text as a free-form attendee.',
+        shortcuts: ['↑', '↓', 'Enter'],
+        howTo:
+          'Open a brand, start a new meeting, type a letter in the Attendees field, then use the arrow keys to pick a suggestion and press Enter.',
+      },
+      {
+        title: 'Arrow keys + Enter on title suggestions',
+        description:
+          'The meeting title input now suggests past titles as you type. Use ↑ / ↓ to navigate them and Enter to fill the field; Esc dismisses the list.',
+        shortcuts: ['↑', '↓', 'Enter', 'Esc'],
+        howTo:
+          'Start a new meeting on a brand that has past meetings, type two letters in the Title field, then press ↓ and Enter.',
+      },
+    ],
+  },
+  {
+    version: '0.6.1',
+    date: '2026-04-17',
+    headline: 'Parkings priority stripes restored',
+    summary:
+      'Parking cards now show the colored left-edge stripe for priority — red for high, amber for medium, dim grey for low — matching task cards.',
+    items: [
+      {
+        title: 'Priority stripe on parking cards',
+        description:
+          'The left-border priority color was being overridden by the card’s base border and rendered invisible. Parking cards now reliably show the correct priority color on the edge.',
+      },
+    ],
+  },
+  {
+    version: '0.6.0',
+    date: '2026-04-16',
+    headline: 'Feature Requests — Google Sheets two-way sync',
+    summary:
+      'Each brand now has a Feature Requests tab that syncs bidirectionally with a Google Spreadsheet. View, edit, and manage client feature requests directly from Momentum.',
+    items: [
+      {
+        title: 'Feature Requests Tab',
+        description:
+          'A new third tab on each brand detail page displays feature requests in a clean, filterable table. Filter by All, Open, or Resolved status, search by keyword, and sort by date or status.',
+        shortcuts: ['3', 'f'],
+        howTo: 'Open any brand and click the Feature Requests tab, or press 3 or f.',
+      },
+      {
+        title: 'Google Sheets Connection',
+        description:
+          'Connect a Google Sheet URL per brand. Momentum analyzes the column structure, optionally standardizes headers, and imports all existing rows. Changes sync both ways — edits in Momentum push to the sheet, and edits in the sheet pull into Momentum.',
+        howTo: 'Go to the Feature Requests tab and click "Connect Google Sheet", then paste the sheet URL.',
+      },
+      {
+        title: 'Inline Editing',
+        description:
+          'Double-click any cell (Date, Request, Response) to edit it inline. The Resolved checkbox toggles with a single click. Changes auto-save on blur or Enter.',
+      },
+      {
+        title: 'Convert to Action Item',
+        description:
+          'Hover any unresolved feature request and click the arrow icon to create an action item from it. The feature request is automatically marked as resolved.',
+      },
+      {
+        title: 'Keyboard Navigation',
+        description:
+          'Full keyboard support on the Feature Requests tab: n for new request, j/k to navigate rows, Space to toggle resolved, r to sync, Escape to deselect.',
+        shortcuts: ['n', 'j', 'k', 'Space', 'r'],
+      },
+      {
+        title: 'Pulse Stats',
+        description:
+          'The brand Overview tab now shows a Feature Requests summary card with open and resolved counts, and a link to jump to the tab.',
+      },
+    ],
+  },
+  {
     version: '0.5.0',
     date: '2026-04-16',
     headline: 'Brand detail view redesigned with tabbed layout',

@@ -24,6 +24,11 @@ export const parkingStatusEnum = pgEnum('parking_status', ['open', 'discussed', 
 export const brandStatusEnum = pgEnum('brand_status', ['active', 'importing', 'import_failed']);
 export const brandActionStatusEnum = pgEnum('brand_action_status', ['open', 'done']);
 export const meetingSourceEnum = pgEnum('meeting_source', ['manual', 'recording_sync']);
+export const featureRequestSyncStatusEnum = pgEnum('feature_request_sync_status', [
+  'synced',
+  'pending',
+  'error',
+]);
 
 /* ─────────────── users ─────────────── */
 
@@ -161,6 +166,7 @@ export const brands = pgTable(
     importError: text('import_error'),
     importedFrom: text('imported_from'),
     rawImportContent: text('raw_import_content'),
+    featureRequestsConfig: jsonb('feature_requests_config'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -245,6 +251,33 @@ export const brandActionItems = pgTable(
   (t) => ({
     brandIdIdx: index('brand_action_items_brand_id_idx').on(t.brandId),
     statusIdx: index('brand_action_items_status_idx').on(t.brandId, t.status),
+  }),
+);
+
+/* ─────────────── brand feature requests ─────────────── */
+
+export const brandFeatureRequests = pgTable(
+  'brand_feature_requests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    brandId: uuid('brand_id')
+      .notNull()
+      .references(() => brands.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    sheetRowIndex: integer('sheet_row_index'),
+    date: text('date').notNull(),
+    request: text('request').notNull(),
+    response: text('response'),
+    resolved: boolean('resolved').notNull().default(false),
+    syncStatus: featureRequestSyncStatusEnum('sync_status').notNull().default('pending'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    brandIdIdx: index('brand_feature_requests_brand_id_idx').on(t.brandId),
+    syncStatusIdx: index('brand_feature_requests_sync_status_idx').on(t.brandId, t.syncStatus),
   }),
 );
 

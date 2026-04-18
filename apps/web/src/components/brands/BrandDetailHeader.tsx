@@ -59,7 +59,7 @@ export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting, 
   };
 
   return (
-    <header className="sticky top-0 z-10 flex items-center justify-between gap-4 px-6 py-4 border-b border-m-border-subtle bg-m-bg/90 backdrop-blur">
+    <header className="sticky top-0 z-20 flex items-center justify-between gap-4 px-6 py-4 border-b border-m-border-subtle bg-m-bg/90 backdrop-blur">
       <div className="flex items-center gap-3 min-w-0">
         <HealthPill status={health} showLabel />
         {editing ? (

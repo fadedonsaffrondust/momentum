@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { BrandMeeting, BrandStakeholder } from '@momentum/shared';
@@ -38,11 +39,13 @@ export function MeetingNoteModal({
   const [title, setTitle] = useState(existingMeeting?.title ?? '');
   const [attendeeInput, setAttendeeInput] = useState('');
   const [attendees, setAttendees] = useState<string[]>(existingMeeting?.attendees ?? []);
+  const [attendeeHighlight, setAttendeeHighlight] = useState(0);
   const [notes, setNotes] = useState(existingMeeting?.rawNotes ?? '');
   const [decisions, setDecisions] = useState(
     existingMeeting?.decisions?.join('\n') ?? '',
   );
   const [titleSuggestions, setTitleSuggestions] = useState<string[]>([]);
+  const [titleHighlight, setTitleHighlight] = useState(0);
   const [dirty, setDirty] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const smartNotes = useSmartTextarea({
@@ -82,6 +85,14 @@ export function MeetingNoteModal({
     } else {
       setTitleSuggestions([]);
     }
+    setTitleHighlight(0);
+  };
+
+  const pickTitleSuggestion = (s: string) => {
+    setTitle(s);
+    setTitleSuggestions([]);
+    setTitleHighlight(0);
+    markDirty();
   };
 
   const stakeholderNames = stakeholders.map((s) => s.name);
@@ -92,6 +103,10 @@ export function MeetingNoteModal({
           !attendees.includes(n),
       )
     : [];
+
+  useEffect(() => {
+    setAttendeeHighlight(0);
+  }, [attendeeInput, attendees.length]);
 
   const save = async () => {
     if (!title.trim()) {
@@ -204,21 +219,42 @@ export function MeetingNoteModal({
                 type="text"
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (titleSuggestions.length === 0) return;
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setTitleHighlight((i) => (i + 1) % titleSuggestions.length);
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setTitleHighlight(
+                      (i) => (i - 1 + titleSuggestions.length) % titleSuggestions.length,
+                    );
+                  } else if (e.key === 'Enter') {
+                    const picked = titleSuggestions[titleHighlight];
+                    if (picked) {
+                      e.preventDefault();
+                      pickTitleSuggestion(picked);
+                    }
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setTitleSuggestions([]);
+                  }
+                }}
                 placeholder="e.g. Weekly sync"
                 className="mt-1 w-full bg-m-surface border border-m-border rounded-lg px-3 py-2 text-sm text-m-fg focus:outline-none focus:border-accent"
               />
               {titleSuggestions.length > 0 && (
                 <ul className="absolute z-10 left-0 right-0 mt-1 border border-m-border bg-m-bg rounded-lg shadow-xl py-1 max-h-40 overflow-y-auto">
-                  {titleSuggestions.map((s) => (
+                  {titleSuggestions.map((s, i) => (
                     <li key={s}>
                       <button
                         type="button"
-                        onClick={() => {
-                          setTitle(s);
-                          setTitleSuggestions([]);
-                          markDirty();
-                        }}
-                        className="w-full text-left px-3 py-1.5 text-xs text-m-fg-secondary hover:bg-m-surface-hover"
+                        onMouseEnter={() => setTitleHighlight(i)}
+                        onClick={() => pickTitleSuggestion(s)}
+                        className={clsx(
+                          'w-full text-left px-3 py-1.5 text-xs text-m-fg-secondary',
+                          i === titleHighlight ? 'bg-m-surface-hover' : 'hover:bg-m-surface-hover',
+                        )}
                       >
                         {s}
                       </button>
@@ -256,9 +292,23 @@ export function MeetingNoteModal({
                   value={attendeeInput}
                   onChange={(e) => setAttendeeInput(e.target.value)}
                   onKeyDown={(e) => {
+                    if (e.key === 'ArrowDown' && attendeeSuggestions.length > 0) {
+                      e.preventDefault();
+                      setAttendeeHighlight((i) => (i + 1) % attendeeSuggestions.length);
+                      return;
+                    }
+                    if (e.key === 'ArrowUp' && attendeeSuggestions.length > 0) {
+                      e.preventDefault();
+                      setAttendeeHighlight(
+                        (i) => (i - 1 + attendeeSuggestions.length) % attendeeSuggestions.length,
+                      );
+                      return;
+                    }
                     if (e.key === 'Enter' || e.key === ',') {
                       e.preventDefault();
-                      addAttendee(attendeeInput);
+                      const picked = attendeeSuggestions[attendeeHighlight];
+                      addAttendee(picked ?? attendeeInput);
+                      return;
                     }
                     if (e.key === 'Backspace' && !attendeeInput && attendees.length > 0) {
                       removeAttendee(attendees[attendees.length - 1]!);
@@ -269,12 +319,16 @@ export function MeetingNoteModal({
                 />
                 {attendeeSuggestions.length > 0 && (
                   <ul className="absolute z-10 left-0 right-0 mt-2 border border-m-border bg-m-bg rounded-lg shadow-xl py-1 max-h-32 overflow-y-auto">
-                    {attendeeSuggestions.map((s) => (
+                    {attendeeSuggestions.map((s, i) => (
                       <li key={s}>
                         <button
                           type="button"
+                          onMouseEnter={() => setAttendeeHighlight(i)}
                           onClick={() => addAttendee(s)}
-                          className="w-full text-left px-3 py-1.5 text-xs text-m-fg-secondary hover:bg-m-surface-hover"
+                          className={clsx(
+                            'w-full text-left px-3 py-1.5 text-xs text-m-fg-secondary',
+                            i === attendeeHighlight ? 'bg-m-surface-hover' : 'hover:bg-m-surface-hover',
+                          )}
                         >
                           {s}
                         </button>

@@ -87,10 +87,23 @@ const SECTIONS: Section[] = [
     rows: [
       { keys: ['1'], label: 'Overview tab' },
       { keys: ['2'], label: 'Action Items & Meetings tab' },
+      { keys: ['3'], label: 'Feature Requests tab' },
+      { keys: ['f'], label: 'Feature Requests tab (alias)' },
       { keys: ['s'], label: 'Sync recordings' },
       { keys: ['n'], label: 'New meeting note' },
       { keys: ['a'], label: 'New action item' },
       { keys: ['Esc'], label: 'Back to brand list' },
+    ],
+  },
+  {
+    title: 'Feature Requests',
+    description: 'On the Feature Requests tab within a brand.',
+    rows: [
+      { keys: ['n'], label: 'New feature request' },
+      { keys: ['j', '/', 'k'], label: 'Navigate rows' },
+      { keys: ['Space'], label: 'Toggle resolved' },
+      { keys: ['r'], label: 'Sync with Google Sheet' },
+      { keys: ['Esc'], label: 'Deselect row' },
     ],
   },
   {

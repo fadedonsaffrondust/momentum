@@ -15,10 +15,10 @@ interface Props {
   onEditDone: () => void;
 }
 
-const priorityBorder: Record<Parking['priority'], string> = {
-  high: 'border-l-red-500',
-  medium: 'border-l-amber-500',
-  low: 'border-l-m-fg-dim',
+const priorityColor: Record<Parking['priority'], string> = {
+  high: '#ef4444',
+  medium: '#f59e0b',
+  low: '#a1a1aa',
 };
 
 export function ParkingCard({
@@ -88,10 +88,10 @@ export function ParkingCard({
       role="button"
       tabIndex={-1}
       onClick={onSelect}
+      style={{ borderLeftColor: priorityColor[parking.priority] }}
       className={clsx(
         'group rounded-lg border-l-4 border border-m-border bg-m-surface-60 p-3 cursor-pointer transition',
         'hover:border-m-border-strong',
-        priorityBorder[parking.priority],
         selected && 'ring-2 ring-accent/80 border-m-border-strong',
         isDiscussed && 'opacity-70',
       )}

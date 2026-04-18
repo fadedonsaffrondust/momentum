@@ -5,6 +5,9 @@ import {
   useBrandMeetings,
   useBrandActionItems,
   useBrandStakeholders,
+  useBrandFeatureRequests,
+  usePullFeatureRequests,
+  usePushFeatureRequests,
   useSendActionItemToToday,
   useCompleteBrandActionItem,
 } from '../../api/hooks';
@@ -13,9 +16,11 @@ import { BrandTabBar } from './BrandTabBar';
 import type { BrandTab } from './BrandTabBar';
 import { OverviewTab } from './OverviewTab';
 import { WorkTab } from './WorkTab';
+import { FeatureRequestsTab } from './FeatureRequestsTab';
 import { MeetingNoteModal } from './MeetingNoteModal';
 import { SyncSettingsPanel } from './SyncSettingsPanel';
 import { SyncReviewModal } from './SyncReviewModal';
+import { ConnectSheetModal } from './ConnectSheetModal';
 import { useUiStore } from '../../store/ui';
 
 interface Props {
@@ -27,6 +32,9 @@ export function BrandDetailView({ brandId }: Props) {
   const meetingsQ = useBrandMeetings(brandId);
   const actionItemsQ = useBrandActionItems(brandId);
   const stakeholdersQ = useBrandStakeholders(brandId);
+  const featureRequestsQ = useBrandFeatureRequests(brandId);
+  const pullFeatureRequests = usePullFeatureRequests(brandId);
+  const pushFeatureRequests = usePushFeatureRequests(brandId);
   const sendToToday = useSendActionItemToToday(brandId);
   const completeItem = useCompleteBrandActionItem(brandId);
   const pushToast = useUiStore((s) => s.pushToast);
@@ -35,6 +43,7 @@ export function BrandDetailView({ brandId }: Props) {
   const [showMeetingModal, setShowMeetingModal] = useState(false);
   const [showSyncSettings, setShowSyncSettings] = useState(false);
   const [showSyncReview, setShowSyncReview] = useState(false);
+  const [showConnectSheet, setShowConnectSheet] = useState(false);
   const activeModal = useUiStore((s) => s.activeModal);
 
   useEffect(() => {
@@ -45,13 +54,26 @@ export function BrandDetailView({ brandId }: Props) {
   const meetings = meetingsQ.data ?? [];
   const actionItems = actionItemsQ.data ?? [];
   const stakeholders = stakeholdersQ.data ?? [];
+  const featureRequests = featureRequestsQ.data ?? [];
   const pastTitles = useMemo(() => meetings.map((m) => m.title), [meetings]);
   const openItemCount = useMemo(
     () => actionItems.filter((a) => a.status === 'open').length,
     [actionItems],
   );
+  const openFeatureRequestCount = useMemo(
+    () => featureRequests.filter((r) => !r.resolved).length,
+    [featureRequests],
+  );
 
-  const anyModalOpen = showMeetingModal || showSyncSettings || showSyncReview || !!activeModal;
+  const isSyncing = pullFeatureRequests.isPending || pushFeatureRequests.isPending;
+
+  const featureRequestsStale = useMemo(() => {
+    const lastSync = brand?.featureRequestsConfig?.lastSyncedAt;
+    if (!lastSync) return false;
+    return Date.now() - new Date(lastSync).getTime() > 5 * 60_000;
+  }, [brand?.featureRequestsConfig?.lastSyncedAt]);
+
+  const anyModalOpen = showMeetingModal || showSyncSettings || showSyncReview || showConnectSheet || !!activeModal;
 
   useEffect(() => {
     if (!brand || anyModalOpen) return;
@@ -71,6 +93,10 @@ export function BrandDetailView({ brandId }: Props) {
       if (e.key === '2' && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         setActiveTab('work');
+      }
+      if ((e.key === '3' || e.key === 'f') && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setActiveTab('feature-requests');
       }
     };
 
@@ -109,6 +135,32 @@ export function BrandDetailView({ brandId }: Props) {
     setShowMeetingModal(true);
   };
 
+  const handleSync = () => {
+    pullFeatureRequests.mutate(undefined, {
+      onSuccess: (pullRes) => {
+        pushFeatureRequests.mutate(undefined, {
+          onSuccess: (pushRes) => {
+            const parts: string[] = [];
+            if (pullRes.created) parts.push(`${pullRes.created} new`);
+            if (pullRes.updated) parts.push(`${pullRes.updated} updated`);
+            if (pushRes.pushed) parts.push(`${pushRes.pushed} pushed`);
+            pushToast({
+              kind: 'success',
+              message: parts.length ? `Synced: ${parts.join(', ')}` : 'Everything up to date',
+              durationMs: 3000,
+            });
+          },
+          onError: () => {
+            pushToast({ kind: 'error', message: 'Failed to push changes to Google Sheets', durationMs: 4000 });
+          },
+        });
+      },
+      onError: () => {
+        pushToast({ kind: 'error', message: 'Failed to pull from Google Sheets', durationMs: 4000 });
+      },
+    });
+  };
+
   return (
     <div className="h-full flex flex-col">
       <BrandDetailHeader
@@ -124,6 +176,8 @@ export function BrandDetailView({ brandId }: Props) {
         activeTab={activeTab}
         onChangeTab={setActiveTab}
         openItemCount={openItemCount}
+        openFeatureRequestCount={openFeatureRequestCount}
+        featureRequestsStale={featureRequestsStale}
       />
 
       <div className="flex-1 overflow-y-auto">
@@ -133,15 +187,26 @@ export function BrandDetailView({ brandId }: Props) {
             meetings={meetings}
             actionItems={actionItems}
             stakeholders={stakeholders}
+            featureRequests={featureRequests}
             onSendToToday={handleSendToToday}
             onMarkDone={handleMarkDone}
+            onSwitchToFeatureRequests={() => setActiveTab('feature-requests')}
           />
-        ) : (
+        ) : activeTab === 'work' ? (
           <WorkTab
             brandId={brand.id}
             actionItems={actionItems}
             meetings={meetings}
             stakeholders={stakeholders}
+          />
+        ) : (
+          <FeatureRequestsTab
+            brandId={brand.id}
+            featureRequests={featureRequests}
+            config={brand.featureRequestsConfig}
+            isSyncing={isSyncing}
+            onSync={handleSync}
+            onConnect={() => setShowConnectSheet(true)}
           />
         )}
       </div>
@@ -168,6 +233,14 @@ export function BrandDetailView({ brandId }: Props) {
           brand={brand}
           stakeholders={stakeholders}
           onClose={() => setShowSyncSettings(false)}
+        />
+      )}
+
+      {showConnectSheet && (
+        <ConnectSheetModal
+          brandId={brand.id}
+          brandName={brand.name}
+          onClose={() => setShowConnectSheet(false)}
         />
       )}
     </div>

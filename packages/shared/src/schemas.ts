@@ -224,6 +224,24 @@ export const syncConfigSchema = z.object({
 });
 export type SyncConfig = z.infer<typeof syncConfigSchema>;
 
+export const featureRequestsColumnMappingSchema = z.object({
+  date: z.number().int().nonnegative(),
+  request: z.number().int().nonnegative(),
+  response: z.number().int().nonnegative(),
+  resolved: z.number().int().nonnegative(),
+});
+export type FeatureRequestsColumnMapping = z.infer<typeof featureRequestsColumnMappingSchema>;
+
+export const featureRequestsConfigSchema = z.object({
+  sheetId: z.string(),
+  sheetGid: z.string().default('0'),
+  sheetUrl: z.string(),
+  connected: z.boolean(),
+  lastSyncedAt: z.string().datetime().nullable().default(null),
+  columnMapping: featureRequestsColumnMappingSchema,
+});
+export type FeatureRequestsConfig = z.infer<typeof featureRequestsConfigSchema>;
+
 export const brandSchema = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
@@ -232,6 +250,7 @@ export const brandSchema = z.object({
   successDefinition: z.string().max(10_000).nullable(),
   customFields: z.record(z.unknown()).default({}),
   syncConfig: syncConfigSchema.nullable(),
+  featureRequestsConfig: featureRequestsConfigSchema.nullable(),
   status: brandStatusSchema,
   importError: z.string().nullable(),
   importedFrom: z.string().max(64).nullable(),
@@ -345,6 +364,77 @@ export const updateBrandActionItemInputSchema = createBrandActionItemInputSchema
   .strict();
 export type UpdateBrandActionItemInput = z.infer<typeof updateBrandActionItemInputSchema>;
 
+/* ─────────────── brand feature requests ─────────────── */
+
+export const featureRequestSyncStatusSchema = z.enum(['synced', 'pending', 'error']);
+export type FeatureRequestSyncStatus = z.infer<typeof featureRequestSyncStatusSchema>;
+
+export const brandFeatureRequestSchema = z.object({
+  id: z.string().uuid(),
+  brandId: z.string().uuid(),
+  userId: z.string().uuid(),
+  sheetRowIndex: z.number().int().nonnegative().nullable(),
+  date: z.string(),
+  request: z.string().min(1).max(10_000),
+  response: z.string().max(10_000).nullable(),
+  resolved: z.boolean(),
+  syncStatus: featureRequestSyncStatusSchema,
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+export type BrandFeatureRequest = z.infer<typeof brandFeatureRequestSchema>;
+
+export const createBrandFeatureRequestInputSchema = z.object({
+  date: z.string().min(1),
+  request: z.string().min(1).max(10_000),
+  response: z.string().max(10_000).nullable().optional(),
+  resolved: z.boolean().optional(),
+});
+export type CreateBrandFeatureRequestInput = z.infer<typeof createBrandFeatureRequestInputSchema>;
+
+export const updateBrandFeatureRequestInputSchema = createBrandFeatureRequestInputSchema
+  .partial()
+  .strict();
+export type UpdateBrandFeatureRequestInput = z.infer<typeof updateBrandFeatureRequestInputSchema>;
+
+export const convertFeatureRequestResponseSchema = z.object({
+  featureRequest: brandFeatureRequestSchema,
+  actionItem: brandActionItemSchema,
+});
+export type ConvertFeatureRequestResponse = z.infer<typeof convertFeatureRequestResponseSchema>;
+
+export const connectSheetInputSchema = z.object({
+  sheetUrl: z.string().min(1),
+  sheetGid: z.string().optional(),
+  standardize: z.boolean().default(true),
+});
+export type ConnectSheetInput = z.infer<typeof connectSheetInputSchema>;
+
+export const connectSheetResponseSchema = z.object({
+  config: featureRequestsConfigSchema,
+  imported: z.number().int().nonnegative(),
+  headers: z.object({
+    original: z.array(z.string()),
+    mapped: z.array(z.string()),
+  }),
+});
+export type ConnectSheetResponse = z.infer<typeof connectSheetResponseSchema>;
+
+export const sheetSyncPullResponseSchema = z.object({
+  created: z.number().int().nonnegative(),
+  updated: z.number().int().nonnegative(),
+  deleted: z.number().int().nonnegative(),
+  unchanged: z.number().int().nonnegative(),
+  errors: z.array(z.string()),
+});
+export type SheetSyncPullResponse = z.infer<typeof sheetSyncPullResponseSchema>;
+
+export const sheetSyncPushResponseSchema = z.object({
+  pushed: z.number().int().nonnegative(),
+  errors: z.array(z.string()),
+});
+export type SheetSyncPushResponse = z.infer<typeof sheetSyncPushResponseSchema>;
+
 /* ─────────────── brand sync ─────────────── */
 
 export const syncCandidateSchema = z.object({
@@ -417,7 +507,7 @@ export type BrandImportResponse = z.infer<typeof brandImportResponseSchema>;
 /* ─────────────── export / import ─────────────── */
 
 export const exportFileSchema = z.object({
-  version: z.enum(['1.0', '1.1', '1.2']),
+  version: z.enum(['1.0', '1.1', '1.2', '1.3']),
   exportedAt: z.string().datetime(),
   settings: userSettingsSchema.omit({ userId: true }),
   roles: z.array(roleSchema.omit({ id: true }).extend({ id: z.string() })),
@@ -452,6 +542,11 @@ export const exportFileSchema = z.object({
     .default([]),
   brandActionItems: z
     .array(brandActionItemSchema.omit({ userId: true }))
+    .optional()
+    .default([]),
+  // Added in 1.3.
+  brandFeatureRequests: z
+    .array(brandFeatureRequestSchema.omit({ userId: true }))
     .optional()
     .default([]),
 });

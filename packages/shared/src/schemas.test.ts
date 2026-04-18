@@ -352,6 +352,7 @@ describe('brandSchema', () => {
     successDefinition: null,
     customFields: {},
     syncConfig: null,
+    featureRequestsConfig: null,
     status: 'active' as const,
     importError: null,
     importedFrom: null,
@@ -534,6 +535,21 @@ describe('exportFileSchema', () => {
     expect(result.brandStakeholders).toEqual([]);
     expect(result.brandMeetings).toEqual([]);
     expect(result.brandActionItems).toEqual([]);
+  });
+
+  it('accepts v1.3 and defaults brandFeatureRequests to []', () => {
+    const v13 = {
+      ...validExport,
+      version: '1.3' as const,
+    };
+    const result = exportFileSchema.parse(v13);
+    expect(result.version).toBe('1.3');
+    expect(result.brandFeatureRequests).toEqual([]);
+  });
+
+  it('defaults brandFeatureRequests to [] when missing (v1.2 compat)', () => {
+    const result = exportFileSchema.parse(validExport);
+    expect(result.brandFeatureRequests).toEqual([]);
   });
 
   it('rejects invalid version', () => {

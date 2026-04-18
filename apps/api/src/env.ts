@@ -17,6 +17,7 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
   OPENAI_API_KEY: z.string().optional(),
   TLDV_API_KEY: z.string().optional(),
+  GOOGLE_SERVICE_ACCOUNT_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -5,11 +5,16 @@ import type {
   Brand,
   BrandActionItem,
   BrandActionStatus,
+  BrandFeatureRequest,
   BrandImportInput,
   BrandImportResponse,
   BrandMeeting,
   BrandStakeholder,
+  ConnectSheetInput,
+  ConnectSheetResponse,
+  ConvertFeatureRequestResponse,
   CreateBrandActionItemInput,
+  CreateBrandFeatureRequestInput,
   CreateBrandInput,
   CreateBrandMeetingInput,
   CreateBrandStakeholderInput,
@@ -23,12 +28,15 @@ import type {
   ParkingStatus,
   RegisterInput,
   Role,
+  SheetSyncPullResponse,
+  SheetSyncPushResponse,
   SyncCandidate,
   SyncCandidatesResponse,
   SyncConfirmResponse,
   Task,
   TaskStatus,
   UpdateBrandActionItemInput,
+  UpdateBrandFeatureRequestInput,
   UpdateBrandInput,
   UpdateBrandMeetingInput,
   UpdateSyncConfigInput,
@@ -570,6 +578,151 @@ export function useCompleteBrandActionItem(brandId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['brands', brandId, 'action-items'] });
       qc.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+}
+
+/* ─────────────── brand feature requests ─────────────── */
+
+export interface FeatureRequestsQueryParams {
+  resolved?: 'true' | 'false';
+  search?: string;
+}
+
+export function useBrandFeatureRequests(
+  brandId: string | undefined,
+  params: FeatureRequestsQueryParams = {},
+) {
+  const token = useToken();
+  return useQuery({
+    queryKey: ['brands', brandId, 'feature-requests', params],
+    queryFn: () =>
+      apiFetch<BrandFeatureRequest[]>(`/brands/${brandId}/feature-requests`, {
+        token,
+        query: { ...params },
+      }),
+    enabled: !!token && !!brandId,
+  });
+}
+
+export function useCreateBrandFeatureRequest(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateBrandFeatureRequestInput) =>
+      apiFetch<BrandFeatureRequest>(`/brands/${brandId}/feature-requests`, {
+        method: 'POST',
+        body: input,
+        token,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands', brandId, 'feature-requests'] }),
+  });
+}
+
+export function useUpdateBrandFeatureRequest(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...input }: UpdateBrandFeatureRequestInput & { id: string }) =>
+      apiFetch<BrandFeatureRequest>(`/brands/${brandId}/feature-requests/${id}`, {
+        method: 'PATCH',
+        body: input,
+        token,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands', brandId, 'feature-requests'] }),
+  });
+}
+
+export function useDeleteBrandFeatureRequest(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<{ ok: true }>(`/brands/${brandId}/feature-requests/${id}`, {
+        method: 'DELETE',
+        token,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands', brandId, 'feature-requests'] }),
+  });
+}
+
+export function useConnectFeatureRequestSheet(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ConnectSheetInput) =>
+      apiFetch<ConnectSheetResponse>(`/brands/${brandId}/feature-requests/connect-sheet`, {
+        method: 'POST',
+        body: input,
+        token,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['brands', brandId] });
+      qc.invalidateQueries({ queryKey: ['brands', brandId, 'feature-requests'] });
+    },
+  });
+}
+
+export function useDisconnectFeatureRequestSheet(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<{ ok: true }>(`/brands/${brandId}/feature-requests/disconnect-sheet`, {
+        method: 'POST',
+        token,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['brands', brandId] });
+      qc.invalidateQueries({ queryKey: ['brands', brandId, 'feature-requests'] });
+    },
+  });
+}
+
+export function usePullFeatureRequests(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<SheetSyncPullResponse>(`/brands/${brandId}/feature-requests/sync/pull`, {
+        method: 'POST',
+        token,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['brands', brandId, 'feature-requests'] });
+      qc.invalidateQueries({ queryKey: ['brands', brandId] });
+    },
+  });
+}
+
+export function usePushFeatureRequests(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<SheetSyncPushResponse>(`/brands/${brandId}/feature-requests/sync/push`, {
+        method: 'POST',
+        token,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['brands', brandId, 'feature-requests'] });
+      qc.invalidateQueries({ queryKey: ['brands', brandId] });
+    },
+  });
+}
+
+export function useConvertFeatureRequestToAction(brandId: string) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<ConvertFeatureRequestResponse>(
+        `/brands/${brandId}/feature-requests/${id}/convert-to-action`,
+        { method: 'POST', token },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['brands', brandId, 'feature-requests'] });
+      qc.invalidateQueries({ queryKey: ['brands', brandId, 'action-items'] });
     },
   });
 }

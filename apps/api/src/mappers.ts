@@ -9,6 +9,7 @@ import type {
   brandStakeholders,
   brandMeetings,
   brandActionItems,
+  brandFeatureRequests,
 } from '@momentum/db';
 import type {
   Task,
@@ -20,7 +21,9 @@ import type {
   BrandStakeholder,
   BrandMeeting,
   BrandActionItem,
+  BrandFeatureRequest,
   SyncConfig,
+  FeatureRequestsConfig,
 } from '@momentum/shared';
 
 type DbTask = InferSelectModel<typeof tasks>;
@@ -32,6 +35,7 @@ type DbBrand = InferSelectModel<typeof brands>;
 type DbBrandStakeholder = InferSelectModel<typeof brandStakeholders>;
 type DbBrandMeeting = InferSelectModel<typeof brandMeetings>;
 type DbBrandActionItem = InferSelectModel<typeof brandActionItems>;
+type DbBrandFeatureRequest = InferSelectModel<typeof brandFeatureRequests>;
 
 const iso = (d: Date | null): string | null => (d ? d.toISOString() : null);
 const isoNonNull = (d: Date): string => d.toISOString();
@@ -99,6 +103,7 @@ export function mapBrand(row: DbBrand): Brand {
     successDefinition: row.successDefinition,
     customFields: (row.customFields ?? {}) as Record<string, unknown>,
     syncConfig: (row.syncConfig as SyncConfig) ?? null,
+    featureRequestsConfig: (row.featureRequestsConfig as FeatureRequestsConfig) ?? null,
     status: row.status,
     importError: row.importError,
     importedFrom: row.importedFrom,
@@ -153,6 +158,22 @@ export function mapBrandActionItem(row: DbBrandActionItem & { meetingDate?: stri
     meetingDate: row.meetingDate ?? null,
     createdAt: isoNonNull(row.createdAt),
     completedAt: iso(row.completedAt),
+  };
+}
+
+export function mapBrandFeatureRequest(row: DbBrandFeatureRequest): BrandFeatureRequest {
+  return {
+    id: row.id,
+    brandId: row.brandId,
+    userId: row.userId,
+    sheetRowIndex: row.sheetRowIndex,
+    date: row.date,
+    request: row.request,
+    response: row.response,
+    resolved: row.resolved,
+    syncStatus: row.syncStatus,
+    createdAt: isoNonNull(row.createdAt),
+    updatedAt: isoNonNull(row.updatedAt),
   };
 }
 

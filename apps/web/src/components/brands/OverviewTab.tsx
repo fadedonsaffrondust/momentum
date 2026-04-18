@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import type { Brand, BrandMeeting, BrandActionItem, BrandStakeholder } from '@momentum/shared';
+import type { Brand, BrandMeeting, BrandActionItem, BrandStakeholder, BrandFeatureRequest } from '@momentum/shared';
 import { Check, ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
 import { StakeholderBadge } from './StakeholderBadge';
 import { formatDateShort } from '../../lib/format';
@@ -16,8 +16,10 @@ interface Props {
   meetings: BrandMeeting[];
   actionItems: BrandActionItem[];
   stakeholders: BrandStakeholder[];
+  featureRequests: BrandFeatureRequest[];
   onSendToToday: (id: string) => void;
   onMarkDone: (id: string) => void;
+  onSwitchToFeatureRequests: () => void;
 }
 
 export function OverviewTab({
@@ -25,8 +27,10 @@ export function OverviewTab({
   meetings,
   actionItems,
   stakeholders,
+  featureRequests,
   onSendToToday,
   onMarkDone,
+  onSwitchToFeatureRequests,
 }: Props) {
   const today = todayIso();
 
@@ -94,7 +98,7 @@ export function OverviewTab({
     <div className="py-6 px-6 space-y-6 animate-slideUp">
       {/* Health Card */}
       <div className="bg-m-surface rounded-xl p-6 border border-m-border-subtle">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Activity Stats */}
           <div className="space-y-3">
             <h3 className="text-xs uppercase tracking-wide text-m-fg-secondary font-semibold">
@@ -167,6 +171,41 @@ export function OverviewTab({
                 +{openCount - 3} more open items
               </p>
             )}
+          </div>
+
+          {/* Feature Requests */}
+          <div className="space-y-3">
+            <h3 className="text-xs uppercase tracking-wide text-m-fg-secondary font-semibold">
+              Feature Requests
+            </h3>
+            {featureRequests.length === 0 ? (
+              <p className="text-sm text-m-fg-muted">No feature requests yet.</p>
+            ) : (
+              <div className="space-y-1.5">
+                <div className="text-sm text-m-fg-secondary">
+                  <span className="text-m-fg-strong font-medium">
+                    {featureRequests.filter((r) => !r.resolved).length}
+                  </span>{' '}
+                  <span className="text-m-fg-muted">open</span>
+                  {', '}
+                  <span className="text-m-fg-strong font-medium">
+                    {featureRequests.filter((r) => r.resolved).length}
+                  </span>{' '}
+                  <span className="text-m-fg-muted">resolved</span>
+                </div>
+                {brand.featureRequestsConfig?.connected && (
+                  <div className="text-xs text-m-fg-muted">
+                    Sheet connected
+                  </div>
+                )}
+              </div>
+            )}
+            <button
+              onClick={onSwitchToFeatureRequests}
+              className="text-xs text-accent hover:underline"
+            >
+              View all →
+            </button>
           </div>
         </div>
       </div>

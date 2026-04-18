@@ -151,6 +151,20 @@ Items intentionally cut from the global-shortcuts refactor (see release notes v0
 
 ---
 
+## Feature Requests — deferred (V2)
+
+Features intentionally deferred from the V1 Feature Requests implementation (see release notes v0.6.0).
+
+- [ ] **Real-time sync / webhooks.** Google Sheets doesn't have a simple webhook for cell changes. Real-time would require Google Apps Script triggers.
+- [ ] **Multi-sheet per brand.** One sheet per brand. Separate sheets for features vs. bugs is a V2 enhancement.
+- [ ] **Inline comments or threads.** No discussion thread per request. The Response column serves this purpose for now.
+- [ ] **Priority or categorization columns.** V1 is the four canonical columns only. Future iterations can add Priority, Category, Assignee.
+- [ ] **Bulk "standardize all sheets" tool.** V1 migrates on connection. A bulk migration tool can come later.
+- [ ] **Manual column mapping UI.** When auto-detection fails, let the user manually assign columns via dropdowns.
+- [ ] **Multi-tab selector during setup.** If a spreadsheet has multiple tabs, show a tab picker during connection.
+
+---
+
 ## Brands — deferred (V2)
 
 Features intentionally deferred from the V1 Brands implementation (see release notes v0.3.0). The `customFields` JSONB column is ready for extensibility.

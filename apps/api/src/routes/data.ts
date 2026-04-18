@@ -13,6 +13,7 @@ import {
   brandStakeholders,
   brandMeetings,
   brandActionItems,
+  brandFeatureRequests,
 } from '@momentum/db';
 import { db } from '../db.ts';
 import {
@@ -25,6 +26,7 @@ import {
   mapBrandStakeholder,
   mapBrandMeeting,
   mapBrandActionItem,
+  mapBrandFeatureRequest,
 } from '../mappers.ts';
 import { notFound } from '../errors.ts';
 
@@ -65,6 +67,10 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         .select()
         .from(brandActionItems)
         .where(eq(brandActionItems.userId, req.userId));
+      const featureRequestRows = await db
+        .select()
+        .from(brandFeatureRequests)
+        .where(eq(brandFeatureRequests.userId, req.userId));
 
       const { userId: _ignoredUserId, ...settingsNoUser } = mapSettings(settingsRow);
 
@@ -75,7 +81,7 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(eq(userSettings.userId, req.userId));
 
       return {
-        version: '1.2' as const,
+        version: '1.3' as const,
         exportedAt: new Date().toISOString(),
         settings: settingsNoUser,
         roles: roleRows.map(mapRole),
@@ -107,6 +113,10 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
           const { userId: _u, ...rest } = mapBrandActionItem(a);
           return rest;
         }),
+        brandFeatureRequests: featureRequestRows.map((fr) => {
+          const { userId: _u, ...rest } = mapBrandFeatureRequest(fr);
+          return rest;
+        }),
       };
     },
   );
@@ -128,6 +138,7 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
               brandStakeholders: z.number(),
               brandMeetings: z.number(),
               brandActionItems: z.number(),
+              brandFeatureRequests: z.number(),
             }),
           }),
         },
@@ -137,6 +148,7 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
       const { mode, file } = req.body;
 
       if (mode === 'replace') {
+        await db.delete(brandFeatureRequests).where(eq(brandFeatureRequests.userId, req.userId));
         await db.delete(brandActionItems).where(eq(brandActionItems.userId, req.userId));
         await db.delete(brandMeetings).where(eq(brandMeetings.userId, req.userId));
         await db.delete(brandStakeholders).where(eq(brandStakeholders.userId, req.userId));
@@ -309,6 +321,23 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         importedActionItems++;
       }
 
+      let importedFeatureRequests = 0;
+      for (const fr of file.brandFeatureRequests ?? []) {
+        const resolvedBrandId = brandIdMap.get(fr.brandId);
+        if (!resolvedBrandId) continue;
+        await db.insert(brandFeatureRequests).values({
+          brandId: resolvedBrandId,
+          userId: req.userId,
+          sheetRowIndex: fr.sheetRowIndex,
+          date: fr.date,
+          request: fr.request,
+          response: fr.response,
+          resolved: fr.resolved,
+          syncStatus: fr.syncStatus,
+        });
+        importedFeatureRequests++;
+      }
+
       return {
         ok: true as const,
         imported: {
@@ -320,6 +349,7 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
           brandStakeholders: importedStakeholders,
           brandMeetings: importedMeetings,
           brandActionItems: importedActionItems,
+          brandFeatureRequests: importedFeatureRequests,
         },
       };
     },
