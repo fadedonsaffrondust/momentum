@@ -1,8 +1,10 @@
 import clsx from 'clsx';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Parking, Role } from '@momentum/shared';
 import { formatTimeAgo } from '../lib/format';
-import { useUpdateParking } from '../api/hooks';
+import { useUpdateParking, useUsers } from '../api/hooks';
+import { Avatar } from './Avatar';
+import { AvatarStack } from './AvatarStack';
 
 interface Props {
   parking: Parking;
@@ -32,12 +34,26 @@ export function ParkingCard({
   onEditDone,
 }: Props) {
   const updateParking = useUpdateParking();
+  const usersQ = useUsers();
   const [title, setTitle] = useState(parking.title);
   const [notes, setNotes] = useState(parking.notes ?? '');
   const [outcome, setOutcome] = useState(parking.outcome ?? '');
   const ref = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const notesRef = useRef<HTMLTextAreaElement>(null);
+
+  const users = usersQ.data ?? [];
+  const creator = useMemo(
+    () => users.find((u) => u.id === parking.creatorId),
+    [users, parking.creatorId],
+  );
+  const involved = useMemo(
+    () =>
+      parking.involvedIds
+        .map((id) => users.find((u) => u.id === id))
+        .filter((u): u is (typeof users)[number] => u !== undefined),
+    [users, parking.involvedIds],
+  );
 
   useEffect(() => {
     if (selected && ref.current) {
@@ -81,6 +97,7 @@ export function ParkingCard({
   };
 
   const isDiscussed = parking.status === 'discussed';
+  const isPrivate = parking.visibility === 'private';
 
   return (
     <div
@@ -94,40 +111,61 @@ export function ParkingCard({
         'hover:border-m-border-strong',
         selected && 'ring-2 ring-accent/80 border-m-border-strong',
         isDiscussed && 'opacity-70',
+        isPrivate && 'bg-m-surface-40/70',
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        {editing ? (
-          <input
-            ref={titleInputRef}
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={() => void commitTitle()}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                void commitTitle();
-              }
-              if (e.key === 'Escape') {
-                setTitle(parking.title);
-                onEditDone();
-              }
-              e.stopPropagation();
-            }}
-            className="flex-1 bg-m-bg border border-m-border rounded px-2 py-1 text-sm text-m-fg focus:outline-none focus:border-accent"
-            data-task-edit-input="true"
-          />
-        ) : (
-          <div
-            className={clsx(
-              'flex-1 text-sm text-m-fg leading-snug break-words',
-              isDiscussed && 'line-through',
-            )}
-          >
-            {parking.title}
-          </div>
+      <div className="flex items-start gap-2">
+        {creator && (
+          <Avatar user={creator} size="xs" className="mt-0.5 shrink-0" />
         )}
+        <div className="flex-1 min-w-0 flex items-start gap-2">
+          {editing ? (
+            <input
+              ref={titleInputRef}
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={() => void commitTitle()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  void commitTitle();
+                }
+                if (e.key === 'Escape') {
+                  setTitle(parking.title);
+                  onEditDone();
+                }
+                e.stopPropagation();
+              }}
+              className="flex-1 bg-m-bg border border-m-border rounded px-2 py-1 text-sm text-m-fg focus:outline-none focus:border-accent"
+              data-task-edit-input="true"
+            />
+          ) : (
+            <div
+              className={clsx(
+                'flex-1 text-sm leading-snug break-words flex items-center gap-2',
+                isDiscussed && 'line-through',
+                isPrivate ? 'text-m-fg-tertiary' : 'text-m-fg',
+              )}
+            >
+              {isPrivate && (
+                <LockIcon
+                  className="shrink-0 text-m-fg-muted"
+                  aria-label="Private to you"
+                />
+              )}
+              <span className="min-w-0">{parking.title}</span>
+            </div>
+          )}
+          {involved.length > 0 && !editing && (
+            <AvatarStack
+              users={involved}
+              max={3}
+              size="xs"
+              className="shrink-0 mt-0.5"
+            />
+          )}
+        </div>
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -149,9 +187,7 @@ export function ParkingCard({
             {role.name}
           </span>
         )}
-        {isDiscussed && (
-          <span className="text-emerald-500">discussed</span>
-        )}
+        {isDiscussed && <span className="text-emerald-500">discussed</span>}
         {parking.notes && !expanded && (
           <span className="text-m-fg-dim">• notes</span>
         )}
@@ -193,5 +229,26 @@ export function ParkingCard({
         </div>
       )}
     </div>
+  );
+}
+
+function LockIcon({ className, ...rest }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...rest}
+    >
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
   );
 }

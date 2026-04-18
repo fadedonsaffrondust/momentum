@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import type { Brand, BrandMeeting, BrandActionItem } from '@momentum/shared';
 import { HealthPill } from './HealthPill';
 import { computeBrandHealth } from '../../hooks/useBrandHealth';
+import { useBrandUnseen } from '../../hooks/useBrandUnseen';
 import { formatTimeAgo } from '../../lib/format';
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
 
 export function BrandListItem({ brand, meetings, actionItems, selected, onClick }: Props) {
   const health = computeBrandHealth(meetings, actionItems);
+  const hasUnseen = useBrandUnseen(brand.id);
 
   return (
     <button
@@ -31,6 +33,13 @@ export function BrandListItem({ brand, meetings, actionItems, selected, onClick 
         <span className="flex-1 text-sm text-m-fg truncate font-medium">
           {brand.name}
         </span>
+        {hasUnseen && !selected && (
+          <span
+            className="w-1.5 h-1.5 rounded-full bg-accent shrink-0"
+            aria-label="New activity"
+            title="New activity since your last visit"
+          />
+        )}
         {brand.status === 'importing' && (
           <span className="text-[9px] text-accent animate-pulse">importing…</span>
         )}

@@ -5,6 +5,7 @@ import type {
   Brand,
   BrandActionItem,
   BrandActionStatus,
+  BrandEvent,
   BrandFeatureRequest,
   BrandImportInput,
   BrandImportResponse,
@@ -23,11 +24,13 @@ import type {
   CreateTaskInput,
   DailyLog,
   ExportFile,
+  InboxEvent,
   LoginInput,
   Parking,
   ParkingStatus,
   RegisterInput,
   Role,
+  SendActionItemToTodayInput,
   SheetSyncPullResponse,
   SheetSyncPushResponse,
   SyncCandidate,
@@ -35,10 +38,14 @@ import type {
   SyncConfirmResponse,
   Task,
   TaskStatus,
+  TeamTaskList,
+  TeamTodayStats,
+  TeamWeeklyStats,
   UpdateBrandActionItemInput,
   UpdateBrandFeatureRequestInput,
   UpdateBrandInput,
   UpdateBrandMeetingInput,
+  UpdateMeInput,
   UpdateSyncConfigInput,
   UpdateBrandStakeholderInput,
   UpdateParkingInput,
@@ -46,6 +53,7 @@ import type {
   UpdateTaskInput,
   UpsertDailyLogInput,
   UserSettings,
+  UserSummary,
   WeeklyStats,
   ImportRequest,
 } from '@momentum/shared';
@@ -53,6 +61,13 @@ import { apiFetch } from '../lib/api';
 import { useAuthStore } from '../store/auth';
 
 const useToken = () => useAuthStore((s) => s.token);
+
+/**
+ * staleTime for team-shared list queries (spec §4.5). Fresh for 30s, then
+ * marked stale — tab-switching and refocus naturally refetch without
+ * thrashing on rapid navigation within that window.
+ */
+const SHARED_STALE_TIME = 30_000;
 
 /* ─────────────── auth ─────────────── */
 
@@ -81,6 +96,41 @@ export function useMe() {
     queryFn: () => apiFetch<AuthUser>('/auth/me', { token }),
     enabled: !!token,
     retry: false,
+  });
+}
+
+/* ─────────────── users (team roster) ─────────────── */
+
+export function useUsers() {
+  const token = useToken();
+  return useQuery({
+    queryKey: ['users'],
+    queryFn: () => apiFetch<UserSummary[]>('/users', { token }),
+    enabled: !!token,
+    staleTime: SHARED_STALE_TIME,
+  });
+}
+
+export function useUser(id: string | undefined) {
+  const token = useToken();
+  return useQuery({
+    queryKey: ['users', id],
+    queryFn: () => apiFetch<UserSummary>(`/users/${id}`, { token }),
+    enabled: !!token && !!id,
+    staleTime: SHARED_STALE_TIME,
+  });
+}
+
+export function useUpdateMe() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdateMeInput) =>
+      apiFetch<AuthUser>('/users/me', { method: 'PATCH', body: input, token }),
+    onSuccess: (data) => {
+      qc.setQueryData(['me', token], data);
+      qc.invalidateQueries({ queryKey: ['users'] });
+    },
   });
 }
 
@@ -142,6 +192,9 @@ export interface TasksQueryParams {
   date?: string;
   roleId?: string;
   status?: TaskStatus;
+  /** 'ALL' → team-wide list; a uuid → filter to that assignee; omit → current user. */
+  assigneeId?: string | 'ALL';
+  creatorId?: string;
 }
 
 export function useTasks(params: TasksQueryParams = {}) {
@@ -154,6 +207,22 @@ export function useTasks(params: TasksQueryParams = {}) {
         query: { ...params },
       }),
     enabled: !!token,
+    staleTime: SHARED_STALE_TIME,
+  });
+}
+
+/** Team Task View: sections grouped by assignee, current user first. */
+export function useTeamTasks(params: { date?: string; status?: TaskStatus } = {}) {
+  const token = useToken();
+  return useQuery({
+    queryKey: ['tasks', 'team', params],
+    queryFn: () =>
+      apiFetch<TeamTaskList>('/tasks/team', {
+        token,
+        query: { ...params },
+      }),
+    enabled: !!token,
+    staleTime: SHARED_STALE_TIME,
   });
 }
 
@@ -163,7 +232,10 @@ export function useCreateTask() {
   return useMutation({
     mutationFn: (input: CreateTaskInput) =>
       apiFetch<Task>('/tasks', { method: 'POST', body: input, token }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+      qc.invalidateQueries({ queryKey: ['inbox'] });
+    },
   });
 }
 
@@ -173,7 +245,10 @@ export function useUpdateTask() {
   return useMutation({
     mutationFn: ({ id, ...input }: UpdateTaskInput & { id: string }) =>
       apiFetch<Task>(`/tasks/${id}`, { method: 'PATCH', body: input, token }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+      qc.invalidateQueries({ queryKey: ['inbox'] });
+    },
   });
 }
 
@@ -220,6 +295,7 @@ export function useParkings(params: ParkingsQueryParams = {}) {
         query: { ...params },
       }),
     enabled: !!token,
+    staleTime: SHARED_STALE_TIME,
   });
 }
 
@@ -229,7 +305,10 @@ export function useCreateParking() {
   return useMutation({
     mutationFn: (input: CreateParkingInput) =>
       apiFetch<Parking>('/parkings', { method: 'POST', body: input, token }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['parkings'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['parkings'] });
+      qc.invalidateQueries({ queryKey: ['inbox'] });
+    },
   });
 }
 
@@ -239,7 +318,10 @@ export function useUpdateParking() {
   return useMutation({
     mutationFn: ({ id, ...input }: UpdateParkingInput & { id: string }) =>
       apiFetch<Parking>(`/parkings/${id}`, { method: 'PATCH', body: input, token }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['parkings'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['parkings'] });
+      qc.invalidateQueries({ queryKey: ['inbox'] });
+    },
   });
 }
 
@@ -296,6 +378,26 @@ export function useWeeklyStats() {
   });
 }
 
+export function useTeamWeeklyStats() {
+  const token = useToken();
+  return useQuery({
+    queryKey: ['weekly-stats', 'team'],
+    queryFn: () => apiFetch<TeamWeeklyStats>('/stats/team-weekly', { token }),
+    enabled: !!token,
+    staleTime: SHARED_STALE_TIME,
+  });
+}
+
+export function useTeamTodayStats() {
+  const token = useToken();
+  return useQuery({
+    queryKey: ['stats', 'team-today'],
+    queryFn: () => apiFetch<TeamTodayStats>('/stats/team-today', { token }),
+    enabled: !!token,
+    staleTime: SHARED_STALE_TIME,
+  });
+}
+
 /* ─────────────── brands ─────────────── */
 
 export function useBrands() {
@@ -304,6 +406,7 @@ export function useBrands() {
     queryKey: ['brands'],
     queryFn: () => apiFetch<Brand[]>('/brands', { token }),
     enabled: !!token,
+    staleTime: SHARED_STALE_TIME,
   });
 }
 
@@ -313,6 +416,7 @@ export function useBrand(id: string | undefined) {
     queryKey: ['brands', id],
     queryFn: () => apiFetch<Brand>(`/brands/${id}`, { token }),
     enabled: !!token && !!id,
+    staleTime: SHARED_STALE_TIME,
     refetchInterval: (query) => {
       const data = query.state.data;
       return data?.status === 'importing' ? 3000 : false;
@@ -371,6 +475,7 @@ export function useBrandStakeholders(brandId: string | undefined) {
     queryKey: ['brands', brandId, 'stakeholders'],
     queryFn: () => apiFetch<BrandStakeholder[]>(`/brands/${brandId}/stakeholders`, { token }),
     enabled: !!token && !!brandId,
+    staleTime: SHARED_STALE_TIME,
   });
 }
 
@@ -423,6 +528,7 @@ export function useBrandMeetings(brandId: string | undefined) {
     queryKey: ['brands', brandId, 'meetings'],
     queryFn: () => apiFetch<BrandMeeting[]>(`/brands/${brandId}/meetings`, { token }),
     enabled: !!token && !!brandId,
+    staleTime: SHARED_STALE_TIME,
   });
 }
 
@@ -433,7 +539,7 @@ export function useAllBrandMeetings(brandIds: string[]) {
       queryKey: ['brands', id, 'meetings'],
       queryFn: () => apiFetch<BrandMeeting[]>(`/brands/${id}/meetings`, { token }),
       enabled: !!token,
-      staleTime: 60_000,
+      staleTime: SHARED_STALE_TIME,
     })),
   });
 }
@@ -445,7 +551,7 @@ export function useAllBrandActionItems(brandIds: string[]) {
       queryKey: ['brands', id, 'action-items', {}],
       queryFn: () => apiFetch<BrandActionItem[]>(`/brands/${id}/action-items`, { token }),
       enabled: !!token,
-      staleTime: 60_000,
+      staleTime: SHARED_STALE_TIME,
     })),
   });
 }
@@ -506,6 +612,7 @@ export function useBrandActionItems(
         query: { ...params },
       }),
     enabled: !!token && !!brandId,
+    staleTime: SHARED_STALE_TIME,
   });
 }
 
@@ -519,7 +626,10 @@ export function useCreateBrandActionItem(brandId: string) {
         body: input,
         token,
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands', brandId, 'action-items'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['brands', brandId, 'action-items'] });
+      qc.invalidateQueries({ queryKey: ['inbox'] });
+    },
   });
 }
 
@@ -533,7 +643,10 @@ export function useUpdateBrandActionItem(brandId: string) {
         body: input,
         token,
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['brands', brandId, 'action-items'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['brands', brandId, 'action-items'] });
+      qc.invalidateQueries({ queryKey: ['inbox'] });
+    },
   });
 }
 
@@ -554,14 +667,15 @@ export function useSendActionItemToToday(brandId: string) {
   const token = useToken();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
+    mutationFn: ({ id, ...input }: SendActionItemToTodayInput & { id: string }) =>
       apiFetch<{ actionItem: BrandActionItem; task: Task }>(
         `/brands/${brandId}/action-items/${id}/send-to-today`,
-        { method: 'POST', token },
+        { method: 'POST', body: input, token },
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['brands', brandId, 'action-items'] });
       qc.invalidateQueries({ queryKey: ['tasks'] });
+      qc.invalidateQueries({ queryKey: ['inbox'] });
     },
   });
 }
@@ -602,6 +716,7 @@ export function useBrandFeatureRequests(
         query: { ...params },
       }),
     enabled: !!token && !!brandId,
+    staleTime: SHARED_STALE_TIME,
   });
 }
 
@@ -784,6 +899,86 @@ export function useUpdateSyncConfig(brandId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['brands', brandId] });
     },
+  });
+}
+
+/* ─────────────── brand events (per-brand activity timeline) ─────────────── */
+
+export interface BrandEventsQueryParams {
+  limit?: number;
+  cursor?: string;
+}
+
+export function useBrandEvents(
+  brandId: string | undefined,
+  params: BrandEventsQueryParams = {},
+) {
+  const token = useToken();
+  return useQuery({
+    queryKey: ['brands', brandId, 'events', params],
+    queryFn: () =>
+      apiFetch<BrandEvent[]>(`/brands/${brandId}/events`, {
+        token,
+        query: { ...params },
+      }),
+    enabled: !!token && !!brandId,
+    staleTime: SHARED_STALE_TIME,
+  });
+}
+
+/* ─────────────── inbox ─────────────── */
+
+export interface InboxQueryParams {
+  unreadOnly?: 'true' | 'false';
+  limit?: number;
+  cursor?: string;
+}
+
+export function useInbox(params: InboxQueryParams = {}) {
+  const token = useToken();
+  return useQuery({
+    queryKey: ['inbox', params],
+    queryFn: () =>
+      apiFetch<InboxEvent[]>('/inbox', {
+        token,
+        query: { ...params },
+      }),
+    enabled: !!token,
+    staleTime: SHARED_STALE_TIME,
+  });
+}
+
+/**
+ * Cheap badge query. Polls every 30s so the sidebar Inbox pill updates
+ * without requiring user interaction (spec §9.2).
+ */
+export function useInboxUnreadCount() {
+  const token = useToken();
+  return useQuery({
+    queryKey: ['inbox', 'unread-count'],
+    queryFn: () => apiFetch<{ count: number }>('/inbox/unread-count', { token }),
+    enabled: !!token,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useMarkInboxRead() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<{ ok: true }>(`/inbox/${id}/read`, { method: 'POST', token }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['inbox'] }),
+  });
+}
+
+export function useMarkAllInboxRead() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<{ updated: number }>('/inbox/read-all', { method: 'POST', token }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['inbox'] }),
   });
 }
 

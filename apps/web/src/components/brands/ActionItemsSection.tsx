@@ -7,7 +7,6 @@ import {
   useCreateBrandActionItem,
   useUpdateBrandActionItem,
   useDeleteBrandActionItem,
-  useSendActionItemToToday,
   useCompleteBrandActionItem,
 } from '../../api/hooks';
 import { useUiStore } from '../../store/ui';
@@ -37,9 +36,8 @@ export function ActionItemsSection({ brandId, actionItems }: Props) {
   const createItem = useCreateBrandActionItem(brandId);
   const updateItem = useUpdateBrandActionItem(brandId);
   const deleteItem = useDeleteBrandActionItem(brandId);
-  const sendToToday = useSendActionItemToToday(brandId);
   const completeItem = useCompleteBrandActionItem(brandId);
-  const pushToast = useUiStore((s) => s.pushToast);
+  const openAssigneePicker = useUiStore((s) => s.openAssigneePicker);
 
   useEffect(() => {
     if (adding) addInputRef.current?.focus();
@@ -160,14 +158,11 @@ export function ActionItemsSection({ brandId, actionItems }: Props) {
               }
             }}
             onSendToToday={() => {
-              sendToToday.mutate(item.id, {
-                onSuccess: (res) => {
-                  pushToast({
-                    kind: 'success',
-                    message: `Sent to Today: "${res.task.title}"`,
-                    durationMs: 3000,
-                  });
-                },
+              openAssigneePicker({
+                kind: 'send-to-today',
+                brandId,
+                itemId: item.id,
+                itemText: item.text,
               });
             }}
             onEdit={(text) => updateItem.mutate({ id: item.id, text })}

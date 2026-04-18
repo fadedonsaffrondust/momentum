@@ -1,5 +1,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { eq, and, asc, max } from 'drizzle-orm';
+import { eq, asc, max } from 'drizzle-orm';
 import { z } from 'zod';
 import { roleSchema, createRoleInputSchema, ROLE_COLOR_PALETTE } from '@momentum/shared';
 import { roles } from '@momentum/db';
@@ -7,18 +7,19 @@ import { db } from '../db.ts';
 import { mapRole } from '../mappers.ts';
 import { notFound } from '../errors.ts';
 
+/**
+ * Roles are team-wide in team-space (spec §5.2). Any authenticated user
+ * may read, create, update, or delete — edits affect everyone (flat perms
+ * per §4.4). Position is a single team-wide sort order, not per-user.
+ */
 export const rolesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.addHook('preHandler', app.authenticate);
 
   app.get(
     '/roles',
     { schema: { response: { 200: z.array(roleSchema) } } },
-    async (req) => {
-      const rows = await db
-        .select()
-        .from(roles)
-        .where(eq(roles.userId, req.userId))
-        .orderBy(asc(roles.position));
+    async () => {
+      const rows = await db.select().from(roles).orderBy(asc(roles.position));
       return rows.map(mapRole);
     },
   );
@@ -36,8 +37,7 @@ export const rolesRoutes: FastifyPluginAsyncZod = async (app) => {
 
       const [{ maxPos }] = (await db
         .select({ maxPos: max(roles.position) })
-        .from(roles)
-        .where(eq(roles.userId, req.userId))) as [{ maxPos: number | null }];
+        .from(roles)) as [{ maxPos: number | null }];
 
       const nextPosition = (maxPos ?? -1) + 1;
       const resolvedColor =
@@ -46,7 +46,6 @@ export const rolesRoutes: FastifyPluginAsyncZod = async (app) => {
       const [row] = await db
         .insert(roles)
         .values({
-          userId: req.userId,
           name,
           color: resolvedColor,
           position: nextPosition,
@@ -70,7 +69,7 @@ export const rolesRoutes: FastifyPluginAsyncZod = async (app) => {
       const [row] = await db
         .update(roles)
         .set(req.body)
-        .where(and(eq(roles.id, req.params.id), eq(roles.userId, req.userId)))
+        .where(eq(roles.id, req.params.id))
         .returning();
       if (!row) throw notFound('Role not found');
       return mapRole(row);
@@ -88,7 +87,7 @@ export const rolesRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req) => {
       const [row] = await db
         .delete(roles)
-        .where(and(eq(roles.id, req.params.id), eq(roles.userId, req.userId)))
+        .where(eq(roles.id, req.params.id))
         .returning({ id: roles.id });
       if (!row) throw notFound('Role not found');
       return { ok: true as const };

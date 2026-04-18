@@ -1,25 +1,29 @@
 # Momentum
 
-Momentum started as a keyboard-first daily task operating system for founders and operators who wear multiple hats. It has since grown into a broader daily execution + relationship surface for people running a company — still keyboard-first, still opinionated, now with client management, meeting capture, and feature-request triage built in.
+Momentum started as a keyboard-first daily task operating system for founders and operators who wear multiple hats. As of **v0.7.0** it is the shared operating system for the Omnirev team — tasks, parkings, brands, and meetings are team-visible, everyone has an Inbox for work that involves them, and a new Team Task View surfaces who's doing what right now. The single-user rituals (Plan My Day, End of Day Review, Weekly Stats) stay personal; the relationship surface is shared.
 
 The product is organized around a few load-bearing ideas:
 
 1. **Today-only by default.** Tasks opens to what you're doing today; everything else is one key away.
 2. **Keyboard-first, everywhere.** Every screen has its own shortcut layer. Press `?` for the full map.
-3. **Context-aware.** Tasks belong to "roles" (the hats you wear) and can be filtered to one at a time.
+3. **Context-aware.** Tasks belong to "roles" (the hats the team wears) and can be filtered to one at a time.
 4. **Time-boxed.** Every task has a time estimate; the day tells you when it's overloaded.
 5. **Opinionated ritual.** Plan My Day, End of Day Review, daily standup Parkings, and per-brand meeting logs drive a workflow, not just a list.
+6. **One team, one space.** Momentum hosts a single team — Omnirev. Signup is restricted to `@omnirev.ai`; the domain allowlist is the tenant boundary (there is no multi-tenancy layer).
 
 ### What's in it today
 
-- **Tasks** — the original Today / Backlog / Done surface with roles, priorities, estimates, and daily rituals.
-- **Parkings** — capture topics to raise at your next daily standup, grouped by day, with prep notes and outcomes.
-- **Brands** — full client/relationship management: North Star (goals + stakeholders), Pulse (health, open action items), Archive (meeting notes with auto-extracted action items), bidirectional sync to the Today view, and AI-assisted import from raw notes.
-- **Meeting recording sync** — pull recordings from tldv per brand, score candidates against stakeholder emails and matching rules, and auto-extract summaries / action items / decisions. Duplicates are deduped against existing action items via an LLM pass.
+- **Tasks** — Today / Backlog / Done with roles, priorities, estimates, and daily rituals. Every task has a creator and an assignee; filter by **Mine / Everyone / Unassigned**, reassign with `A`, or inline-assign with `@alice` in the quick-add bar.
+- **Parkings** — capture topics for the next daily standup. Team-visible by default; flip to private with `v`, or tag teammates into a parking with `I` to put it in their Inbox.
+- **Brands** — full client/relationship management across the team: North Star (goals + stakeholders), Pulse (health, open action items), Archive (meeting notes + auto-extracted action items), bidirectional sync to Today, AI-assisted import, and a Recent Activity feed per brand.
+- **Meeting recording sync** — pull recordings from tldv per brand, score candidates against stakeholder emails and matching rules, and auto-extract summaries / action items / decisions. Attendees that match teammate emails are auto-linked.
 - **Feature Requests** — per-brand tab that two-way-syncs with a Google Sheet. Inline edit, filter/search, convert to action items.
+- **Team Task View** (`g u`) — everyone's Today grouped by teammate, with the same keyboard-first kanban flow as the personal Today view.
+- **Inbox** (`g i`) — the five events that involve you: tasks assigned to you, your tasks edited, parkings that tag you, action items assigned to you, meetings you were added to.
+- **End of Day team pulse + Weekly Stats Team tab** — your personal review stays private; a quiet strip in EOD and a Team tab in Weekly Stats surface team signal without competing with personal rituals.
 - **What's new** — release notes that auto-open on update; an accent dot on the sidebar flags unseen releases.
 
-See [`docs/CLAUDE-CODE-PROMPT.md`](./docs/CLAUDE-CODE-PROMPT.md) for the original product spec, [`docs/MOMENTUM-BRANDS-FEATURE-SPEC.md`](./docs/MOMENTUM-BRANDS-FEATURE-SPEC.md), [`docs/MOMENTUM-TLDV-SYNC-SPEC.md`](./docs/MOMENTUM-TLDV-SYNC-SPEC.md), and [`docs/MOMENTUM-FEATURE-REQUESTS-SPEC.md`](./docs/MOMENTUM-FEATURE-REQUESTS-SPEC.md) for the newer surfaces, and [`docs/KEYBOARD-SHORTCUTS-REFERENCE.md`](./docs/KEYBOARD-SHORTCUTS-REFERENCE.md) for the shortcut contract.
+See [`docs/CLAUDE-CODE-PROMPT.md`](./docs/CLAUDE-CODE-PROMPT.md) for the original product spec, [`docs/MOMENTUM-TEAM-SPACE-SPEC.md`](./docs/MOMENTUM-TEAM-SPACE-SPEC.md) for the v0.7.0 team-space rewrite, [`docs/MOMENTUM-BRANDS-FEATURE-SPEC.md`](./docs/MOMENTUM-BRANDS-FEATURE-SPEC.md), [`docs/MOMENTUM-TLDV-SYNC-SPEC.md`](./docs/MOMENTUM-TLDV-SYNC-SPEC.md), and [`docs/MOMENTUM-FEATURE-REQUESTS-SPEC.md`](./docs/MOMENTUM-FEATURE-REQUESTS-SPEC.md) for the relationship surfaces, and [`docs/KEYBOARD-SHORTCUTS-REFERENCE.md`](./docs/KEYBOARD-SHORTCUTS-REFERENCE.md) for the shortcut contract.
 
 ---
 
@@ -120,7 +124,7 @@ Turborepo boots the API and web client concurrently:
 - API: <http://localhost:3001>
 - Healthcheck: <http://localhost:3001/health>
 
-On first visit the web client walks you through a short first-run wizard (name → roles → daily capacity) and then drops you into the Today view. Press `?` or open the command palette (`Cmd/Ctrl + K` → "Keyboard Shortcuts") for the full list of bindings.
+On first visit the web client walks you through a short first-run wizard (display name → daily capacity) and then drops you into the Today view. Signup is gated to the `@omnirev.ai` domain; the role palette is team-wide (new signups inherit whatever Nader and Mikael seeded), so only the display name and capacity are per-user. Press `?` or open the command palette (`Cmd/Ctrl + K` → "Keyboard Shortcuts") for the full list of bindings.
 
 ---
 

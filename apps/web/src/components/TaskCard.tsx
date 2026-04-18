@@ -1,8 +1,9 @@
 import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
-import type { Task, Role } from '@momentum/shared';
+import type { Task, Role, UserSummary } from '@momentum/shared';
 import { formatMinutes, formatTimeAgo } from '../lib/format';
-import { useUpdateTask } from '../api/hooks';
+import { useMe, useUpdateTask, useUsers } from '../api/hooks';
+import { Avatar } from './Avatar';
 
 interface Props {
   task: Task;
@@ -21,9 +22,19 @@ const priorityColor: Record<Task['priority'], string> = {
 
 export function TaskCard({ task, role, selected, onSelect, editing, onEditDone }: Props) {
   const updateTask = useUpdateTask();
+  const meQ = useMe();
+  const usersQ = useUsers();
   const [title, setTitle] = useState(task.title);
   const ref = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Show the assignee avatar only when the task is assigned to someone
+  // other than the current user — reduces visual noise for the common
+  // "own tasks" case (spec §9.3).
+  const assignee: UserSummary | undefined =
+    meQ.data && task.assigneeId !== meQ.data.id
+      ? (usersQ.data ?? []).find((u) => u.id === task.assigneeId)
+      : undefined;
 
   useEffect(() => {
     if (selected && ref.current) {
@@ -82,13 +93,18 @@ export function TaskCard({ task, role, selected, onSelect, editing, onEditDone }
           data-task-edit-input="true"
         />
       ) : (
-        <div
-          className={clsx(
-            'text-sm text-m-fg leading-snug break-words',
-            task.status === 'done' && 'line-through',
+        <div className="flex items-start gap-2">
+          <div
+            className={clsx(
+              'flex-1 min-w-0 text-sm text-m-fg leading-snug break-words',
+              task.status === 'done' && 'line-through',
+            )}
+          >
+            {task.title}
+          </div>
+          {assignee && (
+            <Avatar user={assignee} size="xs" className="mt-0.5 shrink-0" />
           )}
-        >
-          {task.title}
         </div>
       )}
 

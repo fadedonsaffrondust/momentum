@@ -23,7 +23,6 @@ export const brandImportRoutes: FastifyPluginAsyncZod = async (app) => {
       const [stub] = await db
         .insert(brands)
         .values({
-          userId: req.userId,
           name: fileName.replace(/\.(md|txt)$/i, ''),
           status: 'importing',
           importedFrom: 'file',
@@ -43,9 +42,15 @@ export const brandImportRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 };
 
+/**
+ * Async import worker. `actorId` is used only as the `creatorId` on the
+ * generated action items (so the brand activity panel can attribute the
+ * auto-import to the person who uploaded the file). The brand itself and
+ * stakeholders/meetings are team-shared, so no user_id is written.
+ */
 async function processImportAsync(
   brandId: string,
-  userId: string,
+  actorId: string,
   fileContent: string,
   logger: { error: (...args: unknown[]) => void; info: (...args: unknown[]) => void },
 ): Promise<void> {
@@ -167,7 +172,6 @@ JSON schema:
       seenNames.add(key);
       await db.insert(brandStakeholders).values({
         brandId,
-        userId,
         name: s.name.trim(),
         role: s.role?.trim() || null,
         notes: s.notes?.trim() || null,
@@ -179,7 +183,6 @@ JSON schema:
         .insert(brandMeetings)
         .values({
           brandId,
-          userId,
           date: m.date || new Date().toISOString().slice(0, 10),
           title: m.title || 'Meeting',
           attendees: m.attendees ?? [],
@@ -195,7 +198,7 @@ JSON schema:
           if (!text) continue;
           await db.insert(brandActionItems).values({
             brandId,
-            userId,
+            creatorId: actorId,
             meetingId: meeting.id,
             text,
           });

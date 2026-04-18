@@ -44,11 +44,12 @@ export const dailyLogsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req) => {
       const { date, journalEntry } = req.body;
 
-      // Compute stats from tasks on that date.
+      // Compute stats from tasks on that date, scoped to this user as
+      // assignee — daily_logs are personal, not team-wide.
       const dayTasks = await db
         .select()
         .from(tasks)
-        .where(and(eq(tasks.userId, req.userId), eq(tasks.scheduledDate, date)));
+        .where(and(eq(tasks.assigneeId, req.userId), eq(tasks.scheduledDate, date)));
 
       const tasksPlanned = dayTasks.length;
       const done = dayTasks.filter((t) => t.status === 'done');

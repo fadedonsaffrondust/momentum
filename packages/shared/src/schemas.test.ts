@@ -14,6 +14,7 @@ import {
   updateSettingsInputSchema,
   dailyLogSchema,
   parkingStatusSchema,
+  parkingVisibilitySchema,
   parkingSchema,
   createParkingInputSchema,
   updateParkingInputSchema,
@@ -25,11 +26,20 @@ import {
   brandActionItemSchema,
   createBrandActionItemInputSchema,
   updateBrandActionItemInputSchema,
+  sendActionItemToTodayInputSchema,
   exportFileSchema,
   importModeSchema,
   importRequestSchema,
   registerInputSchema,
   loginInputSchema,
+  authUserSchema,
+  userSummarySchema,
+  updateMeInputSchema,
+  inboxEventSchema,
+  brandEventSchema,
+  teamTaskListSchema,
+  teamWeeklyStatsSchema,
+  teamTodayStatsSchema,
   ROLE_COLOR_PALETTE,
 } from './schemas.ts';
 
@@ -138,9 +148,11 @@ describe('createRoleInputSchema', () => {
 /* ─────────────── task ─────────────── */
 
 describe('taskSchema', () => {
+  const UUID2 = 'b2ffcd00-ad1c-5ff9-cc7e-7ccaae491b22';
   const validTask = {
     id: UUID,
-    userId: UUID,
+    creatorId: UUID,
+    assigneeId: UUID2,
     title: 'Ship feature',
     roleId: null,
     priority: 'medium' as const,
@@ -154,8 +166,18 @@ describe('taskSchema', () => {
     completedAt: null,
   };
 
-  it('accepts a full valid task', () => {
+  it('accepts a full valid task with creator and assignee', () => {
     expect(taskSchema.parse(validTask)).toEqual(validTask);
+  });
+
+  it('requires creatorId', () => {
+    const { creatorId: _, ...withoutCreator } = validTask;
+    expect(() => taskSchema.parse(withoutCreator)).toThrow();
+  });
+
+  it('requires assigneeId', () => {
+    const { assigneeId: _, ...withoutAssignee } = validTask;
+    expect(() => taskSchema.parse(withoutAssignee)).toThrow();
   });
 
   it('allows null scheduledDate, roleId, estimateMinutes, actualMinutes', () => {
@@ -181,15 +203,22 @@ describe('createTaskInputSchema', () => {
     expect(() => createTaskInputSchema.parse({})).toThrow();
   });
 
-  it('accepts all optional fields', () => {
+  it('accepts all optional fields including assigneeId', () => {
     const input = {
       title: 'Do thing',
       roleId: UUID,
       priority: 'high' as const,
       estimateMinutes: 30,
       scheduledDate: '2026-04-15',
+      assigneeId: UUID,
     };
     expect(createTaskInputSchema.parse(input)).toEqual(input);
+  });
+
+  it('rejects non-uuid assigneeId', () => {
+    expect(() =>
+      createTaskInputSchema.parse({ title: 'x', assigneeId: 'not-a-uuid' }),
+    ).toThrow();
   });
 });
 
@@ -206,6 +235,11 @@ describe('updateTaskInputSchema', () => {
     const result = updateTaskInputSchema.parse({ status: 'done', column: 'done' });
     expect(result.status).toBe('done');
     expect(result.column).toBe('done');
+  });
+
+  it('accepts assigneeId for reassignment', () => {
+    const result = updateTaskInputSchema.parse({ assigneeId: UUID });
+    expect(result.assigneeId).toBe(UUID);
   });
 });
 
@@ -280,7 +314,7 @@ describe('dailyLogSchema', () => {
 describe('parkingSchema + create/update', () => {
   const validParking = {
     id: UUID,
-    userId: UUID,
+    creatorId: UUID,
     title: 'Discuss pricing',
     notes: null,
     outcome: null,
@@ -288,6 +322,8 @@ describe('parkingSchema + create/update', () => {
     roleId: null,
     priority: 'medium' as const,
     status: 'open' as const,
+    visibility: 'team' as const,
+    involvedIds: [],
     createdAt: DT,
     discussedAt: null,
   };
@@ -302,8 +338,28 @@ describe('parkingSchema + create/update', () => {
     expect(() => parkingStatusSchema.parse('closed')).toThrow();
   });
 
-  it('accepts a valid parking', () => {
+  it('parkingVisibilitySchema accepts team and private', () => {
+    expect(parkingVisibilitySchema.parse('team')).toBe('team');
+    expect(parkingVisibilitySchema.parse('private')).toBe('private');
+  });
+
+  it('parkingVisibilitySchema rejects invalid', () => {
+    expect(() => parkingVisibilitySchema.parse('public')).toThrow();
+  });
+
+  it('accepts a valid parking with creator and visibility', () => {
     expect(parkingSchema.parse(validParking)).toEqual(validParking);
+  });
+
+  it('accepts a parking with involvedIds populated', () => {
+    const withInvolved = { ...validParking, involvedIds: [UUID] };
+    expect(parkingSchema.parse(withInvolved).involvedIds).toEqual([UUID]);
+  });
+
+  it('rejects non-uuid in involvedIds', () => {
+    expect(() =>
+      parkingSchema.parse({ ...validParking, involvedIds: ['not-a-uuid'] }),
+    ).toThrow();
   });
 
   it('createParkingInputSchema requires title', () => {
@@ -315,14 +371,11 @@ describe('parkingSchema + create/update', () => {
     expect(result.title).toBe('Topic');
   });
 
-  it('createParkingInputSchema accepts all optional fields', () => {
+  it('createParkingInputSchema accepts visibility and involvedIds', () => {
     const input = {
       title: 'Topic',
-      notes: 'some notes',
-      outcome: null,
-      targetDate: '2026-05-01',
-      roleId: UUID,
-      priority: 'high' as const,
+      visibility: 'private' as const,
+      involvedIds: [UUID],
     };
     expect(createParkingInputSchema.parse(input)).toEqual(input);
   });
@@ -336,6 +389,11 @@ describe('parkingSchema + create/update', () => {
     expect(result.status).toBe('discussed');
   });
 
+  it('updateParkingInputSchema accepts visibility toggle', () => {
+    const result = updateParkingInputSchema.parse({ visibility: 'private' });
+    expect(result.visibility).toBe('private');
+  });
+
   it('updateParkingInputSchema rejects unknown keys (strict)', () => {
     expect(() => updateParkingInputSchema.parse({ unknownField: true })).toThrow();
   });
@@ -346,7 +404,6 @@ describe('parkingSchema + create/update', () => {
 describe('brandSchema', () => {
   const validBrand = {
     id: UUID,
-    userId: UUID,
     name: 'Acme Corp',
     goals: null,
     successDefinition: null,
@@ -388,10 +445,10 @@ describe('brandMeetingSchema', () => {
   const validMeeting = {
     id: UUID,
     brandId: UUID,
-    userId: UUID,
     date: '2026-04-15',
     title: 'Weekly sync',
     attendees: ['Alice', 'Bob'],
+    attendeeUserIds: [],
     summary: null,
     rawNotes: 'Notes from the meeting',
     decisions: ['Ship v2'],
@@ -403,6 +460,17 @@ describe('brandMeetingSchema', () => {
 
   it('accepts a valid meeting', () => {
     expect(brandMeetingSchema.parse(validMeeting)).toEqual(validMeeting);
+  });
+
+  it('accepts a meeting with attendeeUserIds populated', () => {
+    const withUserIds = { ...validMeeting, attendeeUserIds: [UUID] };
+    expect(brandMeetingSchema.parse(withUserIds).attendeeUserIds).toEqual([UUID]);
+  });
+
+  it('rejects non-uuid in attendeeUserIds', () => {
+    expect(() =>
+      brandMeetingSchema.parse({ ...validMeeting, attendeeUserIds: ['not-uuid'] }),
+    ).toThrow();
   });
 
   it('attendees is an array of strings', () => {
@@ -434,7 +502,8 @@ describe('brandActionItemSchema + create/update', () => {
     id: UUID,
     brandId: UUID,
     meetingId: null,
-    userId: UUID,
+    creatorId: UUID,
+    assigneeId: null,
     text: 'Follow up with client',
     status: 'open' as const,
     owner: null,
@@ -445,8 +514,18 @@ describe('brandActionItemSchema + create/update', () => {
     completedAt: null,
   };
 
-  it('accepts a valid action item', () => {
+  it('accepts a valid action item with null assignee', () => {
     expect(brandActionItemSchema.parse(validItem)).toEqual(validItem);
+  });
+
+  it('accepts a valid action item with assignee set', () => {
+    const assigned = { ...validItem, assigneeId: UUID };
+    expect(brandActionItemSchema.parse(assigned).assigneeId).toBe(UUID);
+  });
+
+  it('requires creatorId', () => {
+    const { creatorId: _, ...withoutCreator } = validItem;
+    expect(() => brandActionItemSchema.parse(withoutCreator)).toThrow();
   });
 
   it('brandActionStatusSchema accepts open and done', () => {
@@ -467,6 +546,16 @@ describe('brandActionItemSchema + create/update', () => {
     expect(result.text).toBe('Do thing');
   });
 
+  it('createBrandActionItemInputSchema accepts assigneeId', () => {
+    const result = createBrandActionItemInputSchema.parse({ text: 'x', assigneeId: UUID });
+    expect(result.assigneeId).toBe(UUID);
+  });
+
+  it('createBrandActionItemInputSchema accepts null assigneeId', () => {
+    const result = createBrandActionItemInputSchema.parse({ text: 'x', assigneeId: null });
+    expect(result.assigneeId).toBeNull();
+  });
+
   it('updateBrandActionItemInputSchema accepts status extension', () => {
     const result = updateBrandActionItemInputSchema.parse({ status: 'done' });
     expect(result.status).toBe('done');
@@ -474,6 +563,28 @@ describe('brandActionItemSchema + create/update', () => {
 
   it('updateBrandActionItemInputSchema rejects unknown keys (strict)', () => {
     expect(() => updateBrandActionItemInputSchema.parse({ unknownField: true })).toThrow();
+  });
+});
+
+describe('sendActionItemToTodayInputSchema', () => {
+  it('requires assigneeId', () => {
+    expect(() => sendActionItemToTodayInputSchema.parse({})).toThrow();
+  });
+
+  it('rejects non-uuid assigneeId', () => {
+    expect(() => sendActionItemToTodayInputSchema.parse({ assigneeId: 'x' })).toThrow();
+  });
+
+  it('rejects extra keys (strict)', () => {
+    expect(() =>
+      sendActionItemToTodayInputSchema.parse({ assigneeId: UUID, extra: true }),
+    ).toThrow();
+  });
+
+  it('accepts a valid uuid', () => {
+    expect(sendActionItemToTodayInputSchema.parse({ assigneeId: UUID })).toEqual({
+      assigneeId: UUID,
+    });
   });
 });
 
@@ -552,6 +663,114 @@ describe('exportFileSchema', () => {
     expect(result.brandFeatureRequests).toEqual([]);
   });
 
+  it('accepts v1.4 and defaults new team collections to []', () => {
+    const v14 = { ...validExport, version: '1.4' as const };
+    const result = exportFileSchema.parse(v14);
+    expect(result.version).toBe('1.4');
+    expect(result.users).toEqual([]);
+    expect(result.brandEvents).toEqual([]);
+    expect(result.inboxEvents).toEqual([]);
+  });
+
+  it('v1.4 accepts a populated users collection', () => {
+    const v14 = {
+      ...validExport,
+      version: '1.4' as const,
+      users: [
+        {
+          id: UUID,
+          email: 'nader@omnirev.ai',
+          displayName: 'Nader',
+          avatarColor: '#0FB848',
+          deactivatedAt: null,
+        },
+      ],
+    };
+    const result = exportFileSchema.parse(v14);
+    expect(result.users).toHaveLength(1);
+    expect(result.users[0]?.displayName).toBe('Nader');
+  });
+
+  it('v1.3 file without creator/assignee on tasks is accepted (backward compat)', () => {
+    const v13 = {
+      ...validExport,
+      version: '1.3' as const,
+      tasks: [
+        {
+          id: 'task-legacy-1',
+          title: 'Old task',
+          roleId: null,
+          priority: 'medium',
+          estimateMinutes: null,
+          actualMinutes: null,
+          status: 'todo',
+          column: 'up_next',
+          scheduledDate: null,
+          createdAt: DT,
+          startedAt: null,
+          completedAt: null,
+        },
+      ],
+    };
+    const result = exportFileSchema.parse(v13);
+    expect(result.tasks).toHaveLength(1);
+    expect(result.tasks[0]?.creatorId).toBeUndefined();
+    expect(result.tasks[0]?.assigneeId).toBeUndefined();
+  });
+
+  it('v1.3 file without creator/visibility/involved on parkings is accepted', () => {
+    const v13 = {
+      ...validExport,
+      version: '1.3' as const,
+      parkings: [
+        {
+          id: 'p-1',
+          title: 'Legacy parking',
+          notes: null,
+          outcome: null,
+          targetDate: null,
+          roleId: null,
+          priority: 'medium',
+          status: 'open',
+          createdAt: DT,
+          discussedAt: null,
+        },
+      ],
+    };
+    const result = exportFileSchema.parse(v13);
+    expect(result.parkings[0]?.creatorId).toBeUndefined();
+    expect(result.parkings[0]?.visibility).toBeUndefined();
+    expect(result.parkings[0]?.involvedIds).toBeUndefined();
+  });
+
+  it('v1.4 file with populated creator/assignee on tasks round-trips', () => {
+    const v14 = {
+      ...validExport,
+      version: '1.4' as const,
+      tasks: [
+        {
+          id: 'task-new-1',
+          creatorId: UUID,
+          assigneeId: UUID,
+          title: 'New task',
+          roleId: null,
+          priority: 'medium',
+          estimateMinutes: null,
+          actualMinutes: null,
+          status: 'todo',
+          column: 'up_next',
+          scheduledDate: null,
+          createdAt: DT,
+          startedAt: null,
+          completedAt: null,
+        },
+      ],
+    };
+    const result = exportFileSchema.parse(v14);
+    expect(result.tasks[0]?.creatorId).toBe(UUID);
+    expect(result.tasks[0]?.assigneeId).toBe(UUID);
+  });
+
   it('rejects invalid version', () => {
     expect(() => exportFileSchema.parse({ ...validExport, version: '2.0' })).toThrow();
   });
@@ -623,6 +842,262 @@ describe('auth schemas', () => {
 
   it('loginInputSchema rejects empty password', () => {
     expect(() => loginInputSchema.parse({ email: 'a@b.com', password: '' })).toThrow();
+  });
+});
+
+/* ─────────────── team-space: identity + events + stats ─────────────── */
+
+describe('authUserSchema', () => {
+  const valid = {
+    id: UUID,
+    email: 'nader@omnirev.ai',
+    displayName: 'Nader Samadyan',
+    avatarColor: '#0FB848',
+  };
+
+  it('accepts a valid auth user with team-space fields', () => {
+    expect(authUserSchema.parse(valid)).toEqual(valid);
+  });
+
+  it('requires displayName', () => {
+    const { displayName: _, ...without } = valid;
+    expect(() => authUserSchema.parse(without)).toThrow();
+  });
+
+  it('requires avatarColor as hex', () => {
+    expect(() => authUserSchema.parse({ ...valid, avatarColor: 'red' })).toThrow();
+  });
+
+  it('accepts empty displayName (pre-wizard state)', () => {
+    expect(authUserSchema.parse({ ...valid, displayName: '' }).displayName).toBe('');
+  });
+});
+
+describe('userSummarySchema', () => {
+  const valid = {
+    id: UUID,
+    email: 'sara@omnirev.ai',
+    displayName: 'Sara Pourmir',
+    avatarColor: '#F7B24F',
+    deactivatedAt: null,
+  };
+
+  it('accepts a valid active user', () => {
+    expect(userSummarySchema.parse(valid)).toEqual(valid);
+  });
+
+  it('accepts a deactivated user with timestamp', () => {
+    const deactivated = { ...valid, deactivatedAt: DT };
+    expect(userSummarySchema.parse(deactivated).deactivatedAt).toBe(DT);
+  });
+
+  it('requires deactivatedAt to be datetime or null', () => {
+    expect(() => userSummarySchema.parse({ ...valid, deactivatedAt: 'yesterday' })).toThrow();
+  });
+});
+
+describe('updateMeInputSchema', () => {
+  it('accepts displayName', () => {
+    const r = updateMeInputSchema.parse({ displayName: 'Ryan' });
+    expect(r.displayName).toBe('Ryan');
+  });
+
+  it('rejects empty displayName', () => {
+    expect(() => updateMeInputSchema.parse({ displayName: '' })).toThrow();
+  });
+
+  it('rejects extra keys (strict)', () => {
+    expect(() => updateMeInputSchema.parse({ displayName: 'x', extra: true })).toThrow();
+  });
+});
+
+describe('inboxEventSchema', () => {
+  const actor = {
+    id: UUID,
+    email: 'sara@omnirev.ai',
+    displayName: 'Sara',
+    avatarColor: '#F7B24F',
+    deactivatedAt: null,
+  };
+
+  const validEvent = {
+    id: UUID,
+    userId: UUID,
+    actor,
+    eventType: 'task_assigned' as const,
+    entityType: 'task',
+    entityId: UUID,
+    payload: { previousAssigneeId: null },
+    entity: { id: UUID, title: 'Review Boudin proposal' },
+    readAt: null,
+    createdAt: DT,
+  };
+
+  it('accepts a valid task_assigned event', () => {
+    expect(inboxEventSchema.parse(validEvent).eventType).toBe('task_assigned');
+  });
+
+  it('accepts all five event types', () => {
+    for (const t of [
+      'task_assigned',
+      'task_edited',
+      'action_item_assigned',
+      'action_item_edited',
+      'parking_involvement',
+    ] as const) {
+      expect(inboxEventSchema.parse({ ...validEvent, eventType: t }).eventType).toBe(t);
+    }
+  });
+
+  it('rejects unknown eventType', () => {
+    expect(() =>
+      inboxEventSchema.parse({ ...validEvent, eventType: 'made_up_type' }),
+    ).toThrow();
+  });
+
+  it('accepts null entity (entity was deleted after event)', () => {
+    expect(inboxEventSchema.parse({ ...validEvent, entity: null }).entity).toBeNull();
+  });
+
+  it('accepts a read timestamp', () => {
+    expect(inboxEventSchema.parse({ ...validEvent, readAt: DT }).readAt).toBe(DT);
+  });
+});
+
+describe('brandEventSchema', () => {
+  const actor = {
+    id: UUID,
+    email: 'nader@omnirev.ai',
+    displayName: 'Nader',
+    avatarColor: '#0FB848',
+    deactivatedAt: null,
+  };
+
+  const validEvent = {
+    id: UUID,
+    brandId: UUID,
+    actor,
+    eventType: 'action_item_completed' as const,
+    entityType: 'brand_action_item',
+    entityId: UUID,
+    payload: {},
+    createdAt: DT,
+  };
+
+  it('accepts a valid brand event', () => {
+    expect(brandEventSchema.parse(validEvent).eventType).toBe('action_item_completed');
+  });
+
+  it('allows null entityId (e.g., brand-level events)', () => {
+    expect(brandEventSchema.parse({ ...validEvent, entityId: null }).entityId).toBeNull();
+  });
+
+  it('rejects unknown eventType', () => {
+    expect(() =>
+      brandEventSchema.parse({ ...validEvent, eventType: 'unknown' }),
+    ).toThrow();
+  });
+});
+
+describe('teamTaskListSchema', () => {
+  const UUID2 = 'b2ffcd00-ad1c-5ff9-cc7e-7ccaae491b22';
+  const user = {
+    id: UUID,
+    email: 'nader@omnirev.ai',
+    displayName: 'Nader',
+    avatarColor: '#0FB848',
+    deactivatedAt: null,
+  };
+
+  it('accepts empty sections', () => {
+    expect(teamTaskListSchema.parse({ sections: [] })).toEqual({ sections: [] });
+  });
+
+  it('accepts a section with a user and tasks', () => {
+    const result = teamTaskListSchema.parse({
+      sections: [
+        {
+          user,
+          tasks: [
+            {
+              id: UUID,
+              creatorId: UUID,
+              assigneeId: UUID2,
+              title: 'T',
+              roleId: null,
+              priority: 'medium',
+              estimateMinutes: null,
+              actualMinutes: null,
+              status: 'todo',
+              column: 'up_next',
+              scheduledDate: null,
+              createdAt: DT,
+              startedAt: null,
+              completedAt: null,
+            },
+          ],
+        },
+      ],
+    });
+    expect(result.sections[0]?.tasks).toHaveLength(1);
+  });
+});
+
+describe('teamWeeklyStatsSchema', () => {
+  const user = {
+    id: UUID,
+    email: 'nader@omnirev.ai',
+    displayName: 'Nader',
+    avatarColor: '#0FB848',
+    deactivatedAt: null,
+  };
+
+  it('accepts per-user stats', () => {
+    const result = teamWeeklyStatsSchema.parse({
+      users: [
+        {
+          user,
+          completionRate: 0.8,
+          estimationAccuracy: null,
+          streak: 3,
+          mostActiveRoleId: null,
+        },
+      ],
+    });
+    expect(result.users[0]?.streak).toBe(3);
+  });
+
+  it('rejects completionRate > 1', () => {
+    expect(() =>
+      teamWeeklyStatsSchema.parse({
+        users: [
+          {
+            user,
+            completionRate: 1.5,
+            estimationAccuracy: null,
+            streak: 0,
+            mostActiveRoleId: null,
+          },
+        ],
+      }),
+    ).toThrow();
+  });
+});
+
+describe('teamTodayStatsSchema', () => {
+  it('accepts valid team-today stats', () => {
+    const result = teamTodayStatsSchema.parse({
+      teamCompletionRate: 0.82,
+      usersWithInProgressCount: 2,
+    });
+    expect(result.teamCompletionRate).toBe(0.82);
+    expect(result.usersWithInProgressCount).toBe(2);
+  });
+
+  it('rejects negative in-progress count', () => {
+    expect(() =>
+      teamTodayStatsSchema.parse({ teamCompletionRate: 0.5, usersWithInProgressCount: -1 }),
+    ).toThrow();
   });
 });
 

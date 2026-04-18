@@ -9,6 +9,7 @@ import { env } from './env.ts';
 import { authPlugin } from './plugins/auth.ts';
 import { errorHandlerPlugin } from './plugins/error-handler.ts';
 import { authRoutes } from './routes/auth.ts';
+import { usersRoutes } from './routes/users.ts';
 import { settingsRoutes } from './routes/settings.ts';
 import { rolesRoutes } from './routes/roles.ts';
 import { tasksRoutes } from './routes/tasks.ts';
@@ -21,6 +22,8 @@ import { brandImportRoutes } from './routes/brand-import.ts';
 import { brandFeatureRequestsRoutes } from './routes/brand-feature-requests.ts';
 import { brandFeatureRequestSyncRoutes } from './routes/brand-feature-request-sync.ts';
 import { brandSyncRoutes } from './routes/brand-sync.ts';
+import { brandEventsRoutes } from './routes/brand-events.ts';
+import { inboxRoutes } from './routes/inbox.ts';
 import { dailyLogsRoutes } from './routes/daily-logs.ts';
 import { statsRoutes } from './routes/stats.ts';
 import { dataRoutes } from './routes/data.ts';
@@ -46,6 +49,7 @@ async function main() {
   app.get('/health', async () => ({ ok: true as const }));
 
   await app.register(authRoutes);
+  await app.register(usersRoutes);
   await app.register(settingsRoutes);
   await app.register(rolesRoutes);
   await app.register(tasksRoutes);
@@ -58,6 +62,8 @@ async function main() {
   await app.register(brandFeatureRequestsRoutes);
   await app.register(brandFeatureRequestSyncRoutes);
   await app.register(brandSyncRoutes);
+  await app.register(brandEventsRoutes);
+  await app.register(inboxRoutes);
   await app.register(dailyLogsRoutes);
   await app.register(statsRoutes);
   await app.register(dataRoutes);

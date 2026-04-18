@@ -3,6 +3,7 @@ import { useRoles, useSettings, useTasks } from '../api/hooks';
 import { useUiStore } from '../store/ui';
 import { TaskInputBar } from '../components/TaskInputBar';
 import { RoleFilterBar } from '../components/RoleFilterBar';
+import { TaskAssigneeFilter } from '../components/TaskAssigneeFilter';
 import { TimeBudgetBar } from '../components/TimeBudgetBar';
 import { KanbanColumn } from '../components/KanbanColumn';
 import { useKeyboardController } from '../hooks/useKeyboardController';
@@ -11,7 +12,13 @@ import { todayIso } from '../lib/date';
 export function TodayPage() {
   const settingsQ = useSettings();
   const rolesQ = useRoles();
-  const tasksQ = useTasks({ date: todayIso() });
+  const assigneeFilter = useUiStore((s) => s.taskAssigneeFilter);
+  // "Everyone" passes assigneeId=ALL to the backend for team-wide today
+  // view. "Mine" relies on the backend's default current-user scoping.
+  const tasksQ = useTasks({
+    date: todayIso(),
+    ...(assigneeFilter === 'everyone' ? { assigneeId: 'ALL' as const } : {}),
+  });
   const roleFilter = useUiStore((s) => s.roleFilter);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,6 +55,7 @@ export function TodayPage() {
       <TaskInputBar ref={inputRef} />
       <div className="flex items-center justify-between gap-4">
         <RoleFilterBar />
+        <TaskAssigneeFilter />
       </div>
       <TimeBudgetBar tasks={tasks} capacityMinutes={capacity} />
 

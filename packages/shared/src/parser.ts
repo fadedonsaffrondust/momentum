@@ -6,12 +6,19 @@ export interface ParsedQuickAdd {
   roleTag: string | null;
   priority: Priority | null;
   dateToken: string | null;
+  /**
+   * The raw name token captured from `@<name>`, lower-cased. Client-side
+   * resolves it to an assigneeId by matching users' first name or full
+   * display name (case-insensitive). Unmatched tokens stay in `title`.
+   */
+  assigneeToken: string | null;
 }
 
 const TIME_RE = /(^|\s)~(\d+)(m|h)(?=\s|$)/i;
 const ROLE_RE = /(^|\s)#([a-z0-9_-]+)(?=\s|$)/i;
 const PRIO_RE = /(^|\s)!([hml])(?=\s|$)/i;
 const DATE_RE = /(^|\s)\+([a-z]+)(?=\s|$)/i;
+const ASSIGNEE_RE = /(^|\s)@([a-z0-9_-]+)(?=\s|$)/i;
 
 /**
  * Parse the quick-add input bar syntax.
@@ -20,6 +27,7 @@ const DATE_RE = /(^|\s)\+([a-z]+)(?=\s|$)/i;
  * Examples:
  *   "Buy domain ~30m #product !h +tomorrow"
  *   "Write pitch deck #strategy ~2h"
+ *   "Review proposal @sara ~45m"
  */
 export function parseQuickAdd(input: string): ParsedQuickAdd {
   let rest = ` ${input.trim()} `;
@@ -55,9 +63,16 @@ export function parseQuickAdd(input: string): ParsedQuickAdd {
     rest = rest.replace(DATE_RE, ' ');
   }
 
+  let assigneeToken: string | null = null;
+  const assigneeMatch = rest.match(ASSIGNEE_RE);
+  if (assigneeMatch) {
+    assigneeToken = assigneeMatch[2]!.toLowerCase();
+    rest = rest.replace(ASSIGNEE_RE, ' ');
+  }
+
   const title = rest.replace(/\s+/g, ' ').trim();
 
-  return { title, estimateMinutes, roleTag, priority, dateToken };
+  return { title, estimateMinutes, roleTag, priority, dateToken, assigneeToken };
 }
 
 /**
@@ -117,4 +132,32 @@ export function toLocalIsoDate(d: Date): string {
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+/**
+ * Resolve an `@token` to a user id by matching case-insensitively against
+ * the first name (first whitespace-delimited word of displayName), falling
+ * back to the full displayName. Returns null if nothing matches — callers
+ * are expected to re-inject `@token` into the title in that case, so
+ * unknown tokens don't silently disappear.
+ *
+ * Deactivated users should be filtered out by the caller before calling this.
+ */
+export function resolveAssigneeToken(
+  token: string | null,
+  users: ReadonlyArray<{ id: string; displayName: string }>,
+): string | null {
+  if (!token) return null;
+  const t = token.toLowerCase();
+
+  for (const u of users) {
+    const first = u.displayName.trim().split(/\s+/)[0]?.toLowerCase();
+    if (first && first === t) return u.id;
+  }
+
+  for (const u of users) {
+    if (u.displayName.trim().toLowerCase() === t) return u.id;
+  }
+
+  return null;
 }

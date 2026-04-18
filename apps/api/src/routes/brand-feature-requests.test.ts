@@ -51,7 +51,6 @@ function makeFeatureRequestRow(overrides: Record<string, unknown> = {}) {
   return {
     id: FR_ID,
     brandId: BRAND_ID,
-    userId: USER_ID,
     sheetRowIndex: null,
     date: '2026/04/14',
     request: 'Add car dealership industry',
@@ -220,8 +219,10 @@ describe('brand feature requests routes', () => {
   // ── PATCH /brands/:brandId/feature-requests/:id ───────────────────
 
   it('PATCH updates a feature request', async () => {
-    const row = makeFeatureRequestRow({ response: 'Done!', syncStatus: 'pending' });
-    mockDb._pushResult([row]);
+    const existing = makeFeatureRequestRow();
+    const updatedRow = makeFeatureRequestRow({ response: 'Done!', syncStatus: 'pending' });
+    mockDb._pushResult([existing]); // select existing
+    mockDb._pushResult([updatedRow]); // update returning
 
     const res = await app.inject({
       method: 'PATCH',
@@ -237,8 +238,10 @@ describe('brand feature requests routes', () => {
   });
 
   it('PATCH toggles resolved', async () => {
-    const row = makeFeatureRequestRow({ resolved: true });
-    mockDb._pushResult([row]);
+    const existing = makeFeatureRequestRow({ resolved: false });
+    const updatedRow = makeFeatureRequestRow({ resolved: true });
+    mockDb._pushResult([existing]);
+    mockDb._pushResult([updatedRow]);
 
     const res = await app.inject({
       method: 'PATCH',
@@ -267,7 +270,7 @@ describe('brand feature requests routes', () => {
   // ── DELETE /brands/:brandId/feature-requests/:id ──────────────────
 
   it('DELETE removes a feature request', async () => {
-    mockDb._pushResult([{ id: FR_ID }]);
+    mockDb._pushResult([makeFeatureRequestRow()]); // select existing
 
     const res = await app.inject({
       method: 'DELETE',
@@ -299,7 +302,8 @@ describe('brand feature requests routes', () => {
       id: 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       brandId: BRAND_ID,
       meetingId: null,
-      userId: USER_ID,
+      creatorId: USER_ID,
+      assigneeId: null,
       text: frRow.request,
       status: 'open',
       owner: null,
@@ -324,6 +328,8 @@ describe('brand feature requests routes', () => {
     const body = JSON.parse(res.body);
     expect(body.featureRequest.resolved).toBe(true);
     expect(body.actionItem.text).toBe(frRow.request);
+    expect(body.actionItem.creatorId).toBe(USER_ID);
+    expect(body.actionItem.assigneeId).toBeNull();
   });
 
   it('POST convert-to-action returns 404 when not found', async () => {

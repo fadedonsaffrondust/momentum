@@ -8,6 +8,8 @@ import { TodayPage } from './pages/TodayPage';
 import { BacklogPage } from './pages/BacklogPage';
 import { ParkingsPage } from './pages/ParkingsPage';
 import { BrandsPage } from './pages/BrandsPage';
+import { TeamPage } from './pages/TeamPage';
+import { InboxPage } from './pages/InboxPage';
 import { TasksLayout } from './layout/TasksLayout';
 import { Protected } from './components/Protected';
 
@@ -31,6 +33,8 @@ export function App() {
               <Route path="backlog" element={<BacklogPage />} />
             </Route>
             <Route path="parkings" element={<ParkingsPage />} />
+            <Route path="team" element={<TeamPage />} />
+            <Route path="inbox" element={<InboxPage />} />
             <Route path="brands" element={<BrandsPage />} />
             <Route path="brands/:id" element={<BrandsPage />} />
           </Route>

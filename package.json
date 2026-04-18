@@ -13,6 +13,7 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "db:generate": "pnpm --filter @momentum/db generate",
     "db:migrate": "pnpm --filter @momentum/db migrate",
+    "db:migrate:team-space-backfill": "pnpm --filter @momentum/db migrate:team-space-backfill",
     "db:studio": "pnpm --filter @momentum/db studio",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
   },

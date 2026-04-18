@@ -13,12 +13,15 @@ import {
 } from '@momentum/shared';
 import { brands, brandStakeholders, brandMeetings, brandActionItems } from '@momentum/db';
 import { db } from '../db.ts';
-import { mapBrand } from '../mappers.ts';
 import { notFound } from '../errors.ts';
 import { env } from '../env.ts';
 import { TldvClient, TldvApiError } from '../services/tldv.ts';
 import { categorizeCandidates } from '../services/meeting-scorer.ts';
 import { extractMeetingContent, deduplicateActionItems, type DeduplicationResult } from '../services/meeting-extraction.ts';
+import { matchAttendeeUserIds, type UserEmail } from '../lib/attendees.ts';
+import { users as usersTable } from '@momentum/db';
+import { isNull } from 'drizzle-orm';
+import { recordBrandEvent } from '../services/events.ts';
 
 const brandIdParam = z.object({ brandId: z.string().uuid() });
 
@@ -62,7 +65,7 @@ export const brandSyncRoutes: FastifyPluginAsyncZod = async (app) => {
       const [brand] = await db
         .select()
         .from(brands)
-        .where(and(eq(brands.id, req.params.brandId), eq(brands.userId, req.userId)));
+        .where(eq(brands.id, req.params.brandId));
       if (!brand) throw notFound('Brand not found');
 
       const syncConfig = getSyncConfig(brand.syncConfig);
@@ -72,12 +75,7 @@ export const brandSyncRoutes: FastifyPluginAsyncZod = async (app) => {
       const stakeholders = await db
         .select()
         .from(brandStakeholders)
-        .where(
-          and(
-            eq(brandStakeholders.brandId, req.params.brandId),
-            eq(brandStakeholders.userId, req.userId),
-          ),
-        );
+        .where(eq(brandStakeholders.brandId, req.params.brandId));
       const stakeholderEmails = stakeholders
         .map((s) => s.email)
         .filter((e): e is string => !!e);
@@ -156,19 +154,21 @@ export const brandSyncRoutes: FastifyPluginAsyncZod = async (app) => {
       const [brand] = await db
         .select()
         .from(brands)
-        .where(and(eq(brands.id, req.params.brandId), eq(brands.userId, req.userId)));
+        .where(eq(brands.id, req.params.brandId));
       if (!brand) throw notFound('Brand not found');
 
       const syncConfig = getSyncConfig(brand.syncConfig);
       const stakeholders = await db
         .select()
         .from(brandStakeholders)
-        .where(
-          and(
-            eq(brandStakeholders.brandId, req.params.brandId),
-            eq(brandStakeholders.userId, req.userId),
-          ),
-        );
+        .where(eq(brandStakeholders.brandId, req.params.brandId));
+
+      // Load active team roster once — reused for attendee-linking on every
+      // meeting imported in this confirm batch.
+      const teamUsers: UserEmail[] = await db
+        .select({ id: usersTable.id, email: usersTable.email })
+        .from(usersTable)
+        .where(isNull(usersTable.deactivatedAt));
 
       const client = new TldvClient(tldvApiKey);
       let imported = 0;
@@ -251,12 +251,12 @@ export const brandSyncRoutes: FastifyPluginAsyncZod = async (app) => {
             .where(
               and(
                 eq(brandMeetings.brandId, req.params.brandId),
-                eq(brandMeetings.userId, req.userId),
                 eq(brandMeetings.date, meetingDate),
               ),
             );
 
           let targetMeetingId: string | undefined;
+          let targetMeetingTitle: string = meeting.name;
 
           if (existing) {
             // Merge into existing note
@@ -275,6 +275,7 @@ export const brandSyncRoutes: FastifyPluginAsyncZod = async (app) => {
             const mergedSummary = existing.summary
               ? `${existing.summary}\n\n${summary ?? ''}`
               : summary;
+            const mergedAttendeeUserIds = matchAttendeeUserIds(mergedAttendees, teamUsers);
 
             await db
               .update(brandMeetings)
@@ -283,6 +284,7 @@ export const brandSyncRoutes: FastifyPluginAsyncZod = async (app) => {
                 summary: mergedSummary?.slice(0, 10_000) ?? null,
                 decisions: mergedDecisions,
                 attendees: mergedAttendees,
+                attendeeUserIds: mergedAttendeeUserIds,
                 recordingUrl: existing.recordingUrl ?? meeting.url,
                 externalMeetingId: existing.externalMeetingId
                   ? `${existing.externalMeetingId},${meetingId}`
@@ -290,16 +292,19 @@ export const brandSyncRoutes: FastifyPluginAsyncZod = async (app) => {
               })
               .where(eq(brandMeetings.id, existing.id));
             targetMeetingId = existing.id;
+            targetMeetingTitle = existing.title;
           } else {
             // Create new meeting note
+            const newAttendees = meeting.invitees.map((i) => i.name || i.email);
+            const newAttendeeUserIds = matchAttendeeUserIds(newAttendees, teamUsers);
             const [newMeeting] = await db
               .insert(brandMeetings)
               .values({
                 brandId: req.params.brandId,
-                userId: req.userId,
                 date: meetingDate,
                 title: meeting.name,
-                attendees: meeting.invitees.map((i) => i.name || i.email),
+                attendees: newAttendees,
+                attendeeUserIds: newAttendeeUserIds,
                 summary: summary?.slice(0, 10_000) ?? null,
                 rawNotes: rawNotesContent.slice(0, 100_000),
                 decisions: extractedDecisions,
@@ -340,7 +345,7 @@ export const brandSyncRoutes: FastifyPluginAsyncZod = async (app) => {
               if (!text) continue;
               await db.insert(brandActionItems).values({
                 brandId: req.params.brandId,
-                userId: req.userId,
+                creatorId: req.userId,
                 meetingId: targetMeetingId,
                 text: text.slice(0, 2000),
                 owner: item.owner?.slice(0, 256) ?? null,
@@ -378,6 +383,21 @@ export const brandSyncRoutes: FastifyPluginAsyncZod = async (app) => {
           // Track latest meeting date for next sync
           if (!latestMeetingDate || meetingDate > latestMeetingDate) {
             latestMeetingDate = meetingDate;
+          }
+
+          if (targetMeetingId) {
+            await recordBrandEvent({
+              brandId: req.params.brandId,
+              actorId: req.userId,
+              eventType: 'recording_synced',
+              entityType: 'brand_meeting',
+              entityId: targetMeetingId,
+              payload: {
+                title: targetMeetingTitle,
+                externalMeetingId: meetingId,
+                merged: Boolean(existing),
+              },
+            });
           }
         } catch (err) {
           const msg = err instanceof Error ? err.message : 'Unknown error';
@@ -439,7 +459,7 @@ export const brandSyncRoutes: FastifyPluginAsyncZod = async (app) => {
       const [brand] = await db
         .select()
         .from(brands)
-        .where(and(eq(brands.id, req.params.brandId), eq(brands.userId, req.userId)));
+        .where(eq(brands.id, req.params.brandId));
       if (!brand) throw notFound('Brand not found');
 
       const ref = req.body.meetingRef.trim();
@@ -488,7 +508,7 @@ export const brandSyncRoutes: FastifyPluginAsyncZod = async (app) => {
       const [brand] = await db
         .select()
         .from(brands)
-        .where(and(eq(brands.id, req.params.brandId), eq(brands.userId, req.userId)));
+        .where(eq(brands.id, req.params.brandId));
       if (!brand) throw notFound('Brand not found');
 
       const current = getSyncConfig(brand.syncConfig);

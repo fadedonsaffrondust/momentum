@@ -99,7 +99,7 @@ export const brandFeatureRequestSyncRoutes: FastifyPluginAsyncZod = async (app) 
           updatedAt: new Date(),
         })
         .where(
-          and(eq(brands.id, req.params.brandId), eq(brands.userId, req.userId)),
+          eq(brands.id, req.params.brandId),
         )
         .returning();
       if (!brand) throw notFound('Brand not found');
@@ -108,7 +108,6 @@ export const brandFeatureRequestSyncRoutes: FastifyPluginAsyncZod = async (app) 
       for (const row of sheetRows) {
         await db.insert(brandFeatureRequests).values({
           brandId: req.params.brandId,
-          userId: req.userId,
           sheetRowIndex: row.rowIndex,
           date: row.date,
           request: row.request,
@@ -145,9 +144,7 @@ export const brandFeatureRequestSyncRoutes: FastifyPluginAsyncZod = async (app) 
       const [brand] = await db
         .select()
         .from(brands)
-        .where(
-          and(eq(brands.id, req.params.brandId), eq(brands.userId, req.userId)),
-        )
+        .where(eq(brands.id, req.params.brandId))
         .limit(1);
       if (!brand) throw notFound('Brand not found');
 
@@ -158,12 +155,7 @@ export const brandFeatureRequestSyncRoutes: FastifyPluginAsyncZod = async (app) 
       const dbRows = await db
         .select()
         .from(brandFeatureRequests)
-        .where(
-          and(
-            eq(brandFeatureRequests.brandId, req.params.brandId),
-            eq(brandFeatureRequests.userId, req.userId),
-          ),
-        );
+        .where(eq(brandFeatureRequests.brandId, req.params.brandId));
 
       const dbByRowIndex = new Map(
         dbRows.filter((r) => r.sheetRowIndex !== null).map((r) => [r.sheetRowIndex!, r]),
@@ -204,7 +196,6 @@ export const brandFeatureRequestSyncRoutes: FastifyPluginAsyncZod = async (app) 
         } else {
           await db.insert(brandFeatureRequests).values({
             brandId: req.params.brandId,
-            userId: req.userId,
             sheetRowIndex: sheetRow.rowIndex,
             date: sheetRow.date,
             request: sheetRow.request,
@@ -256,9 +247,7 @@ export const brandFeatureRequestSyncRoutes: FastifyPluginAsyncZod = async (app) 
       const [brand] = await db
         .select()
         .from(brands)
-        .where(
-          and(eq(brands.id, req.params.brandId), eq(brands.userId, req.userId)),
-        )
+        .where(eq(brands.id, req.params.brandId))
         .limit(1);
       if (!brand) throw notFound('Brand not found');
 
@@ -270,7 +259,6 @@ export const brandFeatureRequestSyncRoutes: FastifyPluginAsyncZod = async (app) 
         .where(
           and(
             eq(brandFeatureRequests.brandId, req.params.brandId),
-            eq(brandFeatureRequests.userId, req.userId),
             eq(brandFeatureRequests.syncStatus, 'pending'),
           ),
         );
@@ -346,21 +334,14 @@ export const brandFeatureRequestSyncRoutes: FastifyPluginAsyncZod = async (app) 
           featureRequestsConfig: null,
           updatedAt: new Date(),
         })
-        .where(
-          and(eq(brands.id, req.params.brandId), eq(brands.userId, req.userId)),
-        )
+        .where(eq(brands.id, req.params.brandId))
         .returning();
       if (!brand) throw notFound('Brand not found');
 
       await db
         .update(brandFeatureRequests)
         .set({ sheetRowIndex: null, syncStatus: 'pending', updatedAt: new Date() })
-        .where(
-          and(
-            eq(brandFeatureRequests.brandId, req.params.brandId),
-            eq(brandFeatureRequests.userId, req.userId),
-          ),
-        );
+        .where(eq(brandFeatureRequests.brandId, req.params.brandId));
 
       return { ok: true as const };
     },

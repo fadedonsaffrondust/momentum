@@ -37,3 +37,6 @@ drizzle/meta/_journal.json.bak
 
 # Docker volumes
 pgdata/
+
+# Local DB snapshots from the team-space migration runbook
+.migrations/

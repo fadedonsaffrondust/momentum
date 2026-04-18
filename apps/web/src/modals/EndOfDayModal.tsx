@@ -4,6 +4,7 @@ import { useUiStore } from '../store/ui';
 import { useDeferTask, useDeleteTask, useTasks, useUpsertDailyLog } from '../api/hooks';
 import { todayIso } from '../lib/date';
 import { formatMinutes } from '../lib/format';
+import { TeamPulseStrip } from '../components/TeamPulseStrip';
 
 export function EndOfDayModal() {
   const close = useUiStore((s) => s.closeModal);
@@ -111,6 +112,10 @@ export function EndOfDayModal() {
             Save review
           </button>
         </div>
+
+        {/* Muted team-pulse strip (spec §9.9). Sits below the journal +
+            save buttons so it doesn't compete with the personal recap. */}
+        <TeamPulseStrip />
       </div>
     </Modal>
   );

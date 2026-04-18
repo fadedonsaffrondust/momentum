@@ -8,7 +8,6 @@ import {
   useBrandFeatureRequests,
   usePullFeatureRequests,
   usePushFeatureRequests,
-  useSendActionItemToToday,
   useCompleteBrandActionItem,
 } from '../../api/hooks';
 import { BrandDetailHeader } from './BrandDetailHeader';
@@ -35,8 +34,8 @@ export function BrandDetailView({ brandId }: Props) {
   const featureRequestsQ = useBrandFeatureRequests(brandId);
   const pullFeatureRequests = usePullFeatureRequests(brandId);
   const pushFeatureRequests = usePushFeatureRequests(brandId);
-  const sendToToday = useSendActionItemToToday(brandId);
   const completeItem = useCompleteBrandActionItem(brandId);
+  const openAssigneePicker = useUiStore((s) => s.openAssigneePicker);
   const pushToast = useUiStore((s) => s.pushToast);
 
   const [activeTab, setActiveTab] = useState<BrandTab>('overview');
@@ -113,17 +112,14 @@ export function BrandDetailView({ brandId }: Props) {
   }
 
   const handleSendToToday = (itemId: string) => {
-    sendToToday.mutate(itemId, {
-      onSuccess: (res) => {
-        pushToast({
-          kind: 'success',
-          message: `Sent to Today: "${res.task.title}"`,
-          durationMs: 3000,
-        });
-      },
-      onError: () => {
-        pushToast({ kind: 'error', message: 'Failed to send to Today', durationMs: 4000 });
-      },
+    // Open the assignee picker via the global host (Task 19); the host
+    // calls `useSendActionItemToToday` on confirm + shows the toast.
+    const item = actionItems.find((a) => a.id === itemId);
+    openAssigneePicker({
+      kind: 'send-to-today',
+      brandId,
+      itemId,
+      itemText: item?.text ?? '',
     });
   };
 
@@ -191,6 +187,7 @@ export function BrandDetailView({ brandId }: Props) {
             onSendToToday={handleSendToToday}
             onMarkDone={handleMarkDone}
             onSwitchToFeatureRequests={() => setActiveTab('feature-requests')}
+            onSwitchToWork={() => setActiveTab('work')}
           />
         ) : activeTab === 'work' ? (
           <WorkTab

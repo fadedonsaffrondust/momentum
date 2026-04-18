@@ -1,11 +1,12 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 import { ShoppingBag } from 'lucide-react';
-import { useSettings, useUpdateSettings } from '../api/hooks';
+import { useInboxUnreadCount, useMe, useSettings, useUpdateSettings } from '../api/hooks';
 import { useAuthStore } from '../store/auth';
 import { useUiStore } from '../store/ui';
 import { LATEST_VERSION } from '../lib/releaseNotes';
 import { useHasUnseenRelease } from '../hooks/useReleaseNotesPrompt';
+import { Avatar } from '../components/Avatar';
 
 type IconProps = { className?: string };
 
@@ -44,8 +45,46 @@ const ParkingsIcon = ({ className }: IconProps) => (
   </svg>
 );
 
+const TeamIcon = ({ className }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
 const BrandsIcon = ({ className }: IconProps) => (
   <ShoppingBag size={18} className={className} />
+);
+
+const InboxIcon = ({ className }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+    <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z" />
+  </svg>
 );
 
 const SparkleIcon = ({ className }: IconProps) => (
@@ -149,9 +188,14 @@ interface SidebarNavItemProps {
   icon: React.ComponentType<IconProps>;
   /** Extra pathnames that also count as active for this item. */
   matchPaths?: string[];
+  /**
+   * Numeric badge shown at the top-right of the icon. 0 or undefined
+   * hides the badge; > 99 displays as "99+".
+   */
+  badgeCount?: number;
 }
 
-function SidebarNavItem({ to, label, icon: Icon, matchPaths }: SidebarNavItemProps) {
+function SidebarNavItem({ to, label, icon: Icon, matchPaths, badgeCount }: SidebarNavItemProps) {
   const location = useLocation();
   const isActive =
     location.pathname === to ||
@@ -162,10 +206,9 @@ function SidebarNavItem({ to, label, icon: Icon, matchPaths }: SidebarNavItemPro
     <NavLink
       to={to}
       className="group relative flex items-center justify-center w-full py-3"
-      aria-label={label}
+      aria-label={badgeCount ? `${label} (${badgeCount} unread)` : label}
       title={label}
     >
-      {/* Active accent bar on the left edge */}
       <span
         className={clsx(
           'absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[2px] rounded-r transition-all',
@@ -174,15 +217,22 @@ function SidebarNavItem({ to, label, icon: Icon, matchPaths }: SidebarNavItemPro
       />
       <span
         className={clsx(
-          'flex items-center justify-center w-9 h-9 rounded-lg transition',
+          'relative flex items-center justify-center w-9 h-9 rounded-lg transition',
           isActive
             ? 'text-accent bg-accent/10'
             : 'text-m-fg-muted group-hover:text-m-fg-strong group-hover:bg-m-surface-60',
         )}
       >
         <Icon />
+        {badgeCount !== undefined && badgeCount > 0 && (
+          <span
+            className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-accent text-[9px] font-semibold text-white flex items-center justify-center leading-none font-mono"
+            aria-hidden="true"
+          >
+            {badgeCount > 99 ? '99+' : badgeCount}
+          </span>
+        )}
       </span>
-      {/* Tooltip */}
       <span className="pointer-events-none absolute left-[58px] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 px-2 py-1 rounded-md border border-m-border bg-m-bg text-[11px] text-m-fg-strong whitespace-nowrap shadow-lg z-50">
         {label}
       </span>
@@ -219,7 +269,9 @@ function SidebarIconButton({ onClick, label, icon: Icon, badge }: SidebarIconBut
 }
 
 export function Sidebar() {
+  const meQ = useMe();
   const settingsQ = useSettings();
+  const unreadQ = useInboxUnreadCount();
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const updateSettings = useUpdateSettings();
   const openModal = useUiStore((s) => s.openModal);
@@ -230,7 +282,7 @@ export function Sidebar() {
     updateSettings.mutate({ theme: theme === 'dark' ? 'light' : 'dark' });
   };
 
-  const userInitial = (settingsQ.data?.userName ?? '?').slice(0, 1).toUpperCase();
+  const unreadCount = unreadQ.data?.count ?? 0;
 
   return (
     <aside className="hidden md:flex w-[56px] flex-col shrink-0 items-center border-r border-m-border-subtle bg-m-bg/80 backdrop-blur h-full">
@@ -241,15 +293,22 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Main nav */}
+      {/* Main nav — order matches VIEW_CYCLE in useGlobalShortcuts */}
       <nav className="flex-1 w-full flex flex-col items-center pt-2 gap-1">
         <SidebarNavItem to="/" label="Tasks" icon={TasksIcon} matchPaths={['/backlog']} />
         <SidebarNavItem to="/parkings" label="Parkings" icon={ParkingsIcon} />
-        <SidebarNavItem to="/brands" label="Brands" icon={BrandsIcon} matchPaths={[]} />
+        <SidebarNavItem to="/team" label="Team" icon={TeamIcon} />
+        <SidebarNavItem to="/brands" label="Brands" icon={BrandsIcon} />
       </nav>
 
       {/* Bottom actions */}
       <div className="w-full flex flex-col items-center pb-2 border-t border-m-border-subtle pt-2">
+        <SidebarNavItem
+          to="/inbox"
+          label="Inbox"
+          icon={InboxIcon}
+          badgeCount={unreadCount}
+        />
         <SidebarIconButton
           onClick={() => openModal('release-notes')}
           label="What's new"
@@ -272,13 +331,21 @@ export function Sidebar() {
           icon={SignOutIcon}
         />
 
-        {/* User avatar */}
-        <div
-          className="mt-2 w-8 h-8 rounded-full border border-m-border bg-m-surface flex items-center justify-center text-[11px] text-m-fg-secondary"
-          title={settingsQ.data?.userName ?? ''}
-        >
-          {userInitial}
-        </div>
+        {/* Current user avatar — click opens settings modal. Shows the
+            user's own colored avatar with displayName/email in tooltip. */}
+        {meQ.data && (
+          <div className="mt-2 group relative">
+            <Avatar
+              user={meQ.data}
+              size="md"
+              onClick={() => openModal('settings')}
+            />
+            <span className="pointer-events-none absolute left-[46px] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 px-2 py-1 rounded-md border border-m-border bg-m-bg text-[11px] whitespace-nowrap shadow-lg z-50">
+              <div className="text-m-fg-strong">{meQ.data.displayName || 'Set a name'}</div>
+              <div className="text-m-fg-muted text-[10px]">{meQ.data.email}</div>
+            </span>
+          </div>
+        )}
       </div>
     </aside>
   );

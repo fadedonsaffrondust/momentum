@@ -1,44 +1,39 @@
 import { useState } from 'react';
-import {
-  useCreateRole,
-  useDeleteRole,
-  useRoles,
-  useSettings,
-  useUpdateSettings,
-} from '../api/hooks';
-import { ROLE_COLOR_PALETTE } from '@momentum/shared';
+import { useMe, useSettings, useUpdateMe, useUpdateSettings } from '../api/hooks';
 
+/**
+ * First-run wizard for team space. Two steps only — display name, then
+ * daily capacity. The role-picking step from the legacy single-user
+ * wizard was dropped: roles are now team-defined (spec §9.11), so a
+ * brand-new user inherits whatever roles the team has already set up.
+ *
+ * Detection: the wizard runs whenever `user_settings.onboarded=false`.
+ * For new users that also means `users.display_name===''`; for legacy
+ * users (Nader) the migration backfilled `display_name` so they skip
+ * this flow entirely.
+ */
 export function FirstRunWizard() {
+  const meQ = useMe();
   const settingsQ = useSettings();
-  const rolesQ = useRoles();
+  const updateMe = useUpdateMe();
   const updateSettings = useUpdateSettings();
-  const createRole = useCreateRole();
-  const deleteRole = useDeleteRole();
 
   const [step, setStep] = useState(0);
-  const [userName, setUserName] = useState(settingsQ.data?.userName ?? '');
+  const [displayName, setDisplayName] = useState(meQ.data?.displayName ?? '');
   const [capacity, setCapacity] = useState(
     Math.round((settingsQ.data?.dailyCapacityMinutes ?? 480) / 60),
   );
-  const [roleDraft, setRoleDraft] = useState('');
 
-  if (settingsQ.isLoading) return <WizardShell>Loading…</WizardShell>;
-
-  const roles = rolesQ.data ?? [];
+  if (settingsQ.isLoading || meQ.isLoading) return <WizardShell>Loading…</WizardShell>;
 
   const saveNameAndNext = async () => {
-    await updateSettings.mutateAsync({ userName });
+    const trimmed = displayName.trim();
+    if (!trimmed) return;
+    await updateMe.mutateAsync({ displayName: trimmed });
     setStep(1);
   };
 
-  const addRole = async () => {
-    const name = roleDraft.trim();
-    if (!name) return;
-    await createRole.mutateAsync({ name });
-    setRoleDraft('');
-  };
-
-  const saveCapacity = async () => {
+  const finish = async () => {
     await updateSettings.mutateAsync({
       dailyCapacityMinutes: capacity * 60,
       onboarded: true,
@@ -50,7 +45,7 @@ export function FirstRunWizard() {
       <div className="w-full max-w-md space-y-6">
         <header>
           <h1 className="text-2xl font-semibold text-accent">Welcome to Momentum</h1>
-          <p className="text-sm text-m-fg-tertiary mt-1">Step {step + 1} of 3</p>
+          <p className="text-sm text-m-fg-tertiary mt-1">Step {step + 1} of 2</p>
         </header>
 
         {step === 0 && (
@@ -60,14 +55,25 @@ export function FirstRunWizard() {
               <input
                 type="text"
                 autoFocus
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                maxLength={64}
                 className="mt-1 w-full px-3 py-2 bg-m-bg border border-m-border rounded-md focus:outline-none focus:border-accent"
               />
+              <span className="mt-1 block text-xs text-m-fg-muted">
+                Your teammates will see this name on tasks, parkings, and inbox events.
+              </span>
             </label>
+            {updateMe.isError && (
+              <p className="text-sm text-red-400">
+                {updateMe.error instanceof Error
+                  ? updateMe.error.message
+                  : 'Failed to save name'}
+              </p>
+            )}
             <button
               onClick={saveNameAndNext}
-              disabled={!userName.trim() || updateSettings.isPending}
+              disabled={!displayName.trim() || updateMe.isPending}
               className="w-full py-2 rounded-md bg-accent hover:bg-accent-hover transition disabled:opacity-50"
             >
               Continue
@@ -78,79 +84,10 @@ export function FirstRunWizard() {
         {step === 1 && (
           <section className="space-y-4">
             <div>
-              <p className="text-sm text-m-fg-tertiary">
-                What hats do you wear? Add 2–5 roles. You can edit these later.
-              </p>
-            </div>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void addRole();
-              }}
-              className="flex gap-2"
-            >
-              <input
-                type="text"
-                value={roleDraft}
-                placeholder="e.g. Product"
-                onChange={(e) => setRoleDraft(e.target.value)}
-                className="flex-1 px-3 py-2 bg-m-bg border border-m-border rounded-md focus:outline-none focus:border-accent"
-              />
-              <button
-                type="submit"
-                disabled={!roleDraft.trim() || createRole.isPending}
-                className="px-3 py-2 rounded-md bg-m-surface-raised hover:bg-m-border-strong transition disabled:opacity-50"
-              >
-                Add
-              </button>
-            </form>
-
-            <ul className="flex flex-wrap gap-2">
-              {roles.map((r) => (
-                <li
-                  key={r.id}
-                  className="group flex items-center gap-1 pl-3 pr-1 py-1 rounded-full text-sm"
-                  style={{ backgroundColor: r.color + '33', color: r.color }}
-                >
-                  <span>{r.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => deleteRole.mutate(r.id)}
-                    aria-label={`Remove ${r.name}`}
-                    className="ml-1 w-5 h-5 inline-flex items-center justify-center rounded-full text-xs opacity-60 hover:opacity-100 hover:bg-black/30"
-                  >
-                    ✕
-                  </button>
-                </li>
-              ))}
-              {roles.length === 0 && (
-                <li className="text-xs text-m-fg-muted">No roles yet.</li>
-              )}
-            </ul>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => setStep(0)}
-                className="flex-1 py-2 rounded-md border border-m-border hover:bg-m-surface-hover transition"
-              >
-                Back
-              </button>
-              <button
-                onClick={() => setStep(2)}
-                disabled={roles.length < 2}
-                className="flex-1 py-2 rounded-md bg-accent hover:bg-accent-hover transition disabled:opacity-50"
-              >
-                Continue
-              </button>
-            </div>
-          </section>
-        )}
-
-        {step === 2 && (
-          <section className="space-y-4">
-            <div>
               <label className="block text-sm">
-                <span className="text-m-fg-tertiary">How many focused hours per day?</span>
+                <span className="text-m-fg-tertiary">
+                  How many focused hours per day?
+                </span>
                 <input
                   type="range"
                   min={1}
@@ -163,17 +100,27 @@ export function FirstRunWizard() {
                 <div className="text-center text-3xl font-semibold text-accent mt-2">
                   {capacity}h
                 </div>
+                <span className="mt-2 block text-xs text-m-fg-muted text-center">
+                  You can change this any time in Settings.
+                </span>
               </label>
             </div>
+            {updateSettings.isError && (
+              <p className="text-sm text-red-400">
+                {updateSettings.error instanceof Error
+                  ? updateSettings.error.message
+                  : 'Failed to save capacity'}
+              </p>
+            )}
             <div className="flex gap-2">
               <button
-                onClick={() => setStep(1)}
+                onClick={() => setStep(0)}
                 className="flex-1 py-2 rounded-md border border-m-border hover:bg-m-surface-hover transition"
               >
                 Back
               </button>
               <button
-                onClick={saveCapacity}
+                onClick={finish}
                 disabled={updateSettings.isPending}
                 className="flex-1 py-2 rounded-md bg-accent hover:bg-accent-hover transition disabled:opacity-50"
               >
@@ -184,7 +131,7 @@ export function FirstRunWizard() {
         )}
 
         <div className="flex gap-1 pt-2">
-          {[0, 1, 2].map((i) => (
+          {[0, 1].map((i) => (
             <div
               key={i}
               className={`h-1 flex-1 rounded-full ${i <= step ? 'bg-accent' : 'bg-m-border'}`}

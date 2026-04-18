@@ -52,6 +52,10 @@ export function useKeyboardController(ctx: KeyboardContext) {
   const location = useLocation();
   const activeModal = useUiStore((s) => s.activeModal);
   const openModal = useUiStore((s) => s.openModal);
+  const openAssigneePicker = useUiStore((s) => s.openAssigneePicker);
+  const assigneePickerOpen = useUiStore((s) => s.assigneePickerTarget !== null);
+  const openInvolvedPicker = useUiStore((s) => s.openInvolvedPicker);
+  const involvedPickerOpen = useUiStore((s) => s.involvedPickerTarget !== null);
   const selectedTaskId = useUiStore((s) => s.selectedTaskId);
   const setSelectedTaskId = useUiStore((s) => s.setSelectedTaskId);
   const focusedColumn = useUiStore((s) => s.focusedColumn);
@@ -78,7 +82,7 @@ export function useKeyboardController(ctx: KeyboardContext) {
       if (e.defaultPrevented) return;
 
       const typing = isTypingInInput();
-      if (typing || activeModal) return;
+      if (typing || activeModal || assigneePickerOpen || involvedPickerOpen) return;
 
       // Parkings view has its own simpler flat navigation + action set.
       if (location.pathname === '/parkings') {
@@ -175,6 +179,45 @@ export function useKeyboardController(ctx: KeyboardContext) {
               },
             },
           );
+          return;
+        }
+        if (e.key === 'v') {
+          // Toggle visibility. Backend restricts PATCH on private parkings
+          // to the creator; if another user tries this they get 404 and
+          // we surface a toast. The optimistic path avoids a round-trip.
+          e.preventDefault();
+          const nextVisibility = selectedP.visibility === 'private' ? 'team' : 'private';
+          updateParking.mutate(
+            { id: selectedP.id, visibility: nextVisibility },
+            {
+              onSuccess: () => {
+                pushToast({
+                  kind: 'info',
+                  message: `Visibility → ${nextVisibility === 'private' ? 'Private' : 'Team'}`,
+                  durationMs: 2000,
+                });
+              },
+              onError: (err) => {
+                pushToast({
+                  kind: 'error',
+                  message:
+                    err instanceof Error ? err.message : 'Failed to change visibility',
+                  durationMs: 4000,
+                });
+              },
+            },
+          );
+          return;
+        }
+        if (e.key === 'I') {
+          // Shift+I opens the involved-users picker. Lowercase i stays
+          // free for future use and avoids firing while typing.
+          e.preventDefault();
+          openInvolvedPicker({
+            parkingId: selectedP.id,
+            initialIds: selectedP.involvedIds,
+            creatorId: selectedP.creatorId,
+          });
           return;
         }
         if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -295,6 +338,18 @@ export function useKeyboardController(ctx: KeyboardContext) {
         openModal('role-picker');
         return;
       }
+      if (e.key === 'A') {
+        // Shift+A opens the assignee picker. Uppercase intentionally so
+        // lowercase 'a' stays reserved for brand-detail "new action item"
+        // and we don't fire while the user is typing elsewhere.
+        e.preventDefault();
+        openAssigneePicker({
+          kind: 'task',
+          taskId: selected.id,
+          currentAssigneeId: selected.assigneeId,
+        });
+        return;
+      }
       if (e.key === 'p') {
         e.preventDefault();
         const currentIdx = PRIORITY_CYCLE.indexOf(selected.priority);
@@ -351,10 +406,14 @@ export function useKeyboardController(ctx: KeyboardContext) {
   }, [
     ctx,
     activeModal,
+    assigneePickerOpen,
+    involvedPickerOpen,
     focusedColumn,
     selectedTaskId,
     location.pathname,
     openModal,
+    openAssigneePicker,
+    openInvolvedPicker,
     setSelectedTaskId,
     setFocusedColumn,
     startTask,

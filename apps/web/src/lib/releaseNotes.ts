@@ -25,6 +25,73 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.7.0',
+    date: '2026-04-17',
+    headline: 'Momentum is now a team space',
+    summary:
+      'Momentum is now a shared operating system for the Omnirev team. Brands, meetings, and action items are team-visible. Tasks and parkings support assignment and involvement. A new Team Task View shows everyone\'s current work, a new Inbox surfaces things assigned to or involving you, and End of Day + Weekly Stats pick up a team pulse.',
+    items: [
+      {
+        title: 'Sign up with your @omnirev.ai email',
+        description:
+          'Signup is now gated to the @omnirev.ai domain — anyone on the team can create an account and see the same brands, meetings, and action items. A new second step in the first-run wizard asks for your display name so teammates can recognise you on avatars and in task cards.',
+        howTo:
+          'Sign out and register a second account with another @omnirev.ai address to see the team view take shape.',
+      },
+      {
+        title: 'Tasks have creators and assignees',
+        description:
+          'Every task now tracks who created it and who it is assigned to. Both appear as avatars on task cards. You can reassign a task from the picker with a single keystroke, or inline while typing a new task by prefixing a teammate\'s first name with @ — "@alice ship the docs" assigns as you type.',
+        shortcuts: ['A'],
+        howTo:
+          'Select any task with j/k, press A to open the assignee picker, and pick a teammate with 1–9 or by typing their name.',
+      },
+      {
+        title: 'Mine / Everyone / Unassigned filters',
+        description:
+          'The Today and Backlog views grew a small chip above the list to switch between "Mine", "Everyone", and (on Backlog) "Unassigned". Your personal view is still "Mine" by default. Press @ anywhere on a filterable view to jump straight to the chip group.',
+        shortcuts: ['@'],
+      },
+      {
+        title: 'Parkings are shared by default — mark private with v',
+        description:
+          'Parkings default to team-visible so stand-up notes surface for everyone. Toggle a row to private with v and a lock icon appears; only the creator sees private parkings. Tag teammates into a team parking with I to put it in their Inbox and on their Mine filter.',
+        shortcuts: ['v', 'I'],
+        howTo:
+          'Select a parking with j/k, press v to flip visibility, or press I to pick who else is involved.',
+      },
+      {
+        title: 'Brand recent activity + team-visible meetings',
+        description:
+          'Every brand\'s Overview tab now shows a Recent Activity panel with stakeholder edits, meetings logged, action items created and completed, recordings synced, and feature-request changes — with the teammate who did each action. Meetings show attendee avatars for anyone matched to a teammate. Work (action items) cards show creator and assignee so handoffs are visible at a glance.',
+      },
+      {
+        title: 'Team Task View — everyone\'s today in one place',
+        description:
+          'A new /team page groups tasks by person. Each teammate gets their own mini-kanban (Up next · In progress · Done). Navigate with j/k within a column, h/l between columns, ]/[ between teammate sections, press Enter on a task to open its detail modal, or A to reassign it without leaving the page.',
+        shortcuts: ['g', 'u'],
+      },
+      {
+        title: 'Inbox — things that need your attention',
+        description:
+          'A new /inbox page lists the five events that involve you: tasks assigned to you, your tasks edited by someone else, parkings that tag you, action items assigned to you, and meetings where you were added as an attendee. Walk the list with j/k, open an item with Enter (which also marks it read), mark one read with Space, or clear the tray with m then a.',
+        shortcuts: ['g', 'i'],
+      },
+      {
+        title: 'End of Day team pulse + Weekly Stats Team tab',
+        description:
+          'Your End of Day Review still belongs to you — your journal entry, your completed/incomplete lists, your stats. Below the Save button, a quiet strip now shows the team\'s completion rate for today and how many teammates are still working. The Weekly Stats modal gained a Mine | Team tab bar; switch with [ and ] to see per-person completion rate, estimation accuracy, streak, and top role across the team.',
+        shortcuts: ['[', ']'],
+      },
+      {
+        title: 'Six-view navigation cycle',
+        description:
+          '] and [ now cycle through six views: Today → Backlog → Parkings → Team → Brands → Inbox. The g-prefix shortcuts grew g u (Team) and g i (Inbox) to match; the existing g t / g l / g p / g b still work as before.',
+        shortcuts: [']', '['],
+      },
+    ],
+  },
+  {
     version: '0.6.3',
     date: '2026-04-17',
     headline: 'New brand color — Momentum is green now',

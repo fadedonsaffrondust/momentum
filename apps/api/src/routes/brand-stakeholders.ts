@@ -10,6 +10,7 @@ import { brandStakeholders, brands } from '@momentum/db';
 import { db } from '../db.ts';
 import { mapBrandStakeholder } from '../mappers.ts';
 import { notFound } from '../errors.ts';
+import { recordBrandEvent } from '../services/events.ts';
 
 const brandIdParam = z.object({ brandId: z.string().uuid() });
 const idParam = z.object({ brandId: z.string().uuid(), id: z.string().uuid() });
@@ -29,12 +30,7 @@ export const brandStakeholdersRoutes: FastifyPluginAsyncZod = async (app) => {
       const rows = await db
         .select()
         .from(brandStakeholders)
-        .where(
-          and(
-            eq(brandStakeholders.brandId, req.params.brandId),
-            eq(brandStakeholders.userId, req.userId),
-          ),
-        )
+        .where(eq(brandStakeholders.brandId, req.params.brandId))
         .orderBy(asc(brandStakeholders.createdAt));
       return rows.map(mapBrandStakeholder);
     },
@@ -54,7 +50,6 @@ export const brandStakeholdersRoutes: FastifyPluginAsyncZod = async (app) => {
         .insert(brandStakeholders)
         .values({
           brandId: req.params.brandId,
-          userId: req.userId,
           name: req.body.name,
           email: req.body.email ?? null,
           role: req.body.role ?? null,
@@ -62,10 +57,21 @@ export const brandStakeholdersRoutes: FastifyPluginAsyncZod = async (app) => {
         })
         .returning();
       if (!row) throw new Error('Failed to create stakeholder');
+
       await db
         .update(brands)
         .set({ updatedAt: new Date() })
         .where(eq(brands.id, req.params.brandId));
+
+      await recordBrandEvent({
+        brandId: req.params.brandId,
+        actorId: req.userId,
+        eventType: 'stakeholder_added',
+        entityType: 'brand_stakeholder',
+        entityId: row.id,
+        payload: { name: row.name, email: row.email },
+      });
+
       return mapBrandStakeholder(row);
     },
   );
@@ -87,11 +93,20 @@ export const brandStakeholdersRoutes: FastifyPluginAsyncZod = async (app) => {
           and(
             eq(brandStakeholders.id, req.params.id),
             eq(brandStakeholders.brandId, req.params.brandId),
-            eq(brandStakeholders.userId, req.userId),
           ),
         )
         .returning();
       if (!row) throw notFound('Stakeholder not found');
+
+      await recordBrandEvent({
+        brandId: req.params.brandId,
+        actorId: req.userId,
+        eventType: 'stakeholder_edited',
+        entityType: 'brand_stakeholder',
+        entityId: row.id,
+        payload: { changedFields: Object.keys(req.body), name: row.name },
+      });
+
       return mapBrandStakeholder(row);
     },
   );
@@ -105,17 +120,38 @@ export const brandStakeholdersRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => {
+      const [existing] = await db
+        .select({ id: brandStakeholders.id, name: brandStakeholders.name })
+        .from(brandStakeholders)
+        .where(
+          and(
+            eq(brandStakeholders.id, req.params.id),
+            eq(brandStakeholders.brandId, req.params.brandId),
+          ),
+        )
+        .limit(1);
+      if (!existing) throw notFound('Stakeholder not found');
+
+      await recordBrandEvent({
+        brandId: req.params.brandId,
+        actorId: req.userId,
+        eventType: 'stakeholder_removed',
+        entityType: 'brand_stakeholder',
+        entityId: existing.id,
+        payload: { name: existing.name },
+      });
+
       const [row] = await db
         .delete(brandStakeholders)
         .where(
           and(
             eq(brandStakeholders.id, req.params.id),
             eq(brandStakeholders.brandId, req.params.brandId),
-            eq(brandStakeholders.userId, req.userId),
           ),
         )
         .returning({ id: brandStakeholders.id });
       if (!row) throw notFound('Stakeholder not found');
+
       return { ok: true as const };
     },
   );

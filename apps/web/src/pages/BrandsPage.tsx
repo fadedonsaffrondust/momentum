@@ -10,6 +10,7 @@ import {
 import { BrandListRail } from '../components/brands/BrandListRail';
 import { BrandDetailView } from '../components/brands/BrandDetailView';
 import { ImportBrandModal } from '../components/brands/ImportBrandModal';
+import { markBrandSeen } from '../lib/brand-last-seen';
 import { useUiStore } from '../store/ui';
 
 export function BrandsPage() {
@@ -85,9 +86,17 @@ export function BrandsPage() {
   }, [brandIds, allActionItemsQueries]);
 
   const handleSelectBrand = useCallback(
-    (id: string) => navigate(`/brands/${id}`),
+    (id: string) => {
+      markBrandSeen(id);
+      navigate(`/brands/${id}`);
+    },
     [navigate],
   );
+
+  // Also mark the brand seen when the URL lands on it directly (e.g., deep link).
+  useEffect(() => {
+    if (selectedBrandId) markBrandSeen(selectedBrandId);
+  }, [selectedBrandId]);
 
   const handleNewBrand = useCallback(async () => {
     try {

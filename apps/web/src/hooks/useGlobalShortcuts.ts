@@ -144,8 +144,23 @@ export function useGlobalShortcuts(): void {
         return;
       }
 
+      // `@` focuses the page's person-filter chip group, if present.
+      // No-op on views without a person filter (e.g. /brands, /inbox,
+      // /team — each owns its own chip taxonomy). The first button
+      // inside the first matching `[data-person-filter="true"]`
+      // radiogroup receives focus.
+      if (e.key === '@') {
+        const group = document.querySelector<HTMLElement>('[data-person-filter="true"]');
+        const firstBtn = group?.querySelector<HTMLButtonElement>('button');
+        if (firstBtn) {
+          consume(e);
+          firstBtn.focus();
+        }
+        return;
+      }
+
       // View navigation — `g` prefix (vim-style "go to") + bracket cycling.
-      const VIEW_CYCLE = ['/', '/backlog', '/parkings', '/brands'];
+      const VIEW_CYCLE = ['/', '/backlog', '/parkings', '/team', '/brands', '/inbox'];
 
       if (gPendingRef.current) {
         let target: string | null = null;
@@ -153,10 +168,28 @@ export function useGlobalShortcuts(): void {
         else if (e.key === 'l') target = '/backlog';
         else if (e.key === 'p') target = '/parkings';
         else if (e.key === 'b') target = '/brands';
+        else if (e.key === 'u') target = '/team';
+        else if (e.key === 'i') target = '/inbox';
 
         if (target) {
           consume(e);
           navigate(target);
+          clearGPending();
+          return;
+        }
+
+        // Ritual modals as g-prefix aliases — browsers reserve the
+        // Cmd+letter equivalents (Cmd+W close-tab, Cmd+R reload,
+        // Cmd+P print), so these vim-style chords are the only path
+        // that actually works inside a regular tab.
+        let modal: 'weekly-stats' | 'end-of-day' | 'plan-my-day' | null = null;
+        if (e.key === 'w') modal = 'weekly-stats';
+        else if (e.key === 'r') modal = 'end-of-day';
+        else if (e.key === 'd') modal = 'plan-my-day';
+
+        if (modal) {
+          consume(e);
+          openModal(modal);
           clearGPending();
           return;
         }
@@ -193,8 +226,12 @@ export function useGlobalShortcuts(): void {
         return;
       }
 
-      // Role filter (1..9, 0).
-      if (/^[0-9]$/.test(e.key)) {
+      // Role filter (1..9, 0). Scoped to the surfaces that actually
+      // render a role-filter bar — otherwise the capture-phase consume
+      // here would shadow page-local number bindings (e.g. `1`/`2`/`3`
+      // tab-switching on `/brands/:id`) with no user-visible effect.
+      const ROLE_FILTER_PATHS = ['/', '/backlog', '/parkings', '/team'];
+      if (/^[0-9]$/.test(e.key) && ROLE_FILTER_PATHS.includes(location.pathname)) {
         const roles = rolesQ.data ?? [];
         consume(e);
         if (e.key === '0') setRoleFilter(null);

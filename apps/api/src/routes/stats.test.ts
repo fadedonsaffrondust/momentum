@@ -43,7 +43,22 @@ import { errorHandlerPlugin } from '../plugins/error-handler.js';
 import { statsRoutes } from './stats.js';
 
 const USER_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+const OTHER_USER = 'b1ffcd00-ad1c-5ff9-cc7e-7ccaae491b22';
 const ROLE_ID = 'c1234567-1234-1234-1234-123456789012';
+const NOW = new Date('2026-04-15T12:00:00Z');
+
+function makeUserRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: USER_ID,
+    email: 'nader@omnirev.ai',
+    passwordHash: 'x',
+    displayName: 'Nader',
+    avatarColor: '#0FB848',
+    deactivatedAt: null,
+    createdAt: NOW,
+    ...overrides,
+  };
+}
 
 describe('stats routes', () => {
   let app: ReturnType<typeof Fastify>;
@@ -66,6 +81,10 @@ describe('stats routes', () => {
 
   beforeEach(() => {
     mockDb._results.length = 0;
+    mockDb.select.mockClear();
+    mockDb.insert.mockClear();
+    mockDb.update.mockClear();
+    mockDb.delete.mockClear();
     vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.setSystemTime(new Date('2026-04-15T12:00:00Z'));
   });
@@ -169,5 +188,155 @@ describe('stats routes', () => {
       expect(day.tasksPlanned).toBe(0);
       expect(day.completionRate).toBe(0);
     }
+  });
+
+  // ── GET /stats/team-weekly ─────────────────────────────────────────
+
+  it('GET /stats/team-weekly returns one row per active user with computed fields', async () => {
+    mockDb._pushResult([
+      makeUserRow({ id: USER_ID, displayName: 'Nader' }),
+      makeUserRow({ id: OTHER_USER, email: 'sara@omnirev.ai', displayName: 'Sara', avatarColor: '#F7B24F' }),
+    ]);
+    mockDb._pushResult([
+      { userId: USER_ID, date: '2026-04-15', tasksPlanned: 5, tasksCompleted: 4, completionRate: 0.8, totalEstimatedMinutes: 100, totalActualMinutes: 90 },
+      { userId: OTHER_USER, date: '2026-04-15', tasksPlanned: 4, tasksCompleted: 2, completionRate: 0.5, totalEstimatedMinutes: 80, totalActualMinutes: 100 },
+    ]);
+    mockDb._pushResult([
+      { assigneeId: USER_ID, roleId: ROLE_ID, cnt: 3 },
+      { assigneeId: OTHER_USER, roleId: null, cnt: 2 },
+    ]);
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/stats/team-weekly',
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.users).toHaveLength(2);
+
+    const nader = body.users.find((u: { user: { id: string } }) => u.user.id === USER_ID);
+    expect(nader.user.displayName).toBe('Nader');
+    expect(nader.completionRate).toBeCloseTo(0.8, 5);
+    expect(nader.streak).toBe(1);
+    expect(nader.mostActiveRoleId).toBe(ROLE_ID);
+    expect(nader.estimationAccuracy).toBeCloseTo(100 / 90, 5);
+
+    const sara = body.users.find((u: { user: { id: string } }) => u.user.id === OTHER_USER);
+    expect(sara.user.displayName).toBe('Sara');
+    expect(sara.completionRate).toBeCloseTo(0.5, 5);
+    expect(sara.streak).toBe(0); // 0.5 < 0.8
+    expect(sara.mostActiveRoleId).toBeNull(); // only null-role entries
+  });
+
+  it('GET /stats/team-weekly short-circuits to empty when no active users', async () => {
+    mockDb._pushResult([]); // no active users
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/stats/team-weekly',
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body)).toEqual({ users: [] });
+    // Only the users query should have been issued.
+    expect(mockDb.select).toHaveBeenCalledTimes(1);
+  });
+
+  it('GET /stats/team-weekly returns zero-stats user when user has no logs', async () => {
+    mockDb._pushResult([makeUserRow({ displayName: 'Brand New' })]);
+    mockDb._pushResult([]); // no logs
+    mockDb._pushResult([]); // no role counts
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/stats/team-weekly',
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.users).toHaveLength(1);
+    expect(body.users[0].completionRate).toBe(0);
+    expect(body.users[0].estimationAccuracy).toBeNull();
+    expect(body.users[0].streak).toBe(0);
+    expect(body.users[0].mostActiveRoleId).toBeNull();
+  });
+
+  // ── GET /stats/team-today ──────────────────────────────────────────
+
+  it('GET /stats/team-today computes completion rate and in-progress count', async () => {
+    mockDb._pushResult([{ id: USER_ID }, { id: OTHER_USER }]); // active users
+    mockDb._pushResult([
+      { status: 'done' },
+      { status: 'done' },
+      { status: 'in_progress' },
+      { status: 'todo' },
+      { status: 'done' },
+    ]); // today's tasks: 3/5 done = 0.6
+    mockDb._pushResult([{ assigneeId: USER_ID }, { assigneeId: OTHER_USER }]); // distinct in-progress
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/stats/team-today',
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.teamCompletionRate).toBeCloseTo(0.6, 5);
+    expect(body.usersWithInProgressCount).toBe(2);
+  });
+
+  it('GET /stats/team-today returns zeros when no team or no tasks', async () => {
+    mockDb._pushResult([]); // no active users — short-circuit
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/stats/team-today',
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body)).toEqual({
+      teamCompletionRate: 0,
+      usersWithInProgressCount: 0,
+    });
+  });
+
+  it('GET /stats/team-today returns 0 completion rate when no tasks today', async () => {
+    mockDb._pushResult([{ id: USER_ID }]);
+    mockDb._pushResult([]); // no today tasks
+    mockDb._pushResult([]); // no in-progress
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/stats/team-today',
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.teamCompletionRate).toBe(0);
+    expect(body.usersWithInProgressCount).toBe(0);
+  });
+
+  it('GET /stats/team-today handles all-done team (100% completion)', async () => {
+    mockDb._pushResult([{ id: USER_ID }]);
+    mockDb._pushResult([{ status: 'done' }, { status: 'done' }, { status: 'done' }]);
+    mockDb._pushResult([]); // nobody currently in-progress
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/stats/team-today',
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.teamCompletionRate).toBe(1);
+    expect(body.usersWithInProgressCount).toBe(0);
   });
 });

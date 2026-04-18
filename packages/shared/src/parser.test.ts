@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { parseQuickAdd, resolveDateToken, toLocalIsoDate } from './parser.ts';
+import {
+  parseQuickAdd,
+  resolveDateToken,
+  resolveAssigneeToken,
+  toLocalIsoDate,
+} from './parser.ts';
 
 describe('parseQuickAdd', () => {
   it('parses a plain title', () => {
@@ -9,6 +14,7 @@ describe('parseQuickAdd', () => {
     expect(r.roleTag).toBeNull();
     expect(r.priority).toBeNull();
     expect(r.dateToken).toBeNull();
+    expect(r.assigneeToken).toBeNull();
   });
 
   it('parses minute estimate', () => {
@@ -57,6 +63,48 @@ describe('parseQuickAdd', () => {
     expect(r.roleTag).toBeNull();
     expect(r.priority).toBeNull();
     expect(r.dateToken).toBeNull();
+    expect(r.assigneeToken).toBeNull();
+  });
+
+  it('parses @username assignee token', () => {
+    expect(parseQuickAdd('Review proposal @sara').assigneeToken).toBe('sara');
+  });
+
+  it('lowercases @Username for case-insensitive resolution', () => {
+    expect(parseQuickAdd('Ping @Alice').assigneeToken).toBe('alice');
+  });
+
+  it('does not treat bare @ mid-word as a token', () => {
+    const r = parseQuickAdd('email foo@bar.com');
+    expect(r.assigneeToken).toBeNull();
+    expect(r.title).toBe('email foo@bar.com');
+  });
+
+  it('strips the @token from the title', () => {
+    const r = parseQuickAdd('Review proposal @sara');
+    expect(r.title).toBe('Review proposal');
+  });
+
+  it('coexists with other modifiers — @alice before #product', () => {
+    const r = parseQuickAdd('Review proposal @alice #product');
+    expect(r.assigneeToken).toBe('alice');
+    expect(r.roleTag).toBe('product');
+    expect(r.title).toBe('Review proposal');
+  });
+
+  it('coexists with other modifiers — #alice before @product would be a role tag', () => {
+    // `#alice` is parsed as role tag first; `@product` is parsed as assignee token.
+    const r = parseQuickAdd('Review #alice @product');
+    expect(r.roleTag).toBe('alice');
+    expect(r.assigneeToken).toBe('product');
+    expect(r.title).toBe('Review');
+  });
+
+  it('only captures the first @ token', () => {
+    const r = parseQuickAdd('Review @sara @ryan');
+    expect(r.assigneeToken).toBe('sara');
+    // the second @ryan stays in the title
+    expect(r.title).toBe('Review @ryan');
   });
 
   it('returns empty title when input is only modifiers', () => {
@@ -128,5 +176,56 @@ describe('resolveDateToken', () => {
 describe('toLocalIsoDate', () => {
   it('zero-pads month and day', () => {
     expect(toLocalIsoDate(new Date(2026, 0, 5))).toBe('2026-01-05');
+  });
+});
+
+describe('resolveAssigneeToken', () => {
+  const UUID_NADER = '11111111-1111-1111-1111-111111111111';
+  const UUID_SARA = '22222222-2222-2222-2222-222222222222';
+  const UUID_RYAN = '33333333-3333-3333-3333-333333333333';
+
+  const users = [
+    { id: UUID_NADER, displayName: 'Nader Samadyan' },
+    { id: UUID_SARA, displayName: 'Sara Pourmir' },
+    { id: UUID_RYAN, displayName: 'Ryan Ghaffari' },
+  ];
+
+  it('returns null for null token', () => {
+    expect(resolveAssigneeToken(null, users)).toBeNull();
+  });
+
+  it('resolves first-name match', () => {
+    expect(resolveAssigneeToken('sara', users)).toBe(UUID_SARA);
+  });
+
+  it('first-name match is case-insensitive', () => {
+    expect(resolveAssigneeToken('SARA', users)).toBe(UUID_SARA);
+    expect(resolveAssigneeToken('Nader', users)).toBe(UUID_NADER);
+  });
+
+  it('resolves full display name (lowercased) when first name does not match', () => {
+    // synthetic case: token matches only the full name string
+    expect(
+      resolveAssigneeToken('nadersamadyan', [
+        { id: 'x', displayName: 'NaderSamadyan' },
+      ]),
+    ).toBe('x');
+  });
+
+  it('prefers first-name over later full-name match', () => {
+    // Two users share first name "Sam"; first-name match wins for the first entry.
+    const pool = [
+      { id: 'first', displayName: 'Sam One' },
+      { id: 'second', displayName: 'Sam Two' },
+    ];
+    expect(resolveAssigneeToken('sam', pool)).toBe('first');
+  });
+
+  it('returns null when no match', () => {
+    expect(resolveAssigneeToken('nonexistent', users)).toBeNull();
+  });
+
+  it('handles empty user list', () => {
+    expect(resolveAssigneeToken('sara', [])).toBeNull();
   });
 });

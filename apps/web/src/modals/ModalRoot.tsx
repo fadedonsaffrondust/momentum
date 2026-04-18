@@ -7,6 +7,7 @@ import { ShortcutsModal } from './ShortcutsModal';
 import { ImportConfirmModal } from './ImportConfirmModal';
 import { RolePickerModal } from './RolePickerModal';
 import { ReleaseNotesModal } from './ReleaseNotesModal';
+import { SettingsModal } from './SettingsModal';
 
 export function ModalRoot() {
   const active = useUiStore((s) => s.activeModal);
@@ -28,6 +29,8 @@ export function ModalRoot() {
       return <RolePickerModal />;
     case 'release-notes':
       return <ReleaseNotesModal />;
+    case 'settings':
+      return <SettingsModal />;
     default:
       return null;
   }

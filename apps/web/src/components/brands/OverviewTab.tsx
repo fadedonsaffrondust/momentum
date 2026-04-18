@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import type { Brand, BrandMeeting, BrandActionItem, BrandStakeholder, BrandFeatureRequest } from '@momentum/shared';
 import { Check, ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
 import { StakeholderBadge } from './StakeholderBadge';
+import { RecentActivitySection } from './RecentActivitySection';
 import { formatDateShort } from '../../lib/format';
 import { todayIso } from '../../lib/date';
 import {
@@ -20,6 +21,8 @@ interface Props {
   onSendToToday: (id: string) => void;
   onMarkDone: (id: string) => void;
   onSwitchToFeatureRequests: () => void;
+  onSwitchToWork?: () => void;
+  onOpenMeeting?: (meetingId: string) => void;
 }
 
 export function OverviewTab({
@@ -31,6 +34,8 @@ export function OverviewTab({
   onSendToToday,
   onMarkDone,
   onSwitchToFeatureRequests,
+  onSwitchToWork,
+  onOpenMeeting,
 }: Props) {
   const today = todayIso();
 
@@ -245,6 +250,13 @@ export function OverviewTab({
           />
         </div>
       </div>
+
+      {/* Recent Activity */}
+      <RecentActivitySection
+        brandId={brand.id}
+        onOpenActionItems={onSwitchToWork}
+        onOpenMeeting={onOpenMeeting}
+      />
 
       {/* Raw Context — collapsed by default */}
       {brand.rawImportContent && (

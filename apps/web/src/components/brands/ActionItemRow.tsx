@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import clsx from 'clsx';
-import type { BrandActionItem } from '@momentum/shared';
+import type { BrandActionItem, UserSummary } from '@momentum/shared';
 import { ArrowRight, Pencil, Trash2 } from 'lucide-react';
+import { Avatar } from '../Avatar';
+import { useMe, useUsers } from '../../api/hooks';
+import { useUiStore } from '../../store/ui';
 
 interface Props {
   item: BrandActionItem;
@@ -15,6 +18,21 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(item.text);
   const isDone = item.status === 'done';
+
+  const usersQ = useUsers();
+  const meQ = useMe();
+  const openAssigneePicker = useUiStore((s) => s.openAssigneePicker);
+  const users = usersQ.data ?? [];
+
+  const creator = useMemo<UserSummary | undefined>(
+    () => users.find((u) => u.id === item.creatorId),
+    [users, item.creatorId],
+  );
+  const assignee = useMemo<UserSummary | undefined>(
+    () =>
+      item.assigneeId ? users.find((u) => u.id === item.assigneeId) : undefined,
+    [users, item.assigneeId],
+  );
 
   const commit = () => {
     setEditing(false);
@@ -31,6 +49,20 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
     return `${diff}d`;
   })();
 
+  // Hide creator avatar when the current user IS the creator — the row
+  // stays quiet for the default "my own action item" case.
+  const showCreatorAvatar = creator !== undefined && meQ.data?.id !== creator.id;
+
+  const openPicker = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openAssigneePicker({
+      kind: 'action-item',
+      brandId: item.brandId,
+      itemId: item.id,
+      currentAssigneeId: item.assigneeId,
+    });
+  };
+
   return (
     <div className="group flex items-start gap-2 py-1.5 px-1 rounded hover:bg-m-surface-40 transition text-sm">
       <button
@@ -45,6 +77,10 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
       >
         {isDone && <span className="text-[10px]">✓</span>}
       </button>
+
+      {showCreatorAvatar && creator && (
+        <Avatar user={creator} size="xs" className="mt-0.5" />
+      )}
 
       <div className="flex-1 min-w-0">
         {editing ? (
@@ -87,6 +123,29 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
           )}
         </div>
       </div>
+
+      {/* Assignee slot — always clickable to (re)assign. Unassigned
+          items render a small dashed "+" placeholder so the click
+          target is discoverable even before an assignee exists. */}
+      <button
+        type="button"
+        onClick={openPicker}
+        className="shrink-0 mt-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-accent/40"
+        title={
+          assignee
+            ? `Assigned to ${assignee.displayName || assignee.email}`
+            : 'Assign a teammate'
+        }
+        aria-label={assignee ? 'Reassign' : 'Assign'}
+      >
+        {assignee ? (
+          <Avatar user={assignee} size="xs" showTooltip={false} />
+        ) : (
+          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-dashed border-m-border text-[8px] text-m-fg-dim hover:border-accent hover:text-accent transition">
+            +
+          </span>
+        )}
+      </button>
 
       <div className="shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition mt-0.5">
         {!isDone && !item.linkedTaskId && (

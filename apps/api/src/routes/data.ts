@@ -1,5 +1,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { eq } from 'drizzle-orm';
+import { eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { exportFileSchema, importRequestSchema } from '@momentum/shared';
 import {
@@ -14,6 +14,8 @@ import {
   brandMeetings,
   brandActionItems,
   brandFeatureRequests,
+  brandEvents,
+  inboxEvents,
 } from '@momentum/db';
 import { db } from '../db.ts';
 import {
@@ -27,12 +29,24 @@ import {
   mapBrandMeeting,
   mapBrandActionItem,
   mapBrandFeatureRequest,
+  mapUserSummary,
+  mapBrandEvent,
+  mapInboxEvent,
 } from '../mappers.ts';
 import { notFound } from '../errors.ts';
 
 export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
   app.addHook('preHandler', app.authenticate);
 
+  /**
+   * Team-space v1.4 export. Team-shared collections (brands/stakeholders/
+   * meetings/action items/feature requests/roles) are wholesale; personal
+   * collections (settings, daily logs) are still scoped to the actor.
+   *
+   * Events (brand_events + inbox_events) are included for snapshot fidelity
+   * — they're NOT re-imported, but having them in the file preserves
+   * history for downstream consumers (auditors, analytics).
+   */
   app.get(
     '/export',
     { schema: { response: { 200: exportFileSchema } } },
@@ -44,33 +58,33 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         .limit(1);
       if (!settingsRow) throw notFound('Settings not found');
 
-      const roleRows = await db.select().from(roles).where(eq(roles.userId, req.userId));
-      const taskRows = await db.select().from(tasks).where(eq(tasks.userId, req.userId));
+      const roleRows = await db.select().from(roles);
+      const taskRows = await db.select().from(tasks);
       const logRows = await db
         .select()
         .from(dailyLogs)
         .where(eq(dailyLogs.userId, req.userId));
-      const parkingRows = await db
+      const parkingRows = await db.select().from(parkings);
+      const brandRows = await db.select().from(brands);
+      const stakeholderRows = await db.select().from(brandStakeholders);
+      const meetingRows = await db.select().from(brandMeetings);
+      const actionItemRows = await db.select().from(brandActionItems);
+      const featureRequestRows = await db.select().from(brandFeatureRequests);
+
+      // Active team roster for the v1.4 `users` collection (spec §5.10).
+      const activeUserRows = await db
         .select()
-        .from(parkings)
-        .where(eq(parkings.userId, req.userId));
-      const brandRows = await db.select().from(brands).where(eq(brands.userId, req.userId));
-      const stakeholderRows = await db
+        .from(users)
+        .where(isNull(users.deactivatedAt));
+
+      // Events: loaded without their hydrated actor (that's a display
+      // concern). Each event row carries actor_id, and the export's
+      // `users` collection lets consumers look up the UserSummary.
+      const brandEventRows = await db.select().from(brandEvents);
+      const inboxEventRows = await db
         .select()
-        .from(brandStakeholders)
-        .where(eq(brandStakeholders.userId, req.userId));
-      const meetingRows = await db
-        .select()
-        .from(brandMeetings)
-        .where(eq(brandMeetings.userId, req.userId));
-      const actionItemRows = await db
-        .select()
-        .from(brandActionItems)
-        .where(eq(brandActionItems.userId, req.userId));
-      const featureRequestRows = await db
-        .select()
-        .from(brandFeatureRequests)
-        .where(eq(brandFeatureRequests.userId, req.userId));
+        .from(inboxEvents)
+        .where(eq(inboxEvents.userId, req.userId));
 
       const { userId: _ignoredUserId, ...settingsNoUser } = mapSettings(settingsRow);
 
@@ -80,42 +94,36 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         .set({ lastExportDate: new Date() })
         .where(eq(userSettings.userId, req.userId));
 
+      // Build an actor lookup so event mapping can hydrate without a
+      // second round-trip. If an event references a deactivated user we
+      // still include them — historical events shouldn't vanish.
+      const allUserRows = await db.select().from(users);
+      const userById = new Map(allUserRows.map((u) => [u.id, u]));
+
       return {
-        version: '1.3' as const,
+        version: '1.4' as const,
         exportedAt: new Date().toISOString(),
         settings: settingsNoUser,
         roles: roleRows.map(mapRole),
-        tasks: taskRows.map((t) => {
-          const { userId: _u, ...rest } = mapTask(t);
-          return rest;
-        }),
+        tasks: taskRows.map(mapTask),
         dailyLogs: logRows.map((l) => {
           const { userId: _u, ...rest } = mapDailyLog(l);
           return rest;
         }),
-        parkings: parkingRows.map((p) => {
-          const { userId: _u, ...rest } = mapParking(p);
-          return rest;
+        parkings: parkingRows.map(mapParking),
+        brands: brandRows.map(mapBrand),
+        brandStakeholders: stakeholderRows.map(mapBrandStakeholder),
+        brandMeetings: meetingRows.map(mapBrandMeeting),
+        brandActionItems: actionItemRows.map(mapBrandActionItem),
+        brandFeatureRequests: featureRequestRows.map(mapBrandFeatureRequest),
+        users: activeUserRows.map(mapUserSummary),
+        brandEvents: brandEventRows.flatMap((row) => {
+          const actor = userById.get(row.actorId);
+          return actor ? [mapBrandEvent(row, actor)] : [];
         }),
-        brands: brandRows.map((b) => {
-          const { userId: _u, ...rest } = mapBrand(b);
-          return rest;
-        }),
-        brandStakeholders: stakeholderRows.map((s) => {
-          const { userId: _u, ...rest } = mapBrandStakeholder(s);
-          return rest;
-        }),
-        brandMeetings: meetingRows.map((m) => {
-          const { userId: _u, ...rest } = mapBrandMeeting(m);
-          return rest;
-        }),
-        brandActionItems: actionItemRows.map((a) => {
-          const { userId: _u, ...rest } = mapBrandActionItem(a);
-          return rest;
-        }),
-        brandFeatureRequests: featureRequestRows.map((fr) => {
-          const { userId: _u, ...rest } = mapBrandFeatureRequest(fr);
-          return rest;
+        inboxEvents: inboxEventRows.flatMap((row) => {
+          const actor = userById.get(row.actorId);
+          return actor ? [mapInboxEvent(row, actor)] : [];
         }),
       };
     },
@@ -147,19 +155,24 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req) => {
       const { mode, file } = req.body;
 
+      // Replace mode in team-space is destructive at the TEAM level —
+      // wipes team-shared data for everyone. Daily logs + own-settings
+      // are the only personal-scoped wipes. Per spec §4.4 (flat perms)
+      // any authenticated user can trigger this; the UI is expected to
+      // double-confirm before firing. No user_id filter on team tables.
       if (mode === 'replace') {
-        await db.delete(brandFeatureRequests).where(eq(brandFeatureRequests.userId, req.userId));
-        await db.delete(brandActionItems).where(eq(brandActionItems.userId, req.userId));
-        await db.delete(brandMeetings).where(eq(brandMeetings.userId, req.userId));
-        await db.delete(brandStakeholders).where(eq(brandStakeholders.userId, req.userId));
-        await db.delete(brands).where(eq(brands.userId, req.userId));
-        await db.delete(parkings).where(eq(parkings.userId, req.userId));
-        await db.delete(tasks).where(eq(tasks.userId, req.userId));
+        await db.delete(brandFeatureRequests);
+        await db.delete(brandActionItems);
+        await db.delete(brandMeetings);
+        await db.delete(brandStakeholders);
+        await db.delete(brands);
+        await db.delete(parkings);
+        await db.delete(tasks);
         await db.delete(dailyLogs).where(eq(dailyLogs.userId, req.userId));
-        await db.delete(roles).where(eq(roles.userId, req.userId));
+        await db.delete(roles);
       }
 
-      // Apply settings (always merge).
+      // Apply settings (always merge — personal scope).
       await db
         .update(userSettings)
         .set({
@@ -170,15 +183,12 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         })
         .where(eq(userSettings.userId, req.userId));
 
-      // Re-map role IDs: if imported id matches an existing row (merge mode), skip.
-      // For simplicity: always insert with fresh IDs and remap task.roleId accordingly.
       const roleIdMap = new Map<string, string>();
       let importedRoles = 0;
       for (const r of file.roles) {
         const [inserted] = await db
           .insert(roles)
           .values({
-            userId: req.userId,
             name: r.name,
             color: r.color,
             position: r.position,
@@ -193,7 +203,12 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
       let importedTasks = 0;
       for (const t of file.tasks) {
         await db.insert(tasks).values({
-          userId: req.userId,
+          // Backward-compat: v1.0–1.3 files don't carry creator/assignee
+          // ids — those tasks were previously user-scoped to the exporter.
+          // Default both to the importer so the task still "belongs" to
+          // them. v1.4 files preserve the original ids verbatim.
+          creatorId: t.creatorId ?? req.userId,
+          assigneeId: t.assigneeId ?? req.userId,
           title: t.title,
           roleId: t.roleId ? (roleIdMap.get(t.roleId) ?? null) : null,
           priority: t.priority,
@@ -226,11 +241,11 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         importedLogs++;
       }
 
-      // Parkings (added in export v1.1; older files have no parkings array).
       let importedParkings = 0;
       for (const p of file.parkings ?? []) {
         await db.insert(parkings).values({
-          userId: req.userId,
+          // Backward-compat defaults per spec §5.10.
+          creatorId: p.creatorId ?? req.userId,
           title: p.title,
           notes: p.notes,
           outcome: p.outcome,
@@ -238,19 +253,19 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
           roleId: p.roleId ? (roleIdMap.get(p.roleId) ?? null) : null,
           priority: p.priority,
           status: p.status,
+          visibility: p.visibility ?? 'private',
+          involvedIds: p.involvedIds ?? [],
           discussedAt: p.discussedAt ? new Date(p.discussedAt) : null,
         });
         importedParkings++;
       }
 
-      // Brands (added in v1.2).
       const brandIdMap = new Map<string, string>();
       let importedBrands = 0;
       for (const b of file.brands ?? []) {
         const [inserted] = await db
           .insert(brands)
           .values({
-            userId: req.userId,
             name: b.name,
             goals: b.goals,
             successDefinition: b.successDefinition,
@@ -272,8 +287,8 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         if (!resolvedBrandId) continue;
         await db.insert(brandStakeholders).values({
           brandId: resolvedBrandId,
-          userId: req.userId,
           name: s.name,
+          email: s.email,
           role: s.role,
           notes: s.notes,
         });
@@ -289,10 +304,13 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
           .insert(brandMeetings)
           .values({
             brandId: resolvedBrandId,
-            userId: req.userId,
             date: m.date,
             title: m.title,
             attendees: m.attendees,
+            // v1.4 preserves attendee_user_ids; v1.0–1.3 didn't have the
+            // column — default to empty (frontend still renders the
+            // plain-text attendee list via `attendees`).
+            attendeeUserIds: m.attendeeUserIds ?? [],
             summary: m.summary,
             rawNotes: m.rawNotes,
             decisions: m.decisions,
@@ -310,7 +328,10 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         if (!resolvedBrandId) continue;
         await db.insert(brandActionItems).values({
           brandId: resolvedBrandId,
-          userId: req.userId,
+          creatorId: a.creatorId ?? req.userId,
+          // assigneeId may be explicitly null in v1.4 (unassigned) — keep
+          // as null. If absent from an older file, also null.
+          assigneeId: a.assigneeId ?? null,
           meetingId: a.meetingId ? (meetingIdMap.get(a.meetingId) ?? null) : null,
           text: a.text,
           status: a.status,
@@ -327,7 +348,6 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         if (!resolvedBrandId) continue;
         await db.insert(brandFeatureRequests).values({
           brandId: resolvedBrandId,
-          userId: req.userId,
           sheetRowIndex: fr.sheetRowIndex,
           date: fr.date,
           request: fr.request,
@@ -337,6 +357,12 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         importedFeatureRequests++;
       }
+
+      // NOTE: v1.4 `users`, `brandEvents`, and `inboxEvents` collections
+      // are intentionally NOT imported. Users are managed by the auth
+      // route's signup flow; events are mutable activity history that
+      // would create duplicates if replayed. The collections exist in
+      // the export file for snapshot fidelity only.
 
       return {
         ok: true as const,

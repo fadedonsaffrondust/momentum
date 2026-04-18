@@ -14,6 +14,7 @@ import { mapBrandFeatureRequest, mapBrandActionItem } from '../mappers.ts';
 import { notFound } from '../errors.ts';
 import { env } from '../env.ts';
 import { GoogleSheetsClient } from '../services/google-sheets.ts';
+import { recordBrandEvent } from '../services/events.ts';
 import type { InferSelectModel } from 'drizzle-orm';
 
 type DbFeatureRequest = InferSelectModel<typeof brandFeatureRequests>;
@@ -77,10 +78,7 @@ export const brandFeatureRequestsRoutes: FastifyPluginAsyncZod = async (app) => 
       },
     },
     async (req) => {
-      const conds = [
-        eq(brandFeatureRequests.brandId, req.params.brandId),
-        eq(brandFeatureRequests.userId, req.userId),
-      ];
+      const conds = [eq(brandFeatureRequests.brandId, req.params.brandId)];
       if (req.query.resolved !== undefined) {
         conds.push(eq(brandFeatureRequests.resolved, req.query.resolved === 'true'));
       }
@@ -116,7 +114,6 @@ export const brandFeatureRequestsRoutes: FastifyPluginAsyncZod = async (app) => 
         .insert(brandFeatureRequests)
         .values({
           brandId: req.params.brandId,
-          userId: req.userId,
           date: req.body.date,
           request: req.body.request,
           response: req.body.response ?? null,
@@ -125,10 +122,21 @@ export const brandFeatureRequestsRoutes: FastifyPluginAsyncZod = async (app) => 
         })
         .returning();
       if (!row) throw new Error('Failed to create feature request');
+
       await db
         .update(brands)
         .set({ updatedAt: new Date() })
         .where(eq(brands.id, req.params.brandId));
+
+      await recordBrandEvent({
+        brandId: req.params.brandId,
+        actorId: req.userId,
+        eventType: 'feature_request_added',
+        entityType: 'brand_feature_request',
+        entityId: row.id,
+        payload: { request: row.request },
+      });
+
       pushRowToSheet(row, req.params.brandId).catch(() => {});
       return mapBrandFeatureRequest(row);
     },
@@ -144,6 +152,18 @@ export const brandFeatureRequestsRoutes: FastifyPluginAsyncZod = async (app) => 
       },
     },
     async (req) => {
+      const [existing] = await db
+        .select()
+        .from(brandFeatureRequests)
+        .where(
+          and(
+            eq(brandFeatureRequests.id, req.params.id),
+            eq(brandFeatureRequests.brandId, req.params.brandId),
+          ),
+        )
+        .limit(1);
+      if (!existing) throw notFound('Feature request not found');
+
       const [row] = await db
         .update(brandFeatureRequests)
         .set({
@@ -151,15 +171,22 @@ export const brandFeatureRequestsRoutes: FastifyPluginAsyncZod = async (app) => 
           syncStatus: 'pending',
           updatedAt: new Date(),
         })
-        .where(
-          and(
-            eq(brandFeatureRequests.id, req.params.id),
-            eq(brandFeatureRequests.brandId, req.params.brandId),
-            eq(brandFeatureRequests.userId, req.userId),
-          ),
-        )
+        .where(eq(brandFeatureRequests.id, req.params.id))
         .returning();
       if (!row) throw notFound('Feature request not found');
+
+      // Emit feature_request_resolved when the resolved flag flips true.
+      if (!existing.resolved && row.resolved) {
+        await recordBrandEvent({
+          brandId: req.params.brandId,
+          actorId: req.userId,
+          eventType: 'feature_request_resolved',
+          entityType: 'brand_feature_request',
+          entityId: row.id,
+          payload: { request: row.request },
+        });
+      }
+
       pushRowToSheet(row, req.params.brandId).catch(() => {});
       return mapBrandFeatureRequest(row);
     },
@@ -181,11 +208,19 @@ export const brandFeatureRequestsRoutes: FastifyPluginAsyncZod = async (app) => 
           and(
             eq(brandFeatureRequests.id, req.params.id),
             eq(brandFeatureRequests.brandId, req.params.brandId),
-            eq(brandFeatureRequests.userId, req.userId),
           ),
         )
         .limit(1);
       if (!existing) throw notFound('Feature request not found');
+
+      await recordBrandEvent({
+        brandId: req.params.brandId,
+        actorId: req.userId,
+        eventType: 'feature_request_deleted',
+        entityType: 'brand_feature_request',
+        entityId: existing.id,
+        payload: { request: existing.request },
+      });
 
       await db
         .delete(brandFeatureRequests)
@@ -214,7 +249,6 @@ export const brandFeatureRequestsRoutes: FastifyPluginAsyncZod = async (app) => 
           and(
             eq(brandFeatureRequests.id, req.params.id),
             eq(brandFeatureRequests.brandId, req.params.brandId),
-            eq(brandFeatureRequests.userId, req.userId),
           ),
         )
         .limit(1);
@@ -224,7 +258,10 @@ export const brandFeatureRequestsRoutes: FastifyPluginAsyncZod = async (app) => 
         .insert(brandActionItems)
         .values({
           brandId: req.params.brandId,
-          userId: req.userId,
+          creatorId: req.userId,
+          // assigneeId intentionally omitted — action items born from
+          // feature requests start unassigned; an explicit send-to-today
+          // (Task 8) sets the assignee downstream.
           text: existing.request,
         })
         .returning();
@@ -236,6 +273,28 @@ export const brandFeatureRequestsRoutes: FastifyPluginAsyncZod = async (app) => 
         .where(eq(brandFeatureRequests.id, existing.id))
         .returning();
       if (!updated) throw new Error('Failed to update feature request');
+
+      // Two events: the action item was created AND the feature request
+      // was resolved (assuming it wasn't already).
+      await recordBrandEvent({
+        brandId: req.params.brandId,
+        actorId: req.userId,
+        eventType: 'action_item_created',
+        entityType: 'brand_action_item',
+        entityId: actionItem.id,
+        payload: { text: actionItem.text, source: 'feature_request' },
+      });
+
+      if (!existing.resolved && updated.resolved) {
+        await recordBrandEvent({
+          brandId: req.params.brandId,
+          actorId: req.userId,
+          eventType: 'feature_request_resolved',
+          entityType: 'brand_feature_request',
+          entityId: updated.id,
+          payload: { request: updated.request, via: 'convert_to_action' },
+        });
+      }
 
       return {
         featureRequest: mapBrandFeatureRequest(updated),

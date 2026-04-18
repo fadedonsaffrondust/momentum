@@ -4,6 +4,23 @@ A running list of features, polish items, and technical debt identified while bu
 
 ---
 
+## Team Space V1.5 — follow-ups to v0.7.0
+
+Items intentionally deferred from the Team Space V1 rollout (see `docs/MOMENTUM-TEAM-SPACE-SPEC.md` §15 and release notes v0.7.0). These all became meaningful only once Momentum became a team space.
+
+- [ ] **`@mentions` in free-text fields.** Autocomplete on `@` inside meeting notes, parking notes, and action item text, mirrored into Inbox so the mentioned teammate sees it the same way they see an assignment today.
+- [ ] **Email / push / Slack notifications** beyond the in-app Inbox — daily digest, critical events, per-user channel preference.
+- [ ] **Per-user tldv API keys.** Each teammate connects their own recorder account; the sync pipeline de-dupes across attendees so a meeting with three Omnirev people only syncs once.
+- [ ] **Real-time collaboration on brand pages.** SSE for brand_events + optimistic UI with conflict resolution, so two people editing the same brand don't clobber each other.
+- [ ] **Admin UI for user management.** Deactivation is currently SQL-only; expose it (plus re-activation and display-name edits) through a settings pane for an admin user.
+- [ ] **Invitation flow with onboarding email.** A lightweight "Invite teammate" action that emails a one-time signup link — useful if we ever want to onboard a non-`@omnirev.ai` contractor.
+- [ ] **Immutable audit log.** `brand_events` and `inbox_events` today are mutable (DELETE works). A compliance-grade audit trail would need append-only storage + tamper-evident chaining.
+- [ ] **Cross-brand search.** Full-text search over brands, meetings, action items, feature requests, and parkings. More valuable now that everyone sees every brand than it was in single-user mode.
+- [ ] **Public sharing** — read-only share links for an individual brand or meeting summary, so a client stakeholder can see the same page without an account.
+- [ ] **JWT revocation on deactivation.** A user deactivated while logged in keeps a valid JWT for up to 7 days (access is denied at the auth-plugin check, but a refresh-token flow would let us invalidate immediately).
+
+---
+
 ## Automatic daily ritual triggers
 
 The product spec calls for Plan My Day and End of Day Review to open automatically at the right time of day. Currently both only open via keyboard shortcut or command palette.
@@ -125,10 +142,10 @@ Features intentionally cut from the V1 Parkings scope (see release notes v0.2.0)
 
 - [ ] **Threaded comments on parking items.** Upgrade the freeform `notes` field to a real comments model with timestamps and (eventually) multi-user attribution.
 - [ ] **Auto-generate a daily standup summary** from discussed parkings — a one-click "what got decided" digest.
-- [ ] **Shared parkings across users.** Currently single-user scoped; multi-user sharing would require an ACL model on top of parkings.
-- [ ] **Notifications / email alerts** when a daily approaches and you have open parkings.
 - [ ] **Smart `target_date` resolution** that respects working days and holidays, so "+next daily" skips weekends and configured non-work days.
 - [ ] **Rich-text / markdown preview** for notes and outcome fields.
+
+~~Multi-user sharing~~ shipped in v0.7.0 as parking visibility (`Team` / `Private`) plus involved-users tagging; email alerts for due parkings are folded into the V1.5 notifications item above.
 
 ---
 
@@ -174,8 +191,6 @@ Features intentionally deferred from the V1 Brands implementation (see release n
 - [ ] **Email integration / thread capture** — ingest email threads and link them to brands/stakeholders.
 - [ ] **Meeting transcription from audio** — upload audio files, transcribe via Whisper/Deepgram, extract action items.
 - [ ] **LLM-generated brand summary** across all meetings — "What's happened with Boudin this quarter?"
-- [ ] **Search across all brands/meetings** — full-text search over meeting notes, action items, stakeholder names.
-- [ ] **Multi-user collaboration / sharing** — shared brands with per-user access control.
 - [ ] **`.docx` import support** — V1 is `.md`/`.txt` only. Add `.docx` parsing via a library like `mammoth`.
 - [ ] **"Enhance with AI" on individual meetings** — re-run LLM extraction on a single meeting's notes to generate summary + action items, not just on import.
 - [ ] **Brand-level keyboard nav on the list** — `j/k` to navigate brands, `Enter` to open, without needing the mouse.

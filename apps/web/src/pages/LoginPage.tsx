@@ -4,6 +4,16 @@ import { useLogin } from '../api/hooks';
 import { useAuthStore } from '../store/auth';
 import { PasswordInput } from '../components/PasswordInput';
 
+/**
+ * Sign-in page. A successful login writes the auth token + the
+ * (now-team-space-enriched) AuthUser — displayName and avatarColor
+ * become available to the rest of the app immediately.
+ *
+ * Deactivated accounts are rejected by the server with a 400 and a
+ * distinct message; rendered here as a prominent standalone block
+ * rather than the generic "login failed" affordance so the user
+ * isn't confused into trying another password.
+ */
 export function LoginPage() {
   const token = useAuthStore((s) => s.token);
   const login = useLogin();
@@ -11,6 +21,10 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
 
   if (token) return <Navigate to="/" replace />;
+
+  const errorMessage =
+    login.error instanceof Error ? login.error.message : null;
+  const isDeactivated = errorMessage === 'This account has been deactivated.';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-m-bg text-m-fg font-mono">
@@ -23,7 +37,9 @@ export function LoginPage() {
       >
         <div>
           <h1 className="text-2xl font-semibold text-accent">Momentum</h1>
-          <p className="text-sm text-m-fg-tertiary mt-1">Sign in to keep moving.</p>
+          <p className="text-sm text-m-fg-tertiary mt-1">
+            Sign in to keep moving.
+          </p>
         </div>
 
         <label className="block text-sm">
@@ -47,10 +63,15 @@ export function LoginPage() {
           />
         </label>
 
-        {login.isError && (
-          <p className="text-sm text-red-400">
-            {login.error instanceof Error ? login.error.message : 'Login failed'}
-          </p>
+        {isDeactivated && (
+          <div className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+            This account has been deactivated. Reach out to a teammate to
+            reactivate it.
+          </div>
+        )}
+
+        {login.isError && !isDeactivated && errorMessage && (
+          <p className="text-sm text-red-400">{errorMessage}</p>
         )}
 
         <button

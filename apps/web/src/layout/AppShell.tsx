@@ -3,6 +3,9 @@ import { useMe, useSettings } from '../api/hooks';
 import { ToastStack } from '../components/ToastStack';
 import { FirstRunWizard } from '../pages/FirstRunWizard';
 import { ModalRoot } from '../modals/ModalRoot';
+import { AssigneePickerHost } from '../modals/AssigneePickerHost';
+import { InvolvedPickerHost } from '../modals/InvolvedPickerHost';
+import { TaskDetailModal } from '../modals/TaskDetailModal';
 import { DataSync } from '../components/DataSync';
 import { BackupReminder } from '../components/BackupReminder';
 import { ShortcutsHint } from '../components/ShortcutsHint';
@@ -49,6 +52,9 @@ export function AppShell() {
 
       <ToastStack />
       <ModalRoot />
+      <AssigneePickerHost />
+      <InvolvedPickerHost />
+      <TaskDetailModal />
       <DataSync />
       <BackupReminder />
       <ShortcutsHint />

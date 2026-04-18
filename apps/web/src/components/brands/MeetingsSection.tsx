@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
-import type { BrandMeeting, BrandStakeholder } from '@momentum/shared';
-import { useDeleteBrandMeeting, useCreateBrandActionItem } from '../../api/hooks';
+import type { BrandMeeting, BrandStakeholder, UserSummary } from '@momentum/shared';
+import { useDeleteBrandMeeting, useCreateBrandActionItem, useUsers } from '../../api/hooks';
 import { useUiStore } from '../../store/ui';
 import { extractActionItems } from '../../lib/extractActionItems';
 import { formatDateShort } from '../../lib/format';
 import { ChevronDown, ChevronRight, Pencil, Trash2, Zap, Play } from 'lucide-react';
 import { MeetingNoteModal } from './MeetingNoteModal';
+import { AvatarStack } from '../AvatarStack';
+import { Avatar } from '../Avatar';
 import { confirm } from '../ConfirmModal';
 
 interface Props {
@@ -19,7 +21,11 @@ export function MeetingsSection({ brandId, meetings, stakeholders }: Props) {
   const [editingMeeting, setEditingMeeting] = useState<BrandMeeting | null>(null);
   const deleteMeeting = useDeleteBrandMeeting(brandId);
   const createActionItem = useCreateBrandActionItem(brandId);
+  const usersQ = useUsers();
   const pushToast = useUiStore((s) => s.pushToast);
+
+  const users = usersQ.data ?? [];
+  const usersById = useMemo(() => new Map(users.map((u) => [u.id, u])), [users]);
 
   const sorted = useMemo(
     () => [...meetings].sort((a, b) => b.date.localeCompare(a.date)),
@@ -60,9 +66,13 @@ export function MeetingsSection({ brandId, meetings, stakeholders }: Props) {
           )}
           {sorted.map((m) => {
             const isExpanded = expandedId === m.id;
-            const initials = m.attendees
-              .map((a) => a.slice(0, 1).toUpperCase())
-              .join('');
+            const linkedAttendees = m.attendeeUserIds
+              .map((id) => usersById.get(id))
+              .filter((u): u is UserSummary => u !== undefined);
+            const externalCount = Math.max(
+              0,
+              m.attendees.length - linkedAttendees.length,
+            );
 
             return (
               <div
@@ -82,9 +92,20 @@ export function MeetingsSection({ brandId, meetings, stakeholders }: Props) {
                   {m.recordingUrl && (
                     <Play size={12} className="text-accent/60 shrink-0" />
                   )}
-                  {initials && (
-                    <span className="text-xs text-m-fg-muted shrink-0">
-                      {initials}
+                  {linkedAttendees.length > 0 && (
+                    <AvatarStack
+                      users={linkedAttendees}
+                      max={3}
+                      size="xs"
+                      className="shrink-0"
+                    />
+                  )}
+                  {externalCount > 0 && (
+                    <span
+                      className="text-[10px] text-m-fg-muted shrink-0"
+                      title={`${externalCount} external attendee${externalCount === 1 ? '' : 's'}`}
+                    >
+                      +{externalCount}
                     </span>
                   )}
                   {m.source === 'recording_sync' && (
@@ -124,6 +145,15 @@ export function MeetingsSection({ brandId, meetings, stakeholders }: Props) {
                           Summary
                         </span>
                         <p className="text-sm text-m-fg-secondary mt-1">{m.summary}</p>
+                      </div>
+                    )}
+
+                    {m.attendees.length > 0 && (
+                      <div>
+                        <span className="text-xs uppercase tracking-wide text-m-fg-secondary font-semibold">
+                          Attendees
+                        </span>
+                        <AttendeeList attendees={m.attendees} usersById={usersById} />
                       </div>
                     )}
 
@@ -187,6 +217,57 @@ export function MeetingsSection({ brandId, meetings, stakeholders }: Props) {
         />
       )}
     </>
+  );
+}
+
+/**
+ * Attendee list: team members (matched by email in attendees[] against
+ * users.email) render with their Avatar + displayName; unmatched entries
+ * render as plain text (spec §9.6 "for each attendee, render Avatar if
+ * email matches a team user, plain text otherwise").
+ */
+function AttendeeList({
+  attendees,
+  usersById,
+}: {
+  attendees: readonly string[];
+  usersById: Map<string, UserSummary>;
+}) {
+  // Build email → user map once from the roster we already have.
+  const emailLookup = useMemo(() => {
+    const map = new Map<string, UserSummary>();
+    for (const u of usersById.values()) {
+      map.set(u.email.toLowerCase(), u);
+    }
+    return map;
+  }, [usersById]);
+
+  return (
+    <ul className="mt-1 flex flex-wrap gap-1.5">
+      {attendees.map((entry, i) => {
+        const trimmed = entry.trim();
+        const maybeUser = emailLookup.get(trimmed.toLowerCase());
+        if (maybeUser) {
+          return (
+            <li
+              key={`${i}-${trimmed}`}
+              className="inline-flex items-center gap-1.5 text-xs text-m-fg-secondary bg-m-surface rounded-full pl-0.5 pr-2 py-0.5"
+            >
+              <Avatar user={maybeUser} size="xs" showTooltip={false} />
+              <span>{maybeUser.displayName || maybeUser.email}</span>
+            </li>
+          );
+        }
+        return (
+          <li
+            key={`${i}-${trimmed}`}
+            className="inline-flex items-center text-xs text-m-fg-muted bg-m-surface-40 rounded-full px-2 py-0.5"
+          >
+            {trimmed}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

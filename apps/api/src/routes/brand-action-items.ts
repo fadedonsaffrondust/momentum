@@ -6,6 +6,7 @@ import {
   brandActionStatusSchema,
   createBrandActionItemInputSchema,
   updateBrandActionItemInputSchema,
+  sendActionItemToTodayInputSchema,
   taskSchema,
   toLocalIsoDate,
 } from '@momentum/shared';
@@ -13,9 +14,13 @@ import { brandActionItems, brandMeetings, brands, tasks } from '@momentum/db';
 import { db } from '../db.ts';
 import { mapBrandActionItem, mapTask } from '../mappers.ts';
 import { notFound } from '../errors.ts';
+import { recordBrandEvent, recordInboxEvent } from '../services/events.ts';
 
 const brandIdParam = z.object({ brandId: z.string().uuid() });
 const idParam = z.object({ brandId: z.string().uuid(), id: z.string().uuid() });
+
+/** Fields whose change in a PATCH fires `action_item_edited` inbox events. */
+const EDIT_NOTIFY_FIELDS = ['text', 'dueDate', 'owner'] as const;
 
 export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.addHook('preHandler', app.authenticate);
@@ -30,10 +35,7 @@ export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => {
-      const conds = [
-        eq(brandActionItems.brandId, req.params.brandId),
-        eq(brandActionItems.userId, req.userId),
-      ];
+      const conds = [eq(brandActionItems.brandId, req.params.brandId)];
       if (req.query.status) conds.push(eq(brandActionItems.status, req.query.status));
       const rows = await db
         .select({
@@ -58,11 +60,14 @@ export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => {
+      const assigneeId = req.body.assigneeId ?? null;
+
       const [row] = await db
         .insert(brandActionItems)
         .values({
           brandId: req.params.brandId,
-          userId: req.userId,
+          creatorId: req.userId,
+          assigneeId,
           text: req.body.text,
           meetingId: req.body.meetingId ?? null,
           owner: req.body.owner ?? null,
@@ -70,10 +75,32 @@ export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
         })
         .returning();
       if (!row) throw new Error('Failed to create action item');
+
       await db
         .update(brands)
         .set({ updatedAt: new Date() })
         .where(eq(brands.id, req.params.brandId));
+
+      await recordBrandEvent({
+        brandId: req.params.brandId,
+        actorId: req.userId,
+        eventType: 'action_item_created',
+        entityType: 'brand_action_item',
+        entityId: row.id,
+        payload: { text: row.text, assigneeId },
+      });
+
+      if (assigneeId && assigneeId !== req.userId) {
+        await recordInboxEvent({
+          userId: assigneeId,
+          actorId: req.userId,
+          eventType: 'action_item_assigned',
+          entityType: 'brand_action_item',
+          entityId: row.id,
+          payload: { text: row.text, brandId: req.params.brandId },
+        });
+      }
+
       return mapBrandActionItem(row);
     },
   );
@@ -88,8 +115,32 @@ export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => {
-      const updates: Record<string, unknown> = { ...req.body };
-      if (req.body.status === 'done') updates.completedAt = new Date();
+      const [existing] = await db
+        .select()
+        .from(brandActionItems)
+        .where(
+          and(
+            eq(brandActionItems.id, req.params.id),
+            eq(brandActionItems.brandId, req.params.brandId),
+          ),
+        )
+        .limit(1);
+      if (!existing) throw notFound('Action item not found');
+
+      const body = req.body;
+      const isReassignment =
+        body.assigneeId !== undefined && body.assigneeId !== existing.assigneeId;
+      const isStatusChange =
+        body.status !== undefined && body.status !== existing.status;
+
+      const updates: Record<string, unknown> = { ...body };
+      if (isStatusChange && body.status === 'done') {
+        updates.completedAt = new Date();
+      } else if (isStatusChange && body.status === 'open') {
+        // Reopen clears the completion timestamp.
+        updates.completedAt = null;
+      }
+
       const [row] = await db
         .update(brandActionItems)
         .set(updates)
@@ -97,11 +148,85 @@ export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
           and(
             eq(brandActionItems.id, req.params.id),
             eq(brandActionItems.brandId, req.params.brandId),
-            eq(brandActionItems.userId, req.userId),
           ),
         )
         .returning();
       if (!row) throw notFound('Action item not found');
+
+      // Status-transition brand events.
+      if (isStatusChange && body.status === 'done') {
+        await recordBrandEvent({
+          brandId: req.params.brandId,
+          actorId: req.userId,
+          eventType: 'action_item_completed',
+          entityType: 'brand_action_item',
+          entityId: row.id,
+          payload: { text: row.text },
+        });
+      } else if (isStatusChange && body.status === 'open') {
+        await recordBrandEvent({
+          brandId: req.params.brandId,
+          actorId: req.userId,
+          eventType: 'action_item_reopened',
+          entityType: 'brand_action_item',
+          entityId: row.id,
+          payload: { text: row.text },
+        });
+      }
+
+      // Reassignment brand + inbox events.
+      if (isReassignment) {
+        await recordBrandEvent({
+          brandId: req.params.brandId,
+          actorId: req.userId,
+          eventType: 'action_item_assigned',
+          entityType: 'brand_action_item',
+          entityId: row.id,
+          payload: {
+            text: row.text,
+            previousAssigneeId: existing.assigneeId,
+            assigneeId: row.assigneeId,
+          },
+        });
+        if (row.assigneeId && row.assigneeId !== req.userId) {
+          await recordInboxEvent({
+            userId: row.assigneeId,
+            actorId: req.userId,
+            eventType: 'action_item_assigned',
+            entityType: 'brand_action_item',
+            entityId: row.id,
+            payload: { text: row.text, brandId: req.params.brandId },
+          });
+        }
+      }
+
+      // Non-reassignment, non-status edits: text / dueDate / owner.
+      const changedNotifyFields = EDIT_NOTIFY_FIELDS.filter((f) => f in body);
+      if (changedNotifyFields.length > 0) {
+        await recordBrandEvent({
+          brandId: req.params.brandId,
+          actorId: req.userId,
+          eventType: 'action_item_edited',
+          entityType: 'brand_action_item',
+          entityId: row.id,
+          payload: { changedFields: changedNotifyFields, text: row.text },
+        });
+        if (row.assigneeId && row.assigneeId !== req.userId) {
+          await recordInboxEvent({
+            userId: row.assigneeId,
+            actorId: req.userId,
+            eventType: 'action_item_edited',
+            entityType: 'brand_action_item',
+            entityId: row.id,
+            payload: {
+              changedFields: changedNotifyFields,
+              text: row.text,
+              brandId: req.params.brandId,
+            },
+          });
+        }
+      }
+
       return mapBrandActionItem(row);
     },
   );
@@ -121,7 +246,6 @@ export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
           and(
             eq(brandActionItems.id, req.params.id),
             eq(brandActionItems.brandId, req.params.brandId),
-            eq(brandActionItems.userId, req.userId),
           ),
         )
         .returning({ id: brandActionItems.id });
@@ -130,11 +254,18 @@ export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  /**
+   * Send an action item to the assignee's Today. The assignee MUST be
+   * specified explicitly — the frontend opens AssigneePickerModal before
+   * hitting this route (spec §9.6, §9.12). Creates a linked task and
+   * writes an inbox `task_assigned` event if assignee ≠ actor.
+   */
   app.post(
     '/brands/:brandId/action-items/:id/send-to-today',
     {
       schema: {
         params: idParam,
+        body: sendActionItemToTodayInputSchema,
         response: { 200: z.object({ actionItem: brandActionItemSchema, task: taskSchema }) },
       },
     },
@@ -146,16 +277,18 @@ export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
           and(
             eq(brandActionItems.id, req.params.id),
             eq(brandActionItems.brandId, req.params.brandId),
-            eq(brandActionItems.userId, req.userId),
           ),
         )
         .limit(1);
       if (!existing) throw notFound('Action item not found');
 
+      const assigneeId = req.body.assigneeId;
+
       const [task] = await db
         .insert(tasks)
         .values({
-          userId: req.userId,
+          creatorId: req.userId,
+          assigneeId,
           title: existing.text,
           scheduledDate: toLocalIsoDate(new Date()),
           priority: 'medium',
@@ -169,6 +302,21 @@ export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(eq(brandActionItems.id, existing.id))
         .returning();
       if (!updated) throw new Error('Failed to link action item');
+
+      if (assigneeId !== req.userId) {
+        await recordInboxEvent({
+          userId: assigneeId,
+          actorId: req.userId,
+          eventType: 'task_assigned',
+          entityType: 'task',
+          entityId: task.id,
+          payload: {
+            title: task.title,
+            source: 'action_item',
+            brandId: req.params.brandId,
+          },
+        });
+      }
 
       return { actionItem: mapBrandActionItem(updated), task: mapTask(task) };
     },
@@ -190,11 +338,12 @@ export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
           and(
             eq(brandActionItems.id, req.params.id),
             eq(brandActionItems.brandId, req.params.brandId),
-            eq(brandActionItems.userId, req.userId),
           ),
         )
         .limit(1);
       if (!existing) throw notFound('Action item not found');
+
+      const wasOpen = existing.status === 'open';
 
       const [row] = await db
         .update(brandActionItems)
@@ -203,13 +352,24 @@ export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
         .returning();
       if (!row) throw notFound('Action item not found');
 
+      // Bidirectional sync: team-shared tasks no longer have user_id.
+      // Any matching linked task is marked done regardless of assignee.
       if (existing.linkedTaskId) {
         await db
           .update(tasks)
           .set({ status: 'done', column: 'done', completedAt: new Date() })
-          .where(
-            and(eq(tasks.id, existing.linkedTaskId), eq(tasks.userId, req.userId)),
-          );
+          .where(eq(tasks.id, existing.linkedTaskId));
+      }
+
+      if (wasOpen) {
+        await recordBrandEvent({
+          brandId: req.params.brandId,
+          actorId: req.userId,
+          eventType: 'action_item_completed',
+          entityType: 'brand_action_item',
+          entityId: row.id,
+          payload: { text: row.text },
+        });
       }
 
       return mapBrandActionItem(row);

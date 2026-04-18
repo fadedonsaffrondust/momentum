@@ -10,6 +10,9 @@ import type {
   brandMeetings,
   brandActionItems,
   brandFeatureRequests,
+  brandEvents,
+  inboxEvents,
+  users,
 } from '@momentum/db';
 import type {
   Task,
@@ -22,6 +25,12 @@ import type {
   BrandMeeting,
   BrandActionItem,
   BrandFeatureRequest,
+  BrandEvent,
+  BrandEventType,
+  InboxEvent,
+  InboxEventType,
+  InboxEntitySummary,
+  UserSummary,
   SyncConfig,
   FeatureRequestsConfig,
 } from '@momentum/shared';
@@ -36,6 +45,9 @@ type DbBrandStakeholder = InferSelectModel<typeof brandStakeholders>;
 type DbBrandMeeting = InferSelectModel<typeof brandMeetings>;
 type DbBrandActionItem = InferSelectModel<typeof brandActionItems>;
 type DbBrandFeatureRequest = InferSelectModel<typeof brandFeatureRequests>;
+type DbBrandEvent = InferSelectModel<typeof brandEvents>;
+type DbInboxEvent = InferSelectModel<typeof inboxEvents>;
+type DbUser = InferSelectModel<typeof users>;
 
 const iso = (d: Date | null): string | null => (d ? d.toISOString() : null);
 const isoNonNull = (d: Date): string => d.toISOString();
@@ -43,7 +55,8 @@ const isoNonNull = (d: Date): string => d.toISOString();
 export function mapTask(row: DbTask): Task {
   return {
     id: row.id,
-    userId: row.userId,
+    creatorId: row.creatorId,
+    assigneeId: row.assigneeId,
     title: row.title,
     roleId: row.roleId,
     priority: row.priority,
@@ -81,7 +94,7 @@ export function mapSettings(row: DbSettings): UserSettings {
 export function mapParking(row: DbParking): Parking {
   return {
     id: row.id,
-    userId: row.userId,
+    creatorId: row.creatorId,
     title: row.title,
     notes: row.notes,
     outcome: row.outcome,
@@ -89,6 +102,8 @@ export function mapParking(row: DbParking): Parking {
     roleId: row.roleId,
     priority: row.priority,
     status: row.status,
+    visibility: row.visibility,
+    involvedIds: row.involvedIds ?? [],
     createdAt: isoNonNull(row.createdAt),
     discussedAt: iso(row.discussedAt),
   };
@@ -97,7 +112,6 @@ export function mapParking(row: DbParking): Parking {
 export function mapBrand(row: DbBrand): Brand {
   return {
     id: row.id,
-    userId: row.userId,
     name: row.name,
     goals: row.goals,
     successDefinition: row.successDefinition,
@@ -117,7 +131,6 @@ export function mapBrandStakeholder(row: DbBrandStakeholder): BrandStakeholder {
   return {
     id: row.id,
     brandId: row.brandId,
-    userId: row.userId,
     name: row.name,
     email: row.email,
     role: row.role,
@@ -130,10 +143,10 @@ export function mapBrandMeeting(row: DbBrandMeeting): BrandMeeting {
   return {
     id: row.id,
     brandId: row.brandId,
-    userId: row.userId,
     date: row.date,
     title: row.title,
     attendees: row.attendees ?? [],
+    attendeeUserIds: row.attendeeUserIds ?? [],
     summary: row.summary,
     rawNotes: row.rawNotes,
     decisions: row.decisions ?? [],
@@ -144,12 +157,15 @@ export function mapBrandMeeting(row: DbBrandMeeting): BrandMeeting {
   };
 }
 
-export function mapBrandActionItem(row: DbBrandActionItem & { meetingDate?: string | null }): BrandActionItem {
+export function mapBrandActionItem(
+  row: DbBrandActionItem & { meetingDate?: string | null },
+): BrandActionItem {
   return {
     id: row.id,
     brandId: row.brandId,
     meetingId: row.meetingId,
-    userId: row.userId,
+    creatorId: row.creatorId,
+    assigneeId: row.assigneeId,
     text: row.text,
     status: row.status,
     owner: row.owner,
@@ -165,7 +181,6 @@ export function mapBrandFeatureRequest(row: DbBrandFeatureRequest): BrandFeature
   return {
     id: row.id,
     brandId: row.brandId,
-    userId: row.userId,
     sheetRowIndex: row.sheetRowIndex,
     date: row.date,
     request: row.request,
@@ -188,5 +203,47 @@ export function mapDailyLog(row: DbDailyLog): DailyLog {
     totalActualMinutes: row.totalActualMinutes,
     journalEntry: row.journalEntry,
     completionRate: row.completionRate,
+  };
+}
+
+export function mapUserSummary(row: DbUser): UserSummary {
+  return {
+    id: row.id,
+    email: row.email,
+    displayName: row.displayName,
+    avatarColor: row.avatarColor,
+    deactivatedAt: iso(row.deactivatedAt),
+  };
+}
+
+export function mapBrandEvent(row: DbBrandEvent, actor: DbUser): BrandEvent {
+  return {
+    id: row.id,
+    brandId: row.brandId,
+    actor: mapUserSummary(actor),
+    eventType: row.eventType as BrandEventType,
+    entityType: row.entityType,
+    entityId: row.entityId,
+    payload: (row.payload ?? {}) as Record<string, unknown>,
+    createdAt: isoNonNull(row.createdAt),
+  };
+}
+
+export function mapInboxEvent(
+  row: DbInboxEvent,
+  actor: DbUser,
+  entity: InboxEntitySummary = null,
+): InboxEvent {
+  return {
+    id: row.id,
+    userId: row.userId,
+    actor: mapUserSummary(actor),
+    eventType: row.eventType as InboxEventType,
+    entityType: row.entityType,
+    entityId: row.entityId,
+    payload: (row.payload ?? {}) as Record<string, unknown>,
+    entity,
+    readAt: iso(row.readAt),
+    createdAt: isoNonNull(row.createdAt),
   };
 }

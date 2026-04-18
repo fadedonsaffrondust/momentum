@@ -1,10 +1,11 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Parking } from '@momentum/shared';
-import { useParkings, useRoles } from '../api/hooks';
+import { useMe, useParkings, useRoles } from '../api/hooks';
 import { useUiStore } from '../store/ui';
 import { ParkingInputBar } from '../components/ParkingInputBar';
 import { ParkingCard } from '../components/ParkingCard';
 import { RoleFilterBar } from '../components/RoleFilterBar';
+import { ParkingScopeFilter } from '../components/ParkingScopeFilter';
 import { useKeyboardController } from '../hooks/useKeyboardController';
 import { todayIso, tomorrowIso } from '../lib/date';
 import { formatDateShort } from '../lib/format';
@@ -18,7 +19,9 @@ interface Group {
 export function ParkingsPage() {
   const parkingsQ = useParkings();
   const rolesQ = useRoles();
+  const meQ = useMe();
   const roleFilter = useUiStore((s) => s.roleFilter);
+  const scopeFilter = useUiStore((s) => s.parkingScopeFilter);
   const selectedParkingId = useUiStore((s) => s.selectedParkingId);
   const setSelectedParkingId = useUiStore((s) => s.setSelectedParkingId);
   const [editingParkingId, setEditingParkingId] = useState<string | null>(null);
@@ -26,10 +29,21 @@ export function ParkingsPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const rawParkings = parkingsQ.data ?? [];
-  const parkings = useMemo(
-    () => (roleFilter ? rawParkings.filter((p) => p.roleId === roleFilter) : rawParkings),
-    [rawParkings, roleFilter],
-  );
+  const currentUserId = meQ.data?.id;
+  const parkings = useMemo(() => {
+    let filtered = rawParkings;
+    if (roleFilter) {
+      filtered = filtered.filter((p) => p.roleId === roleFilter);
+    }
+    if (currentUserId) {
+      if (scopeFilter === 'mine') {
+        filtered = filtered.filter((p) => p.creatorId === currentUserId);
+      } else if (scopeFilter === 'involving') {
+        filtered = filtered.filter((p) => p.involvedIds.includes(currentUserId));
+      }
+    }
+    return filtered;
+  }, [rawParkings, roleFilter, scopeFilter, currentUserId]);
 
   const roles = rolesQ.data ?? [];
   const rolesById = new Map(roles.map((r) => [r.id, r]));
@@ -65,7 +79,10 @@ export function ParkingsPage() {
         </p>
       </div>
       <ParkingInputBar ref={inputRef} />
-      <RoleFilterBar />
+      <div className="flex items-center justify-between gap-4">
+        <RoleFilterBar />
+        <ParkingScopeFilter />
+      </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto pr-2">
         <div className="max-w-3xl space-y-6">
