@@ -5,7 +5,7 @@ Momentum is a keyboard-first daily task operating system for startup founders an
 ## Stack
 
 - **Monorepo:** pnpm workspaces + Turborepo
-- **Frontend (`apps/web`):** React 18 + Vite + TypeScript, TanStack Query, Zustand, Tailwind CSS, React Router, cmdk
+- **Frontend (`apps/web`):** React 18 + Vite + TypeScript, TanStack Query, Zustand, Tailwind CSS, React Router, cmdk, shadcn/ui + Radix primitives (copied in-repo under `src/components/ui/`), Framer Motion, Geist Sans + Geist Mono via `@fontsource-variable`, lucide-react icons
 - **Backend (`apps/api`):** Fastify + TypeScript, Drizzle ORM, JWT auth, bcrypt, Zod validation
 - **Database:** PostgreSQL 16 (via `docker-compose.yml`)
 - **Shared (`packages/shared`):** Zod schemas + derived TS types used by both web and api — the single source of truth for data contracts
@@ -49,6 +49,92 @@ pnpm lint
 pnpm test
 pnpm format
 ```
+
+## Frontend design principles
+
+Momentum's frontend foundation was rebuilt in v0.9.0 against `docs/FRONTEND-REVISION-BRIEF.md` (the brief) and tracked in `docs/FRONTEND-TASKS.md` (per-phase execution log with deferred follow-ups). Those two files are the authoritative source. This section captures the day-to-day rules so future changes stay consistent without re-reading the brief.
+
+**Aspiration:** Linear / Attio / Raycast / Vercel-dashboard tier. Keyboard-first, information-dense, workflow-driven. Not a generic SaaS dashboard.
+
+### Design tokens
+
+- **Single source of truth:** HSL triplets in `apps/web/src/index.css`, consumed via `hsl(var(--…))` through the Tailwind `colors` map in `tailwind.config.ts`. Legacy `--m-*` variables were fully removed in v0.9.0 — do not reintroduce them.
+- **Semantic token names (use these in classNames):**
+  - `bg-background` / `text-foreground` — page canvas + primary text
+  - `bg-card` / `text-card-foreground` — elevated surface (sidebar, cards, dialogs)
+  - `bg-popover` / `text-popover-foreground` — popovers, dropdowns, the command palette
+  - `bg-primary` / `text-primary` / `text-primary-foreground` — **brand green** (Momentum accent); reserved for primary actions, active states, brand identity
+  - `bg-secondary` / `text-secondary-foreground` — neutral alt surface; used for hover/highlighted/selected states in shadcn primitives
+  - `bg-muted` / `text-muted-foreground` — subtle/disabled content; secondary text, metadata
+  - `bg-accent` / `text-accent-foreground` — shadcn's neutral hover token (**intentionally not the brand color** — `primary` holds brand)
+  - `bg-destructive` / `text-destructive-foreground` — error/danger; status only, never decoration
+  - `border-border` / `border-input` / `ring-ring` — borders, input borders, focus rings
+- **Dark mode is default.** Light mode switches via `html[data-theme="light"]`; shadcn primitives also respect `html.dark` (both selectors mirror). Toggling theme updates both.
+- **Shadcn primitive gotcha:** the in-repo shadcn primitives use `bg-secondary`/`text-secondary-foreground` for hover/highlighted/selected states (canonical shadcn uses `bg-accent` for this; we substituted during install so `--accent` stays reserved as the shadcn-semantic neutral-hover slot). When adding new shadcn primitives, apply the same substitution.
+
+### Typography
+
+- **Fonts:** Geist Variable (UI) + Geist Mono Variable (numerics, IDs, timestamps, keycaps), loaded via `@fontsource-variable/geist*` imports in `apps/web/src/main.tsx`. Never add another font. Never re-introduce Google Fonts `<link>` tags.
+- **Body default:** `font-sans` (Geist). Use `font-mono` only on numeric columns, IDs, timestamps, and `<kbd>`.
+- **Scale (defined in `tailwind.config.ts`):** `text-2xs` (11/16), `text-xs` (12/18), `text-sm` (13/20), `text-base` (14/22), `text-lg` (16/24), `text-xl` (20/28), `text-2xl` (24/32). Don't use arbitrary `text-[Npx]` values — if you need something off-scale, update the scale with justification.
+- **Max three type sizes on any single screen. Max two weights.** Weights allowed: `400` (default), `500` (emphasis), `600` (headers). Never `700+`.
+
+### Spacing, radius, shadow, motion, density
+
+- **Spacing:** 4px base grid. Prefer scale tokens (`gap-2`, `p-4`, `space-y-3`) over arbitrary values.
+- **Radius:** `rounded-sm` (3px, inputs + small buttons), default `rounded` (6px, cards + default buttons), `rounded-md` (8px, dialogs + panels). **Never larger than 8px.**
+- **Shadow:** `shadow-xs` (hover lift), `shadow-sm` (popovers/dropdowns), `shadow-md` (dialogs). Prefer 1px `border-border` over shadows for elevation. No shadows on buttons, inputs, or inline elements.
+- **Motion:** every transition **≤150ms**. Use `transition-colors` or property-specific `transition-[width,opacity]` — **never `transition-all`**. No bounce / spring / elastic / overshoot anywhere. `apps/web/src/hooks/useReducedMotion.ts` wraps Framer Motion's hook; Framer components should read it. Global `@media (prefers-reduced-motion: reduce)` in `index.css` already flattens legacy CSS keyframes and all transitions.
+- **Density:** table rows 32–36px, list rows 36–40px, buttons 28/32/36px (sm/default/lg), inputs 32px, card padding 16px (12px for compact variants).
+
+### Component foundation
+
+- **Reach for shadcn primitives first.** Files in `apps/web/src/components/ui/` — Button, Input, Textarea, Dialog, Popover, DropdownMenu, Tooltip, Tabs, Badge, Select, Checkbox, Command, Separator, AlertDialog, Kbd. Modify them in-repo as needed; do not install another component library (no MUI, Chakra, Ant, Mantine, etc.).
+- **Radix is the behavior layer.** Dialog/Popover/DropdownMenu/Tooltip/Select/Tabs/Checkbox/Separator/AlertDialog are Radix under the hood — they handle focus trap, escape, portal, scroll lock, ARIA. Never roll your own.
+- **Focus rings:** `focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2` is the canonical pattern. shadcn primitives ship with it — never strip it.
+- **Icons:** `lucide-react` only. Never emojis. Never other icon sets.
+- **Path alias:** `@/*` resolves to `apps/web/src/*` (configured in `tsconfig.json`, `vite.config.ts`, `vitest.config.ts`). Use `@/lib/utils` for `cn()`, `@/components/ui/*` for primitives, `@/lib/commands/context` for the palette registry.
+
+### Keyboard architecture
+
+- **Global shortcuts** (`apps/web/src/hooks/useGlobalShortcuts.ts`) run in **capture phase** and `stopPropagation()` consumed keys, so page-scoped handlers never double-fire.
+- **Page-scoped handlers** (`useKeyboardController`, `useTeamKeyboardController`, `useInboxKeyboardController`, and in-page `useEffect` handlers) run in bubble phase and must bail when the active element is an `INPUT`/`TEXTAREA`/contentEditable.
+- **`g`-prefix chord** state machine (1500ms timeout) lives in the global handler. Navigation: `g t` → `/`, `g l` → `/backlog`, `g p` → `/parkings`, `g u` → `/team`, `g b` → `/brands`, `g i` → `/inbox`. Ritual aliases: `g d` → Plan My Day, `g r` → End of Day, `g w` → Weekly Stats (chords exist because browsers reserve `Cmd+P/R/W`).
+- **`n`** = focus `[data-task-input="true"]` if present, else dispatch `new CustomEvent('momentum:new-thing')` on `window`. Page-level "new" handlers should listen for that event going forward rather than binding `n` directly.
+- **Cross-surface canonicals — never reassign:** `j`/`k` navigate, `Enter` opens/confirms, `Space` toggles, `Escape` closes, `?` opens shortcuts modal, `Cmd+K` opens command palette, `/` and `n` focus input / create.
+- **Focus targets:** opt in via data attributes (`[data-task-input="true"]`, `[data-person-filter="true"]`) so the global handler can discover them.
+- **Always update `apps/web/src/modals/ShortcutsModal.tsx`** in the same change when you add/modify/remove a binding (full rule below in "Keep the shortcuts help in sync").
+
+### Command palette
+
+- **Registry pattern:** commands are registered via `useRegisterCommands(commands, deps)` from `@/lib/commands/context`. Each `Command` has `id`, `label`, `description?`, `icon?`, `shortcut?`, `section`, `priority?`, `when?(pathname)`, `run()`. Stable `id` values are required (Recents persistence is keyed by id).
+- **Global commands** live in `apps/web/src/lib/commands/global.tsx` and are mounted once from `AppShell`. Page-specific commands register from the page component with a `when` predicate matching the current route (see `apps/web/src/pages/TodayPage.tsx` for the pattern).
+- **Recents** persist in `localStorage` key `momentum:palette:recents:v1`, cap 5, filtered against currently-registered commands on render.
+- **Shortcut hints** tokenize with spaces and render as keycaps: `"Cmd K"`, `"g t"`, `"?"`. The `Kbd` primitive renders each token.
+
+### Empty / loading / error states
+
+- **Every list, table, and panel has a purposeful empty state** — one line of purpose + a keycap-styled shortcut hint ("Press `/` or `n` to add one"). No illustrations. No empty-state clipart.
+- **Loading:** skeleton matching the expected layout (see `AppShell` for the pattern). Never spinners on local operations — they should be instant.
+- **Errors:** inline next to the thing that failed, with a Retry action. Toasts are for transient confirmations only ("Task created"), never for persistent errors that need action.
+- **Workflow-first defaults:** filtered/focused landing states (Today shows today, Feature Requests defaults to Open, brand list defaults to active). "Show all" is an escape hatch, not the landing state.
+
+### Vendor branding
+
+- **No vendor names in the UI.** Use "recording", "sync", "AI extraction", "spreadsheet" — never "tl;dv", "Google Sheets", "OpenAI", "Slack", etc. Backend env var names (e.g., `OPENAI_API_KEY`) may stay literal in code but never in user-facing copy or release notes.
+
+### Don't
+
+- Don't install Material UI, Chakra, Ant Design, Mantine, or any other component library alongside shadcn.
+- Don't introduce new fonts. Geist and Geist Mono only.
+- Don't use `transition-all` — always name the animating properties.
+- Don't use bounce / spring / elastic / overshoot easings anywhere in UI chrome.
+- Don't use brand color (`primary`) for decoration — it's reserved for primary actions, active states, and brand identity.
+- Don't use bright saturated colors outside of status indicators.
+- Don't reintroduce `--m-*` CSS variables, the `colors.m.*` Tailwind map, or the manual `@layer utilities` scaffolding. All removed in v0.9.0.
+- Don't roll your own modal, popover, dropdown, or tooltip — use Radix via the shadcn primitives.
+- Don't strip the `focus-visible` ring from shadcn primitives.
+- Don't use full-width content containers — use a max width with graceful shrink below it.
 
 ## Keep the shortcuts help in sync
 
@@ -128,8 +214,9 @@ Test files are colocated with source: `foo.ts` → `foo.test.ts`. Use Vitest (`d
 
 - No SSR. Web is a pure SPA.
 - No ORM other than Drizzle.
-- No CSS-in-JS; Tailwind + CSS variables only.
+- No CSS-in-JS; Tailwind utilities + shadcn CSS-variable tokens only.
 - No global Redux; Zustand only for UI state, TanStack Query for server state.
+- No component library other than shadcn/ui (copied in-repo under `apps/web/src/components/ui/`).
 
 ## Data model (summary)
 
