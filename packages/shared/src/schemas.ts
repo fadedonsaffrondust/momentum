@@ -25,7 +25,7 @@ export const roleSchema = z.object({
   color: z
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/)
-    .default('#4F8EF7'),
+    .default('#0FB848'),
   position: z.number().int().nonnegative(),
 });
 export type Role = z.infer<typeof roleSchema>;
@@ -564,12 +564,12 @@ export type ImportRequest = z.infer<typeof importRequestSchema>;
 /* ─────────────── role color palette ─────────────── */
 
 export const ROLE_COLOR_PALETTE = [
-  '#4F8EF7', // blue
+  '#0FB848', // green (brand)
   '#F7B24F', // amber
   '#4FD1C5', // teal
   '#F76C6C', // red
   '#B184F7', // purple
-  '#6BCB77', // green
+  '#4F8EF7', // blue
   '#F78FB3', // pink
   '#FFD93D', // yellow
 ] as const;

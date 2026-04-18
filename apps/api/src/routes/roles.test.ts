@@ -50,7 +50,7 @@ function makeRoleRow(overrides: Record<string, unknown> = {}) {
     id: ROLE_ID,
     userId: USER_ID,
     name: 'Engineering',
-    color: '#4F8EF7',
+    color: '#0FB848',
     position: 0,
     ...overrides,
   };
@@ -81,7 +81,7 @@ describe('roles routes', () => {
 
   it('POST /roles assigns palette color 0 for first role (no color given)', async () => {
     mockDb._pushResult([{ maxPos: null }]); // no existing roles
-    mockDb._pushResult([makeRoleRow({ position: 0, color: '#4F8EF7' })]);
+    mockDb._pushResult([makeRoleRow({ position: 0, color: '#0FB848' })]);
 
     const res = await app.inject({
       method: 'POST',
@@ -92,7 +92,7 @@ describe('roles routes', () => {
 
     expect(res.statusCode).toBe(200);
     const body = JSON.parse(res.body);
-    expect(body.color).toBe('#4F8EF7');
+    expect(body.color).toBe('#0FB848');
     expect(body.position).toBe(0);
   });
 
@@ -130,7 +130,7 @@ describe('roles routes', () => {
 
   it('POST /roles wraps palette for 9th role', async () => {
     mockDb._pushResult([{ maxPos: 7 }]); // 8 existing, maxPos=7
-    mockDb._pushResult([makeRoleRow({ position: 8, color: '#4F8EF7' })]);
+    mockDb._pushResult([makeRoleRow({ position: 8, color: '#0FB848' })]);
 
     const res = await app.inject({
       method: 'POST',
@@ -141,8 +141,8 @@ describe('roles routes', () => {
 
     expect(res.statusCode).toBe(200);
     const body = JSON.parse(res.body);
-    // nextPosition=8, 8 % 8 = 0 => palette[0] = '#4F8EF7'
-    expect(body.color).toBe('#4F8EF7');
+    // nextPosition=8, 8 % 8 = 0 => palette[0] = '#0FB848' (brand green)
+    expect(body.color).toBe('#0FB848');
     expect(body.position).toBe(8);
   });
 

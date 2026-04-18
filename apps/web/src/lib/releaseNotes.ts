@@ -25,6 +25,30 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.6.3',
+    date: '2026-04-17',
+    headline: 'New brand color — Momentum is green now',
+    summary:
+      'The accent color across the app has moved from blue to a vivid green (#0FB848). Buttons, focus rings, tab indicators, modal glows, role-pill defaults, and stakeholder avatars all pick up the new brand color automatically.',
+    items: [
+      {
+        title: 'Accent color refreshed',
+        description:
+          'Every surface that previously rendered in the old blue accent (CTAs, active tab underlines, the "keyboard-first" pill in the Shortcuts modal, focus rings, the What\'s new dot) now uses the new Momentum green. Both dark and light themes pick it up — dark uses the vivid #0FB848 for visibility against the near-black background, light uses a deeper #02862F for legible contrast against the near-white surface.',
+      },
+      {
+        title: 'Default role color is green',
+        description:
+          'New roles created without an explicit color now default to the brand green. Existing roles keep whatever color you chose — nothing is migrated. The role color palette still offers 8 swatches; the old blue is still available, just no longer first.',
+      },
+      {
+        title: 'Stakeholder avatars refreshed',
+        description:
+          'The 8-color palette used for stakeholder initials has the new green at position 0. Stakeholders that previously hashed to blue will now render green; the palette has 8 distinct hues as before.',
+      },
+    ],
+  },
+  {
     version: '0.6.2',
     date: '2026-04-17',
     headline: 'Keyboard navigation for meeting form suggestions',

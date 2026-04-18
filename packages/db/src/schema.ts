@@ -62,7 +62,7 @@ export const roles = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
-    color: text('color').notNull().default('#4F8EF7'),
+    color: text('color').notNull().default('#0FB848'),
     position: integer('position').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

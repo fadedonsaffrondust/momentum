@@ -9,10 +9,9 @@ export default {
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       colors: {
-        accent: {
-          DEFAULT: '#4F8EF7',
-          hover: '#6BA1FA',
-        },
+        // accent.* utilities are declared manually in src/index.css @layer utilities
+        // so they can resolve to theme-aware CSS variables (see Tailwind JIT
+        // CSS-variable color bug — m-* utilities follow the same pattern).
         m: {
           bg: 'var(--m-bg)',
           'bg-60': 'var(--m-bg-60)',
