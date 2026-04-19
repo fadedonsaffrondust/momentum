@@ -25,6 +25,30 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.14.2',
+    date: '2026-04-19',
+    headline: 'Internal API hook layer split into per-domain files',
+    summary:
+      "The web app's TanStack Query hook layer was a single 1008-line file with every query and mutation intermingled. It is now 16 small per-domain files behind a barrel — every existing import path keeps working unchanged. While we were in there, query keys moved to factory helpers in one shared file, and the Brands list page's manual setInterval polling was replaced with TanStack Query's built-in refetchInterval driven by the data itself.",
+    items: [
+      {
+        title: 'Per-domain hook modules',
+        description:
+          'apps/web/src/api/hooks.ts is now apps/web/src/api/hooks/{auth,users,settings,roles,tasks,parkings,daily-logs,stats,brands,brand-action-items,brand-feature-requests,brand-sync,inbox,data}.ts plus _shared.ts and an index barrel. Existing imports from @/api/hooks resolve through the barrel, so every consumer compiles unchanged.',
+      },
+      {
+        title: 'Query-key factories',
+        description:
+          'Every queryKey and invalidateQueries call now goes through a factory in _shared.ts (taskKeys, brandKeys, inboxKeys, etc.) instead of inline string tuples. Invalidation cardinality is intentionally unchanged — the factories return the same prefix-matched tuples — so a future "tighten the invalidation" pass touches one file instead of dozens.',
+      },
+      {
+        title: 'Brands list polls itself while imports run',
+        description:
+          'The Brands page used to spin up a manual setInterval to refetch the brands list while any AI brand import was still running. That logic now lives inside the useBrands hook as a TanStack Query refetchInterval driven by the data — no setup/teardown effect on the page, the same 3-second cadence, automatic stop the moment every brand is past "importing".',
+      },
+    ],
+  },
+  {
     version: '0.14.1',
     date: '2026-04-19',
     headline: 'Backend safety: atomic imports, rate limits, security headers',

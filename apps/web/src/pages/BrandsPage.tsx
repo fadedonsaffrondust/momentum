@@ -27,16 +27,10 @@ export function BrandsPage() {
   const allMeetingsQueries = useAllBrandMeetings(brandIds);
   const allActionItemsQueries = useAllBrandActionItems(brandIds);
 
-  // Poll importing brands: refetch the brands list periodically while any are importing.
-  useEffect(() => {
-    if (importingBrandIds.size === 0) return;
-    const interval = setInterval(() => {
-      brandsQ.refetch();
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [importingBrandIds.size, brandsQ]);
-
-  // Detect when importing brands complete or fail.
+  // Polling is now driven by `useBrands` itself: it calls refetchInterval
+  // every 3s while *any* brand is in the 'importing' status. We only need
+  // to detect the importing→active/import_failed transition here so we
+  // can show the success/error toast and stop tracking the brand id.
   useEffect(() => {
     if (importingBrandIds.size === 0 || !brandsQ.data) return;
     const completed = new Set<string>();
