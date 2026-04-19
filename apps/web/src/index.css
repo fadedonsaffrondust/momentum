@@ -181,6 +181,22 @@
   margin-bottom: 0.25em;
 }
 
+/* Inline image attachments — clamp to editor width so a high-res
+   screenshot doesn't blow out the drawer. The original image stays at
+   full resolution on disk; this is purely a display constraint. */
+.task-description-editor .ProseMirror .task-attachment-image,
+.task-description-editor .ProseMirror img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid hsl(var(--border) / 0.6);
+}
+
+.task-description-editor .ProseMirror .task-attachment-image-wrap {
+  margin: 0.5em 0;
+}
+
 /* Bullet + numbered lists (created by typing `- ` or `1. `). */
 .task-description-editor .ProseMirror ul:not([data-type="taskList"]) {
   list-style: disc;

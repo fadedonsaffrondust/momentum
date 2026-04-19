@@ -10,6 +10,7 @@ import {
   BRAND_ACTION_STATUS,
   MEETING_SOURCE,
   FEATURE_REQUEST_SYNC_STATUS,
+  TASK_ATTACHMENT_KIND,
 } from '@momentum/shared/enums';
 import {
   priorityEnum,
@@ -22,6 +23,7 @@ import {
   brandActionStatusEnum,
   meetingSourceEnum,
   featureRequestSyncStatusEnum,
+  taskAttachmentKindEnum,
 } from '@momentum/db';
 
 /**
@@ -46,6 +48,7 @@ describe('Drizzle ↔ shared enum parity', () => {
       featureRequestSyncStatusEnum.enumValues,
       FEATURE_REQUEST_SYNC_STATUS,
     ],
+    ['task_attachment_kind', taskAttachmentKindEnum.enumValues, TASK_ATTACHMENT_KIND],
   ] as const)('%s tuple matches Drizzle enumValues', (_name, drizzleValues, sharedTuple) => {
     expect([...drizzleValues]).toEqual([...sharedTuple]);
   });

@@ -15,6 +15,10 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
   JWT_EXPIRES_IN: z.string().default('7d'),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  // Where task attachments are written by the LocalDiskStorage adapter
+  // (v1). Replaced by STORAGE_BACKEND=gcs|s3 once cloud storage lands —
+  // see docs/TODO.md.
+  UPLOAD_DIR: z.string().default(path.resolve(__dirname, '../../.uploads')),
   OPENAI_API_KEY: z.string().optional(),
   TLDV_API_KEY: z.string().optional(),
   GOOGLE_SERVICE_ACCOUNT_KEY: z.string().optional(),

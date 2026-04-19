@@ -24,6 +24,7 @@ import {
   BRAND_ACTION_STATUS,
   MEETING_SOURCE,
   FEATURE_REQUEST_SYNC_STATUS,
+  TASK_ATTACHMENT_KIND,
 } from '@momentum/shared/enums';
 
 /* ─────────────── enums ─────────────── */
@@ -44,6 +45,7 @@ export const featureRequestSyncStatusEnum = pgEnum(
   'feature_request_sync_status',
   FEATURE_REQUEST_SYNC_STATUS,
 );
+export const taskAttachmentKindEnum = pgEnum('task_attachment_kind', TASK_ATTACHMENT_KIND);
 
 /* ─────────────── users ─────────────── */
 
@@ -127,6 +129,37 @@ export const tasks = pgTable(
     creatorIdx: index('idx_tasks_creator').on(t.creatorId),
     scheduledIdx: index('idx_tasks_assignee_scheduled').on(t.assigneeId, t.scheduledDate),
     statusIdx: index('tasks_status_idx').on(t.assigneeId, t.status),
+  }),
+);
+
+/* ─────────────── task_attachments ─────────────── */
+// Files uploaded inline into a task description's rich-text body. The
+// description HTML references attachments by id (image src or attachment-
+// node data attribute); this table is the canonical record. Cascade on
+// task_id wipes the rows when a task is deleted; the tasks DELETE handler
+// also tells the StorageAdapter to remove the actual blobs (Postgres FK
+// cascade can't reach disk).
+
+export const taskAttachments = pgTable(
+  'task_attachments',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    taskId: uuid('task_id')
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    uploaderId: uuid('uploader_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'restrict' }),
+    kind: taskAttachmentKindEnum('kind').notNull(),
+    originalName: text('original_name').notNull(),
+    mimeType: text('mime_type').notNull(),
+    sizeBytes: integer('size_bytes').notNull(),
+    // Opaque to callers above the StorageAdapter — see services/storage.
+    storageKey: text('storage_key').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    taskIdx: index('task_attachments_task_id_idx').on(t.taskId),
   }),
 );
 

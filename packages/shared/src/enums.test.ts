@@ -10,6 +10,7 @@ import {
   BRAND_ACTION_STATUS,
   MEETING_SOURCE,
   FEATURE_REQUEST_SYNC_STATUS,
+  TASK_ATTACHMENT_KIND,
 } from './enums.ts';
 
 /**
@@ -59,5 +60,9 @@ describe('canonical enum tuples', () => {
 
   it('FEATURE_REQUEST_SYNC_STATUS', () => {
     expect(FEATURE_REQUEST_SYNC_STATUS).toEqual(['synced', 'pending', 'error']);
+  });
+
+  it('TASK_ATTACHMENT_KIND', () => {
+    expect(TASK_ATTACHMENT_KIND).toEqual(['image', 'file']);
   });
 });

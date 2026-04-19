@@ -107,6 +107,7 @@ Weekly Stats is intentionally minimal. Obvious next steps:
 
 ## Platform & infrastructure
 
+- [ ] **GCS / S3 storage adapter for task attachments (next up).** v0.15.0 ships local-disk storage behind a `StorageAdapter` interface (`apps/api/src/services/storage/`). Migration to cloud is a single new adapter file + a `STORAGE_BACKEND` env switch. While we're there, swap the `?token=` query-param expedient on the download route for proper signed URLs (see the TODOs in `local.ts`, `index.ts`, `ImageWithAuth.tsx`, and `AttachmentNode.tsx`).
 - [ ] **Deployment recipe.** Dockerfile for the API, Vercel/Netlify config for the web. Neon or Supabase for Postgres. CI/CD pipeline.
 - [ ] **Seed script** that creates a demo user with realistic tasks so new contributors can explore without typing 20 things.
 - [ ] **Request logging** for production readiness. (Rate limiting shipped in v0.14.1.)

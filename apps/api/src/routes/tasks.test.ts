@@ -704,7 +704,8 @@ describe('tasks routes', () => {
   // ── DELETE /tasks/:id ──────────────────────────────────────────────
 
   it('DELETE /tasks/:id returns 404 when task not found', async () => {
-    mockDb._pushResult([]);
+    mockDb._pushResult([]); // attachment-keys snapshot
+    mockDb._pushResult([]); // task delete returning
 
     const res = await app.inject({
       method: 'DELETE',
@@ -716,6 +717,7 @@ describe('tasks routes', () => {
   });
 
   it('DELETE /tasks/:id returns ok on success', async () => {
+    mockDb._pushResult([]); // attachment-keys snapshot (no attachments)
     mockDb._pushResult([{ id: TASK_ID }]);
 
     const res = await app.inject({

@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import multipart from '@fastify/multipart';
 import rateLimit from '@fastify/rate-limit';
 import {
   serializerCompiler,
@@ -29,6 +30,7 @@ import { inboxRoutes } from './routes/inbox.ts';
 import { dailyLogsRoutes } from './routes/daily-logs.ts';
 import { statsRoutes } from './routes/stats.ts';
 import { dataRoutes } from './routes/data.ts';
+import { taskAttachmentsRoutes } from './routes/task-attachments.ts';
 
 async function main() {
   const app = Fastify({
@@ -59,6 +61,13 @@ async function main() {
     max: 300,
     timeWindow: '1 minute',
   });
+  await app.register(multipart, {
+    // 10 MB per file. The task-attachments route enforces the same cap on
+    // the client; this is the server-side backstop. @fastify/multipart
+    // raises an error with statusCode 413 when the limit trips, which the
+    // error handler propagates verbatim.
+    limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+  });
   await app.register(cors, { origin: env.CORS_ORIGIN, credentials: true });
   await app.register(authPlugin);
 
@@ -69,6 +78,7 @@ async function main() {
   await app.register(settingsRoutes);
   await app.register(rolesRoutes);
   await app.register(tasksRoutes);
+  await app.register(taskAttachmentsRoutes);
   await app.register(parkingsRoutes);
   await app.register(brandImportRoutes);
   await app.register(brandsRoutes);

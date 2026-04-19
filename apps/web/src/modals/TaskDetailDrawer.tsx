@@ -1,8 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Priority, Task } from '@momentum/shared';
-import { useMe, useRoles, useTasks, useTeamTasks, useUpdateTask, useUsers } from '../api/hooks';
+import {
+  useMe,
+  useRoles,
+  useTasks,
+  useTeamTasks,
+  useUpdateTask,
+  useUploadTaskAttachment,
+  useUsers,
+} from '../api/hooks';
 import { Avatar } from '../components/Avatar';
-import { RichDescriptionEditor, isEmptyEditorHtml } from '../components/RichDescriptionEditor';
+import {
+  RichDescriptionEditor,
+  isEmptyEditorHtml,
+  type UploadFileFn,
+} from '../components/RichDescriptionEditor';
 import { useAutosaveForm } from '../hooks/useAutosaveForm';
 import { useUiStore } from '../store/ui';
 import { formatTimeAgo } from '../lib/format';
@@ -62,6 +74,20 @@ export function TaskDetailDrawer() {
   const usersQ = useUsers();
   const rolesQ = useRoles();
   const updateTask = useUpdateTask();
+  const uploadAttachment = useUploadTaskAttachment(task?.id ?? '');
+  const pushToast = useUiStore((s) => s.pushToast);
+
+  const handleUploadFile: UploadFileFn = async (file) => {
+    if (!task) throw new Error('No task selected');
+    const att = await uploadAttachment.mutateAsync(file);
+    return {
+      id: att.id,
+      name: att.originalName,
+      mimeType: att.mimeType,
+      size: att.sizeBytes,
+      url: att.url,
+    };
+  };
 
   const initial = useMemo<DraftValues>(
     () => ({
@@ -202,6 +228,10 @@ export function TaskDetailDrawer() {
                   value={values.description}
                   onChange={(v) => setField('description', v)}
                   onSlashMenuOpenChange={setSlashMenuOpen}
+                  onUploadFile={handleUploadFile}
+                  onUploadError={(message) =>
+                    pushToast({ kind: 'error', message, durationMs: 4000 })
+                  }
                 />
               </div>
             </div>

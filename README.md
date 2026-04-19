@@ -13,7 +13,7 @@ The product is organized around a few load-bearing ideas:
 
 ### What's in it today
 
-- **Tasks** — Today / Backlog / Done with roles, priorities, estimates, and daily rituals. Every task has a creator and an assignee; filter by **Mine / Everyone / Unassigned**, reassign with `A`, or inline-assign with `@alice` in the quick-add bar.
+- **Tasks** — Today / Backlog / Done with roles, priorities, estimates, and daily rituals. Every task has a creator and an assignee; filter by **Mine / Everyone / Unassigned**, reassign with `A`, or inline-assign with `@alice` in the quick-add bar. Task descriptions support inline images and file attachments (slash commands `/image` and `/attachment`, drag-drop, paste-to-upload).
 - **Parkings** — capture topics for the next daily standup. Team-visible by default; flip to private with `v`, or tag teammates into a parking with `I` to put it in their Inbox.
 - **Brands** — full client/relationship management across the team: North Star (goals + stakeholders), Pulse (health, open action items), Archive (meeting notes + auto-extracted action items), bidirectional sync to Today, AI-assisted import, and a Recent Activity feed per brand.
 - **Meeting recording sync** — pull recordings from tldv per brand, score candidates against stakeholder emails and matching rules, and auto-extract summaries / action items / decisions. Attendees that match teammate emails are auto-linked.
@@ -88,11 +88,12 @@ Open `.env` and set `JWT_SECRET` to a long random string. The defaults for `DATA
 
 The following variables are optional — the app runs fine without them, but the associated features are gated:
 
-| Variable                     | Enables                                                                                                                                                        |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `OPENAI_API_KEY`             | AI brand import from `.md` / `.txt` notes, meeting summary / action-item extraction during recording sync, LLM-based action-item deduplication                 |
-| `TLDV_API_KEY`               | "Sync Recordings" on a brand — pulls recordings from tldv and processes transcripts                                                                            |
-| `GOOGLE_SERVICE_ACCOUNT_KEY` | Feature Requests two-way sync with Google Sheets. Paste the full JSON key as a single-line string, and share the target sheet with the service account's email |
+| Variable                     | Enables                                                                                                                                                                                     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `UPLOAD_DIR`                 | Where the local-disk storage adapter writes task attachments. Defaults to `apps/api/.uploads`. Will be replaced by `STORAGE_BACKEND=gcs\|s3` once cloud storage lands (see `docs/TODO.md`). |
+| `OPENAI_API_KEY`             | AI brand import from `.md` / `.txt` notes, meeting summary / action-item extraction during recording sync, LLM-based action-item deduplication                                              |
+| `TLDV_API_KEY`               | "Sync Recordings" on a brand — pulls recordings from tldv and processes transcripts                                                                                                         |
+| `GOOGLE_SERVICE_ACCOUNT_KEY` | Feature Requests two-way sync with Google Sheets. Paste the full JSON key as a single-line string, and share the target sheet with the service account's email                              |
 
 ### 4. Start the database
 

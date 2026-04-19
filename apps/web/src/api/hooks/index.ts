@@ -22,3 +22,4 @@ export * from './brand-feature-requests';
 export * from './brand-sync';
 export * from './inbox';
 export * from './data';
+export * from './task-attachments';

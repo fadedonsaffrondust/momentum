@@ -10,6 +10,7 @@ import {
   BRAND_ACTION_STATUS,
   MEETING_SOURCE,
   FEATURE_REQUEST_SYNC_STATUS,
+  TASK_ATTACHMENT_KIND,
 } from './enums.ts';
 
 /* ─────────────── primitives ─────────────── */
@@ -88,6 +89,27 @@ export const updateTaskInputSchema = createTaskInputSchema
   })
   .strict();
 export type UpdateTaskInput = z.infer<typeof updateTaskInputSchema>;
+
+/* ─────────────── task attachments ─────────────── */
+
+export const taskAttachmentKindSchema = z.enum(TASK_ATTACHMENT_KIND);
+export type TaskAttachmentKind = z.infer<typeof taskAttachmentKindSchema>;
+
+export const taskAttachmentSchema = z.object({
+  id: z.string().uuid(),
+  taskId: z.string().uuid(),
+  uploaderId: z.string().uuid(),
+  kind: taskAttachmentKindSchema,
+  originalName: z.string(),
+  mimeType: z.string(),
+  sizeBytes: z.number().int().nonnegative(),
+  /** Relative URL the client uses to render / download. v1 returns
+   *  `/attachments/<id>/download`; the web layer appends `?token=<jwt>` so
+   *  `<img>` requests authenticate (signed URLs replace this in v2). */
+  url: z.string(),
+  createdAt: z.string().datetime(),
+});
+export type TaskAttachment = z.infer<typeof taskAttachmentSchema>;
 
 /* ─────────────── settings ─────────────── */
 

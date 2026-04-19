@@ -25,6 +25,32 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.15.0',
+    date: '2026-04-19',
+    headline: 'Images and file attachments in task descriptions',
+    summary:
+      'Task descriptions can now hold images and file attachments. Drop a screenshot onto the description, paste one from the clipboard (Cmd+V), or use the new /image and /attachment slash commands to pick a file from disk. Images render inline at the description width; non-image files render as a single-row card with a download button. Files are stored locally for v1 (cloud storage is the next ticket); 10 MB per file.',
+    items: [
+      {
+        title: '/image and /attachment slash commands',
+        description:
+          'Type "/" inside a task description and pick "Image" or "Attachment" — a small picker pops up and the OS file dialog opens immediately. Image picks render inline at editor width; everything else shows up as a downloadable file row.',
+        shortcuts: ['/'],
+      },
+      {
+        title: 'Drag-and-drop and paste-to-upload',
+        description:
+          'Drag any file from Finder onto a description, or paste a clipboard screenshot with Cmd+V. The file uploads in the background and the right node (image or attachment row) lands at the cursor when ready. Files larger than 10 MB are rejected with a toast.',
+        shortcuts: ['Cmd', 'V'],
+      },
+      {
+        title: 'Download anywhere',
+        description:
+          'Every uploaded file shows a download icon in its node — image hovers and attachment rows alike. Clicking opens the original file in a new tab.',
+      },
+    ],
+  },
+  {
     version: '0.14.4',
     date: '2026-04-19',
     headline: 'Today board kanban columns: equal widths, intentional empty states',

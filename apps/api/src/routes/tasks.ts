@@ -11,11 +11,12 @@ import {
   type UserSummary,
   type Task,
 } from '@momentum/shared';
-import { tasks, brandActionItems, users } from '@momentum/db';
+import { tasks, taskAttachments, brandActionItems, users } from '@momentum/db';
 import { db } from '../db.ts';
 import { mapTask, mapUserSummary } from '../mappers.ts';
 import { badRequest, notFound } from '../errors.ts';
 import { recordInboxEvent } from '../services/events.ts';
+import { storage } from '../services/storage/index.ts';
 
 const MAX_IN_PROGRESS = 2;
 
@@ -262,11 +263,26 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => {
+      // Snapshot any attachment storage keys BEFORE the task delete so we
+      // can clean up the on-disk blobs. The DB rows themselves are wiped
+      // by the FK cascade on task_attachments.task_id; Postgres can't
+      // reach the disk, so the actual files would orphan otherwise.
+      const attachmentKeys = await db
+        .select({ storageKey: taskAttachments.storageKey })
+        .from(taskAttachments)
+        .where(eq(taskAttachments.taskId, req.params.id));
+
       const [row] = await db
         .delete(tasks)
         .where(eq(tasks.id, req.params.id))
         .returning({ id: tasks.id });
       if (!row) throw notFound('Task not found');
+
+      // Fire-and-forget — disk failure shouldn't unwind the DB delete.
+      for (const { storageKey } of attachmentKeys) {
+        void storage.delete(storageKey).catch(() => undefined);
+      }
+
       return { ok: true as const };
     },
   );

@@ -38,5 +38,10 @@ drizzle/meta/_journal.json.bak
 # Docker volumes
 pgdata/
 
+# Local task-attachment uploads (LocalDiskStorage adapter; v1 only — moves
+# to a cloud bucket once the storage adapter swap lands).
+.uploads/
+apps/api/.uploads/
+
 # Local DB snapshots from the team-space migration runbook
 .migrations/

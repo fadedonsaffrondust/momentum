@@ -28,14 +28,17 @@ export async function apiFetch<T>(path: string, opts: RequestOptions = {}): Prom
     }
   }
 
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
   const headers: Record<string, string> = {};
-  if (body !== undefined) headers['content-type'] = 'application/json';
+  // Don't set content-type for FormData — the browser sets it with the
+  // boundary parameter the multipart parser needs.
+  if (body !== undefined && !isFormData) headers['content-type'] = 'application/json';
   if (token) headers.authorization = `Bearer ${token}`;
 
   const res = await fetch(url, {
     method,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body === undefined ? undefined : isFormData ? (body as FormData) : JSON.stringify(body),
   });
 
   if (!res.ok) {
