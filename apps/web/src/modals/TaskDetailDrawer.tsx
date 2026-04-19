@@ -1,11 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { UpdateTaskInput } from '@momentum/shared';
 import { X } from 'lucide-react';
 import type { Priority, Task } from '@momentum/shared';
 import { useMe, useRoles, useTasks, useTeamTasks, useUpdateTask, useUsers } from '../api/hooks';
 import { Avatar } from '../components/Avatar';
 import { PropertyPicker, type PropertyPickerItem } from '../components/PropertyPicker';
+import {
+  RichDescriptionEditor,
+  isEmptyEditorHtml,
+} from '../components/RichDescriptionEditor';
 import { useUiStore } from '../store/ui';
-import { useSmartTextarea } from '../hooks/useSmartTextarea';
 import { todayIso } from '../lib/date';
 import { formatMinutes, formatTimeAgo } from '../lib/format';
 
@@ -41,6 +45,7 @@ export function TaskDetailDrawer() {
   const closeDrawer = useUiStore((s) => s.closeDrawer);
   const taskId = useUiStore((s) => s.selectedTaskId);
   const assigneePickerOpen = useUiStore((s) => s.assigneePickerTarget !== null);
+  const [slashMenuOpen, setSlashMenuOpen] = useState(false);
 
   const teamTasksQ = useTeamTasks();
   const tasksQ = useTasks();
@@ -69,6 +74,10 @@ export function TaskDetailDrawer() {
   const [roleId, setRoleId] = useState<string | null>(task?.roleId ?? null);
   const [assigneeId, setAssigneeId] = useState<string>(task?.assigneeId ?? '');
 
+  // Sync staged state from the task ONLY when the target task changes.
+  // Depending on `task` itself would re-fire on every refetch (autosave
+  // causes invalidation) and clobber in-flight edits typed during the
+  // save round-trip.
   useEffect(() => {
     if (!task) return;
     setTitle(task.title);
@@ -78,15 +87,8 @@ export function TaskDetailDrawer() {
     setScheduledDate(task.scheduledDate);
     setRoleId(task.roleId);
     setAssigneeId(task.assigneeId);
-  }, [task?.id, task]);
-
-  // Smart editing helpers for the description textarea: `/todo ` → `- [ ]`,
-  // list continuation on `- ` / `1. `, Tab / Shift+Tab indent. Shared with
-  // `MeetingNoteModal`.
-  const smartDescription = useSmartTextarea({
-    value: description,
-    onChange: setDescription,
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task?.id]);
 
   // Escape closes the drawer. Uses capture-phase + stopPropagation so the
   // assignee picker (or any inner modal) gets Escape first when it's open.
@@ -94,15 +96,17 @@ export function TaskDetailDrawer() {
     if (!drawerOpen) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
-      // Let inner modals (assignee / involved picker) claim Escape first.
-      if (assigneePickerOpen) return;
+      // Let inner modals (assignee / involved picker) and the slash
+      // command menu claim Escape before the drawer does.
+      if (assigneePickerOpen || slashMenuOpen) return;
       e.preventDefault();
       e.stopPropagation();
+      flushPendingSave();
       closeDrawer();
     };
     window.addEventListener('keydown', handler, true);
     return () => window.removeEventListener('keydown', handler, true);
-  }, [drawerOpen, assigneePickerOpen, closeDrawer]);
+  }, [drawerOpen, assigneePickerOpen, slashMenuOpen, closeDrawer]);
 
   const roles = rolesQ.data ?? [];
   const users = usersQ.data ?? [];
@@ -145,27 +149,64 @@ export function TaskDetailDrawer() {
     [users, meQ.data?.id],
   );
 
-  const dirty = useMemo(() => {
-    if (!task) return false;
-    return (
-      title.trim() !== task.title ||
-      description !== (task.description ?? '') ||
-      priority !== task.priority ||
-      estimate !== task.estimateMinutes ||
-      scheduledDate !== task.scheduledDate ||
-      roleId !== task.roleId ||
-      assigneeId !== task.assigneeId
-    );
-  }, [task, title, description, priority, estimate, scheduledDate, roleId, assigneeId]);
+  // ─── Autosave ────────────────────────────────────────────────────
+  // Every edit schedules a debounced save. A refs-based "pending payload"
+  // lets us flush cleanly when the user navigates to another task (so the
+  // outgoing task's edits don't get silently dropped) or when the drawer
+  // unmounts.
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingSaveRef = useRef<
+    | { taskId: string; payload: Omit<UpdateTaskInput, 'id'> }
+    | null
+  >(null);
+  // Latest mutate fn in a ref so cleanup callbacks always see it without
+  // needing react-query's object in their deps.
+  const mutateRef = useRef(updateTask.mutate);
+  mutateRef.current = updateTask.mutate;
 
-  const save = useCallback(() => {
+  const flushPendingSave = () => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+    const pending = pendingSaveRef.current;
+    if (pending) {
+      mutateRef.current({ id: pending.taskId, ...pending.payload });
+      pendingSaveRef.current = null;
+    }
+  };
+
+  useEffect(() => {
     if (!task) return;
     const trimmed = title.trim();
+    // Don't autosave an empty title — that would clobber the stored title.
     if (!trimmed) return;
-    const nextDescription = description.trim() || null;
-    updateTask.mutate(
-      {
-        id: task.id,
+
+    const nextDescription = isEmptyEditorHtml(description) ? null : description;
+
+    const unchanged =
+      trimmed === task.title &&
+      (nextDescription ?? null) === (task.description ?? null) &&
+      priority === task.priority &&
+      estimate === task.estimateMinutes &&
+      scheduledDate === task.scheduledDate &&
+      roleId === task.roleId &&
+      assigneeId === task.assigneeId;
+    if (unchanged) {
+      // State matches the task — cancel any pending save that was
+      // scheduled for a now-stale value (e.g., user typed then undid,
+      // or the task just switched and state hasn't diverged from server).
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+      pendingSaveRef.current = null;
+      return;
+    }
+
+    pendingSaveRef.current = {
+      taskId: task.id,
+      payload: {
         title: trimmed,
         description: nextDescription,
         priority,
@@ -174,9 +215,34 @@ export function TaskDetailDrawer() {
         roleId,
         assigneeId,
       },
-      { onSuccess: () => closeDrawer() },
-    );
-  }, [task, title, description, priority, estimate, scheduledDate, roleId, assigneeId, updateTask, closeDrawer]);
+    };
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      const pending = pendingSaveRef.current;
+      if (pending) {
+        mutateRef.current({ id: pending.taskId, ...pending.payload });
+        pendingSaveRef.current = null;
+      }
+      saveTimerRef.current = null;
+    }, 500);
+    // `task` is intentionally NOT a dep: depending on it causes the
+    // autosave to fire on task-switch with state values that belong to
+    // the previous task (since setState from the task-sync effect hasn't
+    // committed yet), resulting in stale writes. State-value deps alone
+    // ensure the effect only runs after the state has actually caught up.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, description, priority, estimate, scheduledDate, roleId, assigneeId]);
+
+  // When the drawer target changes (j/k-navigation) or unmounts, flush any
+  // pending autosave for the outgoing task. Cleanup sees the previous
+  // render's refs, which still hold the outgoing task's payload.
+  useEffect(() => {
+    return () => {
+      flushPendingSave();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task?.id]);
 
   return (
     <aside
@@ -198,7 +264,10 @@ export function TaskDetailDrawer() {
             </div>
             <button
               type="button"
-              onClick={closeDrawer}
+              onClick={() => {
+                flushPendingSave();
+                closeDrawer();
+              }}
               aria-label="Close"
               className="text-muted-foreground hover:text-foreground transition-colors duration-150"
             >
@@ -362,18 +431,16 @@ export function TaskDetailDrawer() {
                   Description
                 </span>
                 <span className="text-2xs text-muted-foreground/70">
-                  <code>/todo</code> for a checkbox · <code>-</code> or <code>1.</code> for lists ·{' '}
-                  <code>Tab</code> to indent
+                  Type <code>/</code> for formatting options
                 </span>
               </div>
-              <textarea
-                value={description}
-                onChange={smartDescription.onChange}
-                onKeyDown={smartDescription.onKeyDown}
-                rows={6}
-                placeholder="Definition of done, context, links, notes…"
-                className="w-full bg-transparent border border-border/60 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary resize-y font-mono placeholder:text-muted-foreground/70"
-              />
+              <div className="rounded-md border border-border/60 px-3 py-2 focus-within:border-primary transition-colors duration-150">
+                <RichDescriptionEditor
+                  value={description}
+                  onChange={setDescription}
+                  onSlashMenuOpenChange={setSlashMenuOpen}
+                />
+              </div>
             </div>
 
             {/* Meta row (read-only) */}
@@ -402,25 +469,18 @@ export function TaskDetailDrawer() {
 
           <footer className="px-5 py-3 border-t border-border/60 flex items-center justify-between shrink-0">
             <div className="text-[10px] text-muted-foreground/70">
-              Esc to close · j / k still navigate
+              {updateTask.isPending ? 'Saving…' : 'Saved'} · Esc to close · j / k still navigate
             </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={closeDrawer}
-                className="px-3 py-1.5 rounded-md border border-border hover:bg-secondary text-sm transition-colors duration-150"
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                onClick={save}
-                disabled={!dirty || updateTask.isPending}
-                className="px-3 py-1.5 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground text-sm transition-colors duration-150 disabled:opacity-50"
-              >
-                {updateTask.isPending ? 'Saving…' : 'Save'}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                flushPendingSave();
+                closeDrawer();
+              }}
+              className="px-3 py-1.5 rounded-md border border-border hover:bg-secondary text-sm transition-colors duration-150"
+            >
+              Close
+            </button>
           </footer>
         </>
       ) : drawerOpen ? (

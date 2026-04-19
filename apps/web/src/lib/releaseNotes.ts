@@ -25,6 +25,83 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.13.3',
+    date: '2026-04-18',
+    headline: 'Today board reshapes smoothly when the drawer opens',
+    summary:
+      'Opening a task used to pop the Today board: the Done column disappeared instantly, the grid snapped from 3 to 2 columns, and the remaining cards visibly flashed wider before the drawer finished sliding in. The reshape now animates as a single 150ms motion — Done fades and collapses, the other two columns glide to their new widths, and the cards inside resize in lockstep with the drawer.',
+    items: [
+      {
+        title: 'One smooth motion for the drawer + board reshape',
+        description:
+          'The Done column, the remaining two columns\' widths, the cards inside, and the drawer all animate in 150ms ease-out so opening / closing the drawer feels like one gesture instead of three competing ones.',
+      },
+    ],
+  },
+  {
+    version: '0.13.2',
+    date: '2026-04-18',
+    headline: 'Snappier kanban drag-and-drop',
+    summary:
+      'The Today kanban drag felt off — cards bounced on drop, the dragged card looked ghost-like, and the drop target was easy to miss. All fixed: a crisp 150ms fade on drop (no bouncy spring), a subtle lift (scale + tilt + shadow) on the card under the cursor, a bolder drop-zone highlight, and smooth reflow when a card leaves a column.',
+    items: [
+      {
+        title: 'Crisper drop animation',
+        description:
+          'The default spring overshoot is gone. When you drop a card, the floating clone fades out in 150ms while the card lands in its new column — no bounce, no lag.',
+      },
+      {
+        title: 'Lifted card while dragging',
+        description:
+          'The card following the cursor now scales slightly, tilts 1.5°, and gets a heavier shadow with a subtle primary-color ring. Clear "I\'ve picked this up" affordance.',
+      },
+      {
+        title: 'Stronger drop-zone highlight and smooth reflow',
+        description:
+          'Hovering a column while dragging shows a full-color primary border with a tinted background and inset ring. When a card leaves a column, the remaining cards slide into place with a short 150ms ease-out layout animation instead of popping.',
+      },
+    ],
+  },
+  {
+    version: '0.13.1',
+    date: '2026-04-18',
+    headline: 'Task detail drawer autosaves',
+    summary:
+      'The Save button is gone. Every field in the task detail drawer — title, description, priority, role, estimate, scheduled date, assignee — now saves itself about half a second after you stop editing. Navigate to another task with j/k and the previous task\'s pending changes flush immediately, so nothing gets lost when you switch focus mid-edit.',
+    items: [
+      {
+        title: 'Autosave on every edit',
+        description:
+          'Edits are debounced by 500ms and written back to the task. The footer shows a subtle "Saving…" while a save is in flight and "Saved" otherwise — no more hunting for a Save button.',
+      },
+      {
+        title: 'Flush on navigate and close',
+        description:
+          'Pressing j/k to move to another task, clicking Close, hitting Escape, or pressing the X in the drawer header all flush any in-progress save immediately. Switching tasks mid-sentence no longer loses the half-typed text.',
+      },
+    ],
+  },
+  {
+    version: '0.13.0',
+    date: '2026-04-18',
+    headline: 'Notion-style slash commands in task descriptions',
+    summary:
+      'The task Description is now a rich-text editor. Type `/` anywhere and an inline menu appears with Heading 1, Heading 2, and Todo. Pick one and the current line becomes a real heading (visibly larger) or a real checkbox you can click to complete — not just a markdown prefix. Existing plain-text descriptions load as regular paragraphs, no migration needed.',
+    items: [
+      {
+        title: 'Slash menu: /h1, /h2, /todo',
+        description:
+          'Type `/` to open the menu, then type to filter (`h` narrows to headings, `t` jumps to Todo), arrow keys to navigate, Enter to apply. Esc closes the menu without closing the drawer.',
+        shortcuts: ['/'],
+      },
+      {
+        title: 'Real headings and checkboxes',
+        description:
+          'Heading 1 and Heading 2 render at their actual sizes. Todo items are native checkboxes — click to check; checked items go muted and strike-through. Save persists the full formatted content back to the task.',
+      },
+    ],
+  },
+  {
     version: '0.12.0',
     date: '2026-04-18',
     headline: 'Team view is now a column-per-teammate board',

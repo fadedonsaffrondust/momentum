@@ -1,13 +1,16 @@
 import { useMemo, useRef, useState } from 'react';
 import { Plus, UserSquare } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  defaultDropAnimationSideEffects,
   useSensor,
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
+  type DropAnimation,
 } from '@dnd-kit/core';
 import type { Task, TaskColumn } from '@momentum/shared';
 import {
@@ -79,12 +82,30 @@ export function TodayPage() {
   const pauseTask = usePauseTask();
   const reopenTask = useReopenTask();
 
+  // Fade the overlay out on drop instead of letting dnd-kit animate it
+  // back toward the source with a bouncy spring (the default). Matches
+  // the app-wide ≤150ms / no-overshoot motion rule.
+  const dropAnimation: DropAnimation = {
+    duration: 150,
+    easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+    sideEffects: defaultDropAnimationSideEffects({
+      styles: { active: { opacity: '0' } },
+    }),
+  };
+
+  const setBodyDragging = (dragging: boolean) => {
+    if (typeof document === 'undefined') return;
+    document.body.classList.toggle('dnd-dragging', dragging);
+  };
+
   const handleDragStart = (e: DragStartEvent) => {
     setActiveId(String(e.active.id));
+    setBodyDragging(true);
   };
 
   const handleDragEnd = (e: DragEndEvent) => {
     setActiveId(null);
+    setBodyDragging(false);
     if (!e.over) return;
     const task = tasks.find((t) => t.id === String(e.active.id));
     if (!task) return;
@@ -177,50 +198,73 @@ export function TodayPage() {
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        onDragCancel={() => setActiveId(null)}
+        onDragCancel={() => {
+          setActiveId(null);
+          setBodyDragging(false);
+        }}
       >
-        <div
-          className={[
-            'flex-1 min-h-0 grid gap-4 grid-cols-1',
-            // With the detail drawer open, only render Up Next + In
-            // Progress in a 2-col layout; Done is hidden to give the
-            // active columns more room. Closed: the normal 3-col layout.
-            drawerOpen
-              ? 'md:grid-cols-1 lg:grid-cols-2'
-              : 'md:grid-cols-2 lg:grid-cols-3',
-          ].join(' ')}
-        >
-          <KanbanColumn
-            column="up_next"
-            title="Up Next"
-            tasks={columns.up_next}
-            roles={roles}
-            dnd
-          />
-          <KanbanColumn
-            column="in_progress"
-            title="In Progress"
-            tasks={columns.in_progress}
-            roles={roles}
-            dnd
-          />
-          {!drawerOpen && (
+        <div className="flex-1 min-h-0 flex flex-col md:flex-row gap-4">
+          {/* Each column slot is a motion.div with `layout` so when the
+              drawer opens and Done collapses (via AnimatePresence below),
+              the remaining two columns glide to their new widths in sync
+              with the padding transition on main — no pop. */}
+          <motion.div
+            layout
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            className="flex-1 min-w-0 flex"
+          >
             <KanbanColumn
-              column="done"
-              title="Done"
-              tasks={columns.done}
+              column="up_next"
+              title="Up Next"
+              tasks={columns.up_next}
               roles={roles}
               dnd
             />
-          )}
+          </motion.div>
+          <motion.div
+            layout
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            className="flex-1 min-w-0 flex"
+          >
+            <KanbanColumn
+              column="in_progress"
+              title="In Progress"
+              tasks={columns.in_progress}
+              roles={roles}
+              dnd
+            />
+          </motion.div>
+          <AnimatePresence initial={false}>
+            {!drawerOpen && (
+              <motion.div
+                key="done-col"
+                layout
+                initial={{ opacity: 0, flexGrow: 0 }}
+                animate={{ opacity: 1, flexGrow: 1 }}
+                exit={{ opacity: 0, flexGrow: 0 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                style={{ flexBasis: 0 }}
+                className="min-w-0 flex overflow-hidden"
+              >
+                <KanbanColumn
+                  column="done"
+                  title="Done"
+                  tasks={columns.done}
+                  roles={roles}
+                  dnd
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-        <DragOverlay>
+        <DragOverlay dropAnimation={dropAnimation}>
           {activeTask ? (
             <TaskCard
               task={activeTask}
               role={activeTask.roleId ? rolesById.get(activeTask.roleId) : undefined}
               selected={false}
               onSelect={() => undefined}
+              isOverlay
             />
           ) : null}
         </DragOverlay>

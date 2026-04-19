@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { useCallback, useEffect, useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
+import { motion } from 'framer-motion';
 import type { Task, Role, UserSummary } from '@momentum/shared';
 import { formatMinutes, formatTimeAgo } from '../lib/format';
 import { useMe, useUsers } from '../api/hooks';
@@ -19,6 +20,14 @@ interface Props {
    * so the stage needs to be called out on the card itself.
    */
   showStatus?: boolean;
+  /**
+   * Rendered inside dnd-kit's `<DragOverlay>` (the card that follows the
+   * cursor). Adds a subtle lift — scale + rotate + stronger shadow — so
+   * the user gets a clear "picked up" affordance. Layout animation is
+   * intentionally suppressed here because the overlay is a fixed-position
+   * clone controlled by dnd-kit.
+   */
+  isOverlay?: boolean;
 }
 
 const priorityColor: Record<Task['priority'], string> = {
@@ -49,6 +58,7 @@ export function TaskCard({
   onSelect,
   draggable = false,
   showStatus = false,
+  isOverlay = false,
 }: Props) {
   const statusStyle = STATUS_STYLE[task.status];
   const meQ = useMe();
@@ -79,20 +89,33 @@ export function TaskCard({
   );
 
   return (
-    <div
+    <motion.div
       ref={setRefs}
       {...(draggable ? drag.attributes : {})}
       {...(draggable ? drag.listeners : {})}
       role="button"
       tabIndex={-1}
       onClick={onSelect}
+      // Animate layout (position changes when siblings enter/leave the
+      // column) unless this card IS the drag overlay clone, where Framer
+      // would fight dnd-kit over the transform.
+      {...(isOverlay
+        ? {}
+        : { layout: true, transition: { duration: 0.15, ease: 'easeOut' } })}
       style={{ borderLeftColor: priorityColor[task.priority] }}
       className={clsx(
-        'group rounded-lg border-l-4 border border-border bg-card/60 p-3 cursor-pointer transition',
+        'group rounded-lg border-l-4 border border-border bg-card/60 p-3 cursor-pointer',
+        'transition-[opacity,box-shadow,border-color] duration-150 ease-out',
         'hover:border-border',
-        selected && 'ring-2 ring-primary/80 border-border',
+        selected && !isOverlay && 'ring-2 ring-primary/80 border-border',
         task.status === 'done' && 'opacity-60',
-        draggable && drag.isDragging && 'opacity-30',
+        // Source card while dragging: slot is preserved (still occupies
+        // space in the list) but visually empty so the overlay is the
+        // only version the eye tracks.
+        draggable && drag.isDragging && !isOverlay && 'opacity-0',
+        // The overlay clone gets a subtle lift.
+        isOverlay &&
+          'scale-[1.02] -rotate-[1.5deg] shadow-2xl ring-1 ring-primary/20 cursor-grabbing',
       )}
     >
       <div className="flex items-start gap-2">
@@ -138,6 +161,6 @@ export function TaskCard({
         )}
         <span className="ml-auto text-muted-foreground/70">{formatTimeAgo(task.createdAt)}</span>
       </div>
-    </div>
+    </motion.div>
   );
 }

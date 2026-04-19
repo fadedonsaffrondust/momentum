@@ -39,9 +39,9 @@ export function KanbanColumn({
     <section
       ref={dnd ? drop.setNodeRef : undefined}
       className={clsx(
-        'flex flex-col rounded-xl border transition-colors h-full min-h-0',
+        'flex flex-col rounded-xl border transition-colors duration-150 h-full min-h-0',
         isFocused ? 'border-border bg-background/85' : 'border-border/60 bg-background/60',
-        dnd && drop.isOver && 'border-primary/80 bg-primary/5',
+        dnd && drop.isOver && 'border-primary bg-primary/10 ring-1 ring-inset ring-primary/20',
       )}
     >
       <header className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
