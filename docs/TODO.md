@@ -109,7 +109,7 @@ Weekly Stats is intentionally minimal. Obvious next steps:
 
 - [ ] **Deployment recipe.** Dockerfile for the API, Vercel/Netlify config for the web. Neon or Supabase for Postgres. CI/CD pipeline.
 - [ ] **Seed script** that creates a demo user with realistic tasks so new contributors can explore without typing 20 things.
-- [ ] **API rate limiting + request logging** for production readiness.
+- [ ] **Request logging** for production readiness. (Rate limiting shipped in v0.14.1.)
 - [ ] **Password reset flow** (currently no way to recover a lost password).
 - [ ] **Multi-device auth** — refresh tokens instead of 7-day JWTs.
 - [ ] **E2E tests** with Playwright covering the golden path (register → first-run → create task → start → complete → review).

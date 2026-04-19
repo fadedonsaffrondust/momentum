@@ -1,5 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
 import {
   serializerCompiler,
   validatorCompiler,
@@ -43,6 +45,20 @@ async function main() {
   app.setSerializerCompiler(serializerCompiler);
 
   await app.register(errorHandlerPlugin);
+  await app.register(helmet, {
+    // SPA serves its own CSP via Vite; CSP at the API level would block
+    // legitimate cross-origin XHR responses without adding meaningful
+    // protection (the API only returns JSON, never HTML).
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: 'same-site' },
+  });
+  await app.register(rateLimit, {
+    // Generous default keyed by IP; per-route configs tighten it for the
+    // expensive endpoints (auth, export). 429 default response shape ships
+    // with `Retry-After` — clients see a transient error toast.
+    max: 300,
+    timeWindow: '1 minute',
+  });
   await app.register(cors, { origin: env.CORS_ORIGIN, credentials: true });
   await app.register(authPlugin);
 

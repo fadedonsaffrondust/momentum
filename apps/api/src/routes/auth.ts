@@ -30,6 +30,10 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/auth/register',
     {
+      // Tight rate limit: bcrypt(10) is intentionally CPU-expensive, so
+      // even a small burst of registrations is enough to exhaust a worker.
+      // Keyed by IP since unauthenticated.
+      config: { rateLimit: { max: 5, timeWindow: '15 minutes' } },
       schema: {
         body: registerInputSchema,
         response: { 200: authResponseSchema },
@@ -52,30 +56,37 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       const passwordHash = await bcrypt.hash(password, 10);
       const avatarColor = avatarColorForEmail(email);
 
-      const [user] = await db
-        .insert(users)
-        .values({
-          email,
-          passwordHash,
-          avatarColor,
-          // display_name intentionally left as '' (the default) — the
-          // first-run wizard fills it via PATCH /users/me.
-        })
-        .returning({
-          id: users.id,
-          email: users.email,
-          displayName: users.displayName,
-          avatarColor: users.avatarColor,
-        });
+      // user + user_settings are written in a single transaction so a
+      // failed settings insert can't leave an orphaned user row that
+      // blocks future re-registration with the same email.
+      const user = await db.transaction(async (tx) => {
+        const [created] = await tx
+          .insert(users)
+          .values({
+            email,
+            passwordHash,
+            avatarColor,
+            // display_name intentionally left as '' (the default) — the
+            // first-run wizard fills it via PATCH /users/me.
+          })
+          .returning({
+            id: users.id,
+            email: users.email,
+            displayName: users.displayName,
+            avatarColor: users.avatarColor,
+          });
 
-      if (!user) throw new Error('Failed to create user');
+        if (!created) throw new Error('Failed to create user');
 
-      // user_settings.user_name is NOT NULL; seed it from the register body
-      // or fall back to the email local-part. The value is no longer used
-      // by the UI after team-space, but the column stays for v1.4 import
-      // backward-compat (see spec §7.1 settings route).
-      const seededUserName = userName ?? email.split('@')[0]!;
-      await db.insert(userSettings).values({ userId: user.id, userName: seededUserName });
+        // user_settings.user_name is NOT NULL; seed it from the register body
+        // or fall back to the email local-part. The value is no longer used
+        // by the UI after team-space, but the column stays for v1.4 import
+        // backward-compat (see spec §7.1 settings route).
+        const seededUserName = userName ?? email.split('@')[0]!;
+        await tx.insert(userSettings).values({ userId: created.id, userName: seededUserName });
+
+        return created;
+      });
 
       const token = await app.jwt.sign({ sub: user.id });
       return {
@@ -93,6 +104,8 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/auth/login',
     {
+      // Same tight rate limit as register — bcrypt.compare is the cost.
+      config: { rateLimit: { max: 5, timeWindow: '15 minutes' } },
       schema: {
         body: loginInputSchema,
         response: { 200: authResponseSchema },

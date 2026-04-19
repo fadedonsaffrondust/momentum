@@ -1,17 +1,29 @@
 import { z } from 'zod';
+import {
+  PRIORITY,
+  TASK_STATUS,
+  TASK_COLUMN,
+  THEME,
+  PARKING_STATUS,
+  PARKING_VISIBILITY,
+  BRAND_STATUS,
+  BRAND_ACTION_STATUS,
+  MEETING_SOURCE,
+  FEATURE_REQUEST_SYNC_STATUS,
+} from './enums.ts';
 
 /* ─────────────── primitives ─────────────── */
 
-export const prioritySchema = z.enum(['high', 'medium', 'low']);
+export const prioritySchema = z.enum(PRIORITY);
 export type Priority = z.infer<typeof prioritySchema>;
 
-export const taskStatusSchema = z.enum(['todo', 'in_progress', 'done']);
+export const taskStatusSchema = z.enum(TASK_STATUS);
 export type TaskStatus = z.infer<typeof taskStatusSchema>;
 
-export const taskColumnSchema = z.enum(['up_next', 'in_progress', 'done']);
+export const taskColumnSchema = z.enum(TASK_COLUMN);
 export type TaskColumn = z.infer<typeof taskColumnSchema>;
 
-export const themeSchema = z.enum(['dark', 'light']);
+export const themeSchema = z.enum(THEME);
 export type Theme = z.infer<typeof themeSchema>;
 
 /** ISO date string (YYYY-MM-DD). */
@@ -123,10 +135,10 @@ export type UpsertDailyLogInput = z.infer<typeof upsertDailyLogInputSchema>;
 
 /* ─────────────── parkings ─────────────── */
 
-export const parkingStatusSchema = z.enum(['open', 'discussed', 'archived']);
+export const parkingStatusSchema = z.enum(PARKING_STATUS);
 export type ParkingStatus = z.infer<typeof parkingStatusSchema>;
 
-export const parkingVisibilitySchema = z.enum(['team', 'private']);
+export const parkingVisibilitySchema = z.enum(PARKING_VISIBILITY);
 export type ParkingVisibility = z.infer<typeof parkingVisibilitySchema>;
 
 export const parkingSchema = z.object({
@@ -235,10 +247,10 @@ export type AuthResponse = z.infer<typeof authResponseSchema>;
 
 /* ─────────────── brands ─────────────── */
 
-export const brandStatusSchema = z.enum(['active', 'importing', 'import_failed']);
+export const brandStatusSchema = z.enum(BRAND_STATUS);
 export type BrandStatus = z.infer<typeof brandStatusSchema>;
 
-export const meetingSourceSchema = z.enum(['manual', 'recording_sync']);
+export const meetingSourceSchema = z.enum(MEETING_SOURCE);
 export type MeetingSource = z.infer<typeof meetingSourceSchema>;
 
 export const syncMatchRulesSchema = z.object({
@@ -362,7 +374,7 @@ export type UpdateBrandMeetingInput = z.infer<typeof updateBrandMeetingInputSche
 
 /* ─────────────── brand action items ─────────────── */
 
-export const brandActionStatusSchema = z.enum(['open', 'done']);
+export const brandActionStatusSchema = z.enum(BRAND_ACTION_STATUS);
 export type BrandActionStatus = z.infer<typeof brandActionStatusSchema>;
 
 export const brandActionItemSchema = z.object({
@@ -406,7 +418,7 @@ export type SendActionItemToTodayInput = z.infer<typeof sendActionItemToTodayInp
 
 /* ─────────────── brand feature requests ─────────────── */
 
-export const featureRequestSyncStatusSchema = z.enum(['synced', 'pending', 'error']);
+export const featureRequestSyncStatusSchema = z.enum(FEATURE_REQUEST_SYNC_STATUS);
 export type FeatureRequestSyncStatus = z.infer<typeof featureRequestSyncStatusSchema>;
 
 export const brandFeatureRequestSchema = z.object({

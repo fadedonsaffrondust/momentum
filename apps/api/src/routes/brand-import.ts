@@ -158,61 +158,68 @@ JSON schema:
       }[];
     };
 
-    await db
-      .update(brands)
-      .set({
-        name: parsed.name || 'Imported Brand',
-        goals: parsed.goals || null,
-        successDefinition: parsed.successDefinition || null,
-        updatedAt: new Date(),
-      })
-      .where(eq(brands.id, brandId));
-
-    const seenNames = new Set<string>();
-    for (const s of parsed.stakeholders ?? []) {
-      const key = s.name.toLowerCase().trim();
-      if (!key || seenNames.has(key)) continue;
-      seenNames.add(key);
-      await db.insert(brandStakeholders).values({
-        brandId,
-        name: s.name.trim(),
-        role: s.role?.trim() || null,
-        notes: s.notes?.trim() || null,
-      });
-    }
-
-    for (const m of parsed.meetings ?? []) {
-      const [meeting] = await db
-        .insert(brandMeetings)
-        .values({
-          brandId,
-          date: m.date || new Date().toISOString().slice(0, 10),
-          title: m.title || 'Meeting',
-          attendees: m.attendees ?? [],
-          summary: m.summary || null,
-          rawNotes: m.rawNotes || '',
-          decisions: m.decisions ?? [],
+    // All post-extraction writes run in one transaction so a failed
+    // stakeholder or action-item insert leaves the brand in its previous
+    // state (still 'importing') instead of partially populated. The
+    // catch-all below promotes it to 'import_failed' so the UI surfaces
+    // the issue cleanly.
+    await db.transaction(async (tx) => {
+      await tx
+        .update(brands)
+        .set({
+          name: parsed.name || 'Imported Brand',
+          goals: parsed.goals || null,
+          successDefinition: parsed.successDefinition || null,
+          updatedAt: new Date(),
         })
-        .returning({ id: brandMeetings.id });
+        .where(eq(brands.id, brandId));
 
-      if (meeting) {
-        for (const ai of m.actionItems ?? []) {
-          const text = ai.trim();
-          if (!text) continue;
-          await db.insert(brandActionItems).values({
+      const seenNames = new Set<string>();
+      for (const s of parsed.stakeholders ?? []) {
+        const key = s.name.toLowerCase().trim();
+        if (!key || seenNames.has(key)) continue;
+        seenNames.add(key);
+        await tx.insert(brandStakeholders).values({
+          brandId,
+          name: s.name.trim(),
+          role: s.role?.trim() || null,
+          notes: s.notes?.trim() || null,
+        });
+      }
+
+      for (const m of parsed.meetings ?? []) {
+        const [meeting] = await tx
+          .insert(brandMeetings)
+          .values({
             brandId,
-            creatorId: actorId,
-            meetingId: meeting.id,
-            text,
-          });
+            date: m.date || new Date().toISOString().slice(0, 10),
+            title: m.title || 'Meeting',
+            attendees: m.attendees ?? [],
+            summary: m.summary || null,
+            rawNotes: m.rawNotes || '',
+            decisions: m.decisions ?? [],
+          })
+          .returning({ id: brandMeetings.id });
+
+        if (meeting) {
+          for (const ai of m.actionItems ?? []) {
+            const text = ai.trim();
+            if (!text) continue;
+            await tx.insert(brandActionItems).values({
+              brandId,
+              creatorId: actorId,
+              meetingId: meeting.id,
+              text,
+            });
+          }
         }
       }
-    }
 
-    await db
-      .update(brands)
-      .set({ status: 'active', updatedAt: new Date() })
-      .where(eq(brands.id, brandId));
+      await tx
+        .update(brands)
+        .set({ status: 'active', updatedAt: new Date() })
+        .where(eq(brands.id, brandId));
+    });
 
     logger.info({ brandId }, 'Brand import completed successfully');
   } catch (err) {

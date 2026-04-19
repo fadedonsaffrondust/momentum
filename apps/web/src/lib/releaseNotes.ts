@@ -25,6 +25,40 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.14.1',
+    date: '2026-04-19',
+    headline: 'Backend safety: atomic imports, rate limits, security headers',
+    summary:
+      'Defensive backend hardening with no behavior change in the happy path. Multi-step writes (data import, AI brand import, account registration) now run inside a single database transaction, so a mid-stream failure can no longer leave the database half-changed. Auth and export endpoints are rate-limited to make CPU-expensive paths un-floodable. Standard security response headers ship on every API response. The Drizzle column types and the Zod API validators are now driven from a single canonical tuple, so they cannot drift apart.',
+    items: [
+      {
+        title: 'Atomic data imports',
+        description:
+          'The /import endpoint now wraps the entire import flow in a single database transaction. If a mid-stream insert fails (bad file, schema mismatch, unique-constraint violation), the database is left exactly as it was before the request — no half-replaced team data, no orphaned brands missing their stakeholders. Same protection added to the AI brand import worker and to account registration.',
+      },
+      {
+        title: 'Rate limits on expensive endpoints',
+        description:
+          'Default 300 requests / minute per IP. /auth/register and /auth/login are tightened to 5 / 15 minutes per IP (bcrypt is intentionally CPU-expensive — easy to weaponize without a limit). /export is tightened to 5 / 5 minutes per JWT user id (it iterates the entire team-shared dataset). Requests over budget receive a 429 with the standard Retry-After header.',
+      },
+      {
+        title: 'Security response headers',
+        description:
+          'The API now ships standard security headers on every response (X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, Cross-Origin-Resource-Policy, etc.) via @fastify/helmet. Content-Security-Policy is intentionally left to the SPA layer.',
+      },
+      {
+        title: 'Single source of truth for enums',
+        description:
+          'Postgres column types (Drizzle pgEnum) and the API contract (Zod z.enum) used to be defined separately — a typo in either could have silently diverged. Both sides now import the same canonical tuple from @momentum/shared/enums, with a parity test in the API suite that fails if anything drifts.',
+      },
+      {
+        title: 'Plugin error codes are respected',
+        description:
+          'The error handler now respects the statusCode property on errors thrown by Fastify plugins (rate-limit, JWT, etc.) instead of converting them to a generic 500. A 429 stays a 429 — clients can distinguish "back off" from "we crashed".',
+      },
+    ],
+  },
+  {
     version: '0.14.0',
     date: '2026-04-19',
     headline: 'Continuous integration, linting, and pre-commit checks land',

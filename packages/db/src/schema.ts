@@ -13,23 +13,37 @@ import {
   index,
   jsonb,
 } from 'drizzle-orm/pg-core';
+import {
+  PRIORITY,
+  TASK_STATUS,
+  TASK_COLUMN,
+  THEME,
+  PARKING_STATUS,
+  PARKING_VISIBILITY,
+  BRAND_STATUS,
+  BRAND_ACTION_STATUS,
+  MEETING_SOURCE,
+  FEATURE_REQUEST_SYNC_STATUS,
+} from '@momentum/shared/enums';
 
 /* ─────────────── enums ─────────────── */
+// Tuples imported from @momentum/shared/enums so both the Postgres column
+// type and the API's Zod validators are guaranteed to agree at compile
+// time. Test parity is asserted in apps/api/src/test/enum-parity.test.ts.
 
-export const priorityEnum = pgEnum('priority', ['high', 'medium', 'low']);
-export const taskStatusEnum = pgEnum('task_status', ['todo', 'in_progress', 'done']);
-export const taskColumnEnum = pgEnum('task_column', ['up_next', 'in_progress', 'done']);
-export const themeEnum = pgEnum('theme', ['dark', 'light']);
-export const parkingStatusEnum = pgEnum('parking_status', ['open', 'discussed', 'archived']);
-export const parkingVisibilityEnum = pgEnum('parking_visibility', ['team', 'private']);
-export const brandStatusEnum = pgEnum('brand_status', ['active', 'importing', 'import_failed']);
-export const brandActionStatusEnum = pgEnum('brand_action_status', ['open', 'done']);
-export const meetingSourceEnum = pgEnum('meeting_source', ['manual', 'recording_sync']);
-export const featureRequestSyncStatusEnum = pgEnum('feature_request_sync_status', [
-  'synced',
-  'pending',
-  'error',
-]);
+export const priorityEnum = pgEnum('priority', PRIORITY);
+export const taskStatusEnum = pgEnum('task_status', TASK_STATUS);
+export const taskColumnEnum = pgEnum('task_column', TASK_COLUMN);
+export const themeEnum = pgEnum('theme', THEME);
+export const parkingStatusEnum = pgEnum('parking_status', PARKING_STATUS);
+export const parkingVisibilityEnum = pgEnum('parking_visibility', PARKING_VISIBILITY);
+export const brandStatusEnum = pgEnum('brand_status', BRAND_STATUS);
+export const brandActionStatusEnum = pgEnum('brand_action_status', BRAND_ACTION_STATUS);
+export const meetingSourceEnum = pgEnum('meeting_source', MEETING_SOURCE);
+export const featureRequestSyncStatusEnum = pgEnum(
+  'feature_request_sync_status',
+  FEATURE_REQUEST_SYNC_STATUS,
+);
 
 /* ─────────────── users ─────────────── */
 

@@ -27,11 +27,12 @@ const { mockDb } = vi.hoisted(() => {
     });
     return chain;
   }
-  const mockDb = {
+  const mockDb: any = {
     select: vi.fn((..._args: unknown[]) => createChain()),
     insert: vi.fn((..._args: unknown[]) => createChain()),
     update: vi.fn((..._args: unknown[]) => createChain()),
     delete: vi.fn((..._args: unknown[]) => createChain()),
+    transaction: vi.fn(async (cb: (tx: typeof mockDb) => unknown) => cb(mockDb)),
     _results: results,
     _pushResult(value: unknown) {
       results.push(value);
@@ -321,5 +322,47 @@ describe('auth routes', () => {
     });
 
     expect(res.statusCode).toBe(401);
+  });
+});
+
+describe('rate limit on /auth/register', () => {
+  let rlApp: ReturnType<typeof Fastify>;
+
+  beforeAll(async () => {
+    const rateLimit = (await import('@fastify/rate-limit')).default;
+    rlApp = Fastify({ logger: false }).withTypeProvider<ZodTypeProvider>();
+    rlApp.setValidatorCompiler(validatorCompiler);
+    rlApp.setSerializerCompiler(serializerCompiler);
+    await rlApp.register(errorHandlerPlugin);
+    // Register rate-limit BEFORE routes so the per-route config picks up.
+    // Generous global default; the per-route config on /auth/register
+    // (max 5 / 15 minutes) is what we're proving fires.
+    await rlApp.register(rateLimit, { max: 1000, timeWindow: '1 minute' });
+    await rlApp.register(authPlugin);
+    await rlApp.register(authRoutes);
+    await rlApp.ready();
+  });
+
+  afterAll(() => rlApp.close());
+
+  it('returns 429 once the per-route 5/15min limit is exceeded', async () => {
+    // Use an invalid signup domain so each request fails fast at the
+    // domain check (no DB calls, no bcrypt). The rate-limit plugin runs
+    // before the handler, so all 6 still consume budget.
+    for (let i = 0; i < 5; i++) {
+      const res = await rlApp.inject({
+        method: 'POST',
+        url: '/auth/register',
+        payload: { email: 'flood@gmail.com', password: 'password123' },
+      });
+      expect(res.statusCode).toBe(400);
+    }
+
+    const sixth = await rlApp.inject({
+      method: 'POST',
+      url: '/auth/register',
+      payload: { email: 'flood@gmail.com', password: 'password123' },
+    });
+    expect(sixth.statusCode).toBe(429);
   });
 });

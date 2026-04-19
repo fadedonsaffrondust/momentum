@@ -34,7 +34,7 @@ See [`docs/CLAUDE-CODE-PROMPT.md`](./docs/CLAUDE-CODE-PROMPT.md) for the origina
 | **Monorepo**         | pnpm workspaces + Turborepo                                                                                                                             |
 | **Language**         | TypeScript (strict, `noUncheckedIndexedAccess`, ESM everywhere)                                                                                         |
 | **Frontend**         | React 18, Vite, Tailwind CSS (semantic `m.*` token namespace), TanStack Query, Zustand, React Router, cmdk, react-hotkeys-hook                          |
-| **Backend**          | Node.js 20+, Fastify 5, `fastify-type-provider-zod`, `@fastify/jwt`, bcryptjs                                                                           |
+| **Backend**          | Node.js 20+, Fastify 5, `fastify-type-provider-zod`, `@fastify/jwt`, `@fastify/helmet`, `@fastify/rate-limit`, bcryptjs                                 |
 | **Integrations**     | OpenAI (brand import, action-item dedup, meeting extraction), tldv (meeting recordings), Google Sheets via `googleapis` (feature requests two-way sync) |
 | **Database**         | PostgreSQL 16                                                                                                                                           |
 | **ORM / migrations** | Drizzle ORM + drizzle-kit, postgres.js driver                                                                                                           |
