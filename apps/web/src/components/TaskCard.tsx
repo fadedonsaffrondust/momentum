@@ -1,8 +1,9 @@
 import clsx from 'clsx';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { useDraggable } from '@dnd-kit/core';
 import type { Task, Role, UserSummary } from '@momentum/shared';
 import { formatMinutes, formatTimeAgo } from '../lib/format';
-import { useMe, useUpdateTask, useUsers } from '../api/hooks';
+import { useMe, useUsers } from '../api/hooks';
 import { Avatar } from './Avatar';
 
 interface Props {
@@ -10,8 +11,14 @@ interface Props {
   role: Role | undefined;
   selected: boolean;
   onSelect: () => void;
-  editing: boolean;
-  onEditDone: () => void;
+  /** When true, wires the card up as a dnd-kit draggable source (Today view). */
+  draggable?: boolean;
+  /**
+   * When true, render the task's status as a pill in the meta row. Used on
+   * the Team view where the column represents a teammate (not a status)
+   * so the stage needs to be called out on the card itself.
+   */
+  showStatus?: boolean;
 }
 
 const priorityColor: Record<Task['priority'], string> = {
@@ -20,13 +27,34 @@ const priorityColor: Record<Task['priority'], string> = {
   low: '#a1a1aa',
 };
 
-export function TaskCard({ task, role, selected, onSelect, editing, onEditDone }: Props) {
-  const updateTask = useUpdateTask();
+const STATUS_STYLE: Record<Task['status'], { label: string; className: string }> = {
+  in_progress: {
+    label: 'In Progress',
+    className: 'border-primary/40 bg-primary/10 text-primary',
+  },
+  todo: {
+    label: 'Up Next',
+    className: 'border-border bg-secondary text-secondary-foreground',
+  },
+  done: {
+    label: 'Done',
+    className: 'border-border/60 bg-muted/40 text-muted-foreground',
+  },
+};
+
+export function TaskCard({
+  task,
+  role,
+  selected,
+  onSelect,
+  draggable = false,
+  showStatus = false,
+}: Props) {
+  const statusStyle = STATUS_STYLE[task.status];
   const meQ = useMe();
   const usersQ = useUsers();
-  const [title, setTitle] = useState(task.title);
-  const ref = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const drag = useDraggable({ id: task.id, disabled: !draggable });
 
   // Show the assignee avatar only when the task is assigned to someone
   // other than the current user — reduces visual noise for the common
@@ -42,24 +70,19 @@ export function TaskCard({ task, role, selected, onSelect, editing, onEditDone }
     }
   }, [selected]);
 
-  useEffect(() => {
-    if (editing) {
-      setTitle(task.title);
-      setTimeout(() => inputRef.current?.select(), 0);
-    }
-  }, [editing, task.title]);
-
-  const commit = async () => {
-    const next = title.trim();
-    if (next && next !== task.title) {
-      await updateTask.mutateAsync({ id: task.id, title: next });
-    }
-    onEditDone();
-  };
+  const setRefs = useCallback(
+    (el: HTMLDivElement | null) => {
+      ref.current = el;
+      if (draggable) drag.setNodeRef(el);
+    },
+    [draggable, drag],
+  );
 
   return (
     <div
-      ref={ref}
+      ref={setRefs}
+      {...(draggable ? drag.attributes : {})}
+      {...(draggable ? drag.listeners : {})}
       role="button"
       tabIndex={-1}
       onClick={onSelect}
@@ -69,46 +92,34 @@ export function TaskCard({ task, role, selected, onSelect, editing, onEditDone }
         'hover:border-border',
         selected && 'ring-2 ring-primary/80 border-border',
         task.status === 'done' && 'opacity-60',
+        draggable && drag.isDragging && 'opacity-30',
       )}
     >
-      {editing ? (
-        <input
-          ref={inputRef}
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={() => void commit()}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              void commit();
-            }
-            if (e.key === 'Escape') {
-              setTitle(task.title);
-              onEditDone();
-            }
-            e.stopPropagation();
-          }}
-          className="w-full bg-background border border-border rounded px-2 py-1 text-sm text-foreground focus:outline-none focus:border-primary"
-          data-task-edit-input="true"
-        />
-      ) : (
-        <div className="flex items-start gap-2">
-          <div
-            className={clsx(
-              'flex-1 min-w-0 text-sm text-foreground leading-snug break-words',
-              task.status === 'done' && 'line-through',
-            )}
-          >
-            {task.title}
-          </div>
-          {assignee && (
-            <Avatar user={assignee} size="xs" className="mt-0.5 shrink-0" />
+      <div className="flex items-start gap-2">
+        <div
+          className={clsx(
+            'flex-1 min-w-0 text-sm text-foreground leading-snug break-words',
+            task.status === 'done' && 'line-through',
           )}
+        >
+          {task.title}
         </div>
-      )}
+        {assignee && (
+          <Avatar user={assignee} size="xs" className="mt-0.5 shrink-0" />
+        )}
+      </div>
 
       <div className="mt-2 flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
+        {showStatus && (
+          <span
+            className={clsx(
+              'px-2 py-0.5 rounded-sm text-2xs font-medium border',
+              statusStyle.className,
+            )}
+          >
+            {statusStyle.label}
+          </span>
+        )}
         {role && (
           <span
             className="px-2 py-0.5 rounded-full"

@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useDroppable } from '@dnd-kit/core';
 import type { Task, Role, TaskColumn } from '@momentum/shared';
 import { TaskCard } from './TaskCard';
 import { useUiStore } from '../store/ui';
@@ -8,13 +9,13 @@ interface Props {
   title: string;
   tasks: Task[];
   roles: Role[];
-  editingTaskId: string | null;
-  setEditingTaskId: (id: string | null) => void;
+  /** When true, the column accepts dnd-kit drops and cards are draggable. */
+  dnd?: boolean;
 }
 
 const TITLE_HINT: Record<TaskColumn, string> = {
   up_next: 'Press Enter to start',
-  in_progress: 'Press Space to complete',
+  in_progress: 'Press Enter or Space to complete',
   done: 'Nice work.',
 };
 
@@ -23,8 +24,7 @@ export function KanbanColumn({
   title,
   tasks,
   roles,
-  editingTaskId,
-  setEditingTaskId,
+  dnd = false,
 }: Props) {
   const focusedColumn = useUiStore((s) => s.focusedColumn);
   const selectedTaskId = useUiStore((s) => s.selectedTaskId);
@@ -33,11 +33,15 @@ export function KanbanColumn({
   const rolesById = new Map(roles.map((r) => [r.id, r]));
   const isFocused = focusedColumn === column;
 
+  const drop = useDroppable({ id: column, disabled: !dnd });
+
   return (
     <section
+      ref={dnd ? drop.setNodeRef : undefined}
       className={clsx(
-        'flex flex-col rounded-xl border transition h-full min-h-0',
+        'flex flex-col rounded-xl border transition-colors h-full min-h-0',
         isFocused ? 'border-border bg-background/85' : 'border-border/60 bg-background/60',
+        dnd && drop.isOver && 'border-primary/80 bg-primary/5',
       )}
     >
       <header className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
@@ -57,7 +61,7 @@ export function KanbanColumn({
         )}
         {tasks.length === 0 && column === 'in_progress' && (
           <p className="text-xs text-muted-foreground/70 text-center py-8">
-            Nothing in progress. Press <kbd className="font-mono">Enter</kbd> on a task to start.
+            Nothing in progress. Press <kbd className="font-mono">Enter</kbd> on an Up Next task to start.
           </p>
         )}
         {tasks.length === 0 && column === 'done' && (
@@ -75,8 +79,7 @@ export function KanbanColumn({
               setSelectedTaskId(t.id);
               setFocusedColumn(column);
             }}
-            editing={editingTaskId === t.id}
-            onEditDone={() => setEditingTaskId(null)}
+            draggable={dnd}
           />
         ))}
       </div>

@@ -1,11 +1,11 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { eq, asc, max } from 'drizzle-orm';
+import { eq, ne, and, asc, max, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { roleSchema, createRoleInputSchema, ROLE_COLOR_PALETTE } from '@momentum/shared';
 import { roles } from '@momentum/db';
 import { db } from '../db.ts';
 import { mapRole } from '../mappers.ts';
-import { notFound } from '../errors.ts';
+import { conflict, notFound } from '../errors.ts';
 
 /**
  * Roles are team-wide in team-space (spec §5.2). Any authenticated user
@@ -34,6 +34,18 @@ export const rolesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req) => {
       const { name, color } = req.body;
+
+      // Case-insensitive duplicate check for a friendly 409. The DB has a
+      // functional unique index on LOWER(name) as a backstop if this check
+      // is ever bypassed.
+      const [existing] = await db
+        .select({ name: roles.name })
+        .from(roles)
+        .where(sql`LOWER(${roles.name}) = LOWER(${name})`)
+        .limit(1);
+      if (existing) {
+        throw conflict(`A role named "${existing.name}" already exists.`);
+      }
 
       const [{ maxPos }] = (await db
         .select({ maxPos: max(roles.position) })
@@ -66,6 +78,25 @@ export const rolesRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => {
+      // If the rename would collide with another role (case-insensitive),
+      // surface a 409 before the DB unique index fires so the client gets a
+      // clean error message instead of a raw integrity violation.
+      if (req.body.name !== undefined) {
+        const [existing] = await db
+          .select({ name: roles.name })
+          .from(roles)
+          .where(
+            and(
+              sql`LOWER(${roles.name}) = LOWER(${req.body.name})`,
+              ne(roles.id, req.params.id),
+            ),
+          )
+          .limit(1);
+        if (existing) {
+          throw conflict(`A role named "${existing.name}" already exists.`);
+        }
+      }
+
       const [row] = await db
         .update(roles)
         .set(req.body)

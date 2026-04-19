@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import clsx from 'clsx';
+import { TaskAssigneeFilter } from '../components/TaskAssigneeFilter';
 
 interface TabProps {
   to: string;
@@ -42,6 +43,9 @@ export function TasksLayout() {
         </h1>
         <Tab to="/" label="Today" end />
         <Tab to="/backlog" label="Backlog" />
+        <div className="ml-auto">
+          <TaskAssigneeFilter />
+        </div>
       </div>
       <div className="flex-1 min-h-0 overflow-hidden">
         <Outlet />

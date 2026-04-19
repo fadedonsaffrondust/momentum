@@ -24,8 +24,9 @@ const PRIORITY_LABEL: Record<Priority, string> = {
 
 interface KeyboardContext {
   tasks: Task[];
-  editingTaskId: string | null;
-  setEditingTaskId: (id: string | null) => void;
+  /** Inline-edit state for parkings. Task edits use the detail drawer via `e`. */
+  editingTaskId?: string | null;
+  setEditingTaskId?: (id: string | null) => void;
   /** Flat list of parkings in rendered order (used on /parkings). */
   parkings?: Parking[];
   /** Invoked when Enter is pressed on a parking — toggles the details drawer. */
@@ -53,6 +54,7 @@ export function useKeyboardController(ctx: KeyboardContext) {
   const activeModal = useUiStore((s) => s.activeModal);
   const openModal = useUiStore((s) => s.openModal);
   const openAssigneePicker = useUiStore((s) => s.openAssigneePicker);
+  const openDrawer = useUiStore((s) => s.openDrawer);
   const assigneePickerOpen = useUiStore((s) => s.assigneePickerTarget !== null);
   const openInvolvedPicker = useUiStore((s) => s.openInvolvedPicker);
   const involvedPickerOpen = useUiStore((s) => s.involvedPickerTarget !== null);
@@ -127,7 +129,7 @@ export function useKeyboardController(ctx: KeyboardContext) {
         }
         if (e.key === 'e') {
           e.preventDefault();
-          ctx.setEditingTaskId(selectedP.id);
+          ctx.setEditingTaskId?.(selectedP.id);
           return;
         }
         if (e.key === 'r') {
@@ -313,6 +315,8 @@ export function useKeyboardController(ctx: KeyboardContext) {
               });
             },
           });
+        } else if (selected.status === 'in_progress') {
+          completeTask.mutate(selected.id);
         }
         return;
       }
@@ -325,7 +329,7 @@ export function useKeyboardController(ctx: KeyboardContext) {
       }
       if (e.key === 'e') {
         e.preventDefault();
-        ctx.setEditingTaskId(selected.id);
+        openDrawer();
         return;
       }
       if (e.key === 'd') {
@@ -408,6 +412,7 @@ export function useKeyboardController(ctx: KeyboardContext) {
     activeModal,
     assigneePickerOpen,
     involvedPickerOpen,
+    openDrawer,
     focusedColumn,
     selectedTaskId,
     location.pathname,

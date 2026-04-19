@@ -66,8 +66,11 @@ export function PlanMyDayModal() {
 
   return (
     <Modal title="Plan My Day" onClose={close} className="max-w-3xl">
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      {/* Flex column with a capped height so long leftovers / backlog lists
+          scroll inside the modal instead of pushing the footer below the
+          viewport. Chrome (step chips, footer buttons) stays pinned. */}
+      <div className="flex flex-col max-h-[70vh]">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
           {['Leftovers', 'Backlog', 'Summary'].map((label, i) => (
             <div
               key={label}
@@ -84,6 +87,7 @@ export function PlanMyDayModal() {
           ))}
         </div>
 
+        <div className="flex-1 min-h-0 overflow-y-auto mt-4 pr-1">
         {step === 0 && (
           <section className="space-y-2">
             <p className="text-sm text-muted-foreground">
@@ -169,8 +173,9 @@ export function PlanMyDayModal() {
             </ul>
           </section>
         )}
+        </div>
 
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-4 shrink-0">
           <button
             onClick={() => (step === 0 ? close() : setStep(step - 1))}
             className="flex-1 py-2 rounded-md border border-border text-sm hover:bg-secondary"

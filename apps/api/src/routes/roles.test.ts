@@ -80,6 +80,7 @@ describe('roles routes', () => {
   // ── POST /roles ────────────────────────────────────────────────────
 
   it('POST /roles assigns palette color 0 for first role (no color given)', async () => {
+    mockDb._pushResult([]); // duplicate-name check: none
     mockDb._pushResult([{ maxPos: null }]); // no existing roles
     mockDb._pushResult([makeRoleRow({ position: 0, color: '#0FB848' })]);
 
@@ -97,6 +98,7 @@ describe('roles routes', () => {
   });
 
   it('POST /roles assigns palette color 3 for 4th role (no color given)', async () => {
+    mockDb._pushResult([]); // duplicate-name check: none
     mockDb._pushResult([{ maxPos: 2 }]); // 3 existing roles, maxPos=2
     mockDb._pushResult([makeRoleRow({ position: 3, color: '#F76C6C' })]);
 
@@ -114,6 +116,7 @@ describe('roles routes', () => {
   });
 
   it('POST /roles uses explicit color when provided', async () => {
+    mockDb._pushResult([]); // duplicate-name check: none
     mockDb._pushResult([{ maxPos: 0 }]);
     mockDb._pushResult([makeRoleRow({ position: 1, color: '#112233' })]);
 
@@ -129,6 +132,7 @@ describe('roles routes', () => {
   });
 
   it('POST /roles wraps palette for 9th role', async () => {
+    mockDb._pushResult([]); // duplicate-name check: none
     mockDb._pushResult([{ maxPos: 7 }]); // 8 existing, maxPos=7
     mockDb._pushResult([makeRoleRow({ position: 8, color: '#0FB848' })]);
 
@@ -144,6 +148,80 @@ describe('roles routes', () => {
     // nextPosition=8, 8 % 8 = 0 => palette[0] = '#0FB848' (brand green)
     expect(body.color).toBe('#0FB848');
     expect(body.position).toBe(8);
+  });
+
+  it('POST /roles returns 409 when a role with the same name (case-insensitive) exists', async () => {
+    mockDb._pushResult([{ name: 'Product' }]); // duplicate-name check hits
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/roles',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { name: 'product' }, // lowercase should still collide with 'Product'
+    });
+
+    expect(res.statusCode).toBe(409);
+    const body = JSON.parse(res.body);
+    expect(body.error).toBe('CONFLICT');
+    expect(body.message).toContain('Product');
+  });
+
+  // ── PATCH /roles/:id ───────────────────────────────────────────────
+
+  it('PATCH /roles/:id returns 409 when renaming to a name that already exists', async () => {
+    mockDb._pushResult([{ name: 'Design' }]); // dup check hits
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/roles/${ROLE_ID}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: { name: 'design' }, // case-insensitive collision
+    });
+
+    expect(res.statusCode).toBe(409);
+    expect(JSON.parse(res.body).error).toBe('CONFLICT');
+  });
+
+  it('PATCH /roles/:id allows rename when no conflict', async () => {
+    mockDb._pushResult([]); // dup check empty
+    mockDb._pushResult([makeRoleRow({ name: 'Renamed' })]);
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/roles/${ROLE_ID}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: { name: 'Renamed' },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).name).toBe('Renamed');
+  });
+
+  it('PATCH /roles/:id skips dup check when body has no name', async () => {
+    mockDb._pushResult([makeRoleRow({ color: '#112233' })]);
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/roles/${ROLE_ID}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: { color: '#112233' },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).color).toBe('#112233');
+  });
+
+  it('PATCH /roles/:id returns 404 when role not found', async () => {
+    mockDb._pushResult([]); // update returning empty
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/roles/${ROLE_ID}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: { color: '#112233' },
+    });
+
+    expect(res.statusCode).toBe(404);
   });
 
   // ── DELETE /roles/:id ──────────────────────────────────────────────

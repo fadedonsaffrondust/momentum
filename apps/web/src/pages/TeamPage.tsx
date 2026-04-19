@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import type { Task } from '@momentum/shared';
 import { useMe, useRoles, useTeamTasks } from '../api/hooks';
 import { useUiStore } from '../store/ui';
+import { cn } from '@/lib/utils';
 import { Avatar } from '../components/Avatar';
 import { TaskCard } from '../components/TaskCard';
 import { RoleFilterBar } from '../components/RoleFilterBar';
@@ -10,14 +11,6 @@ import { useTeamKeyboardController } from '../hooks/useTeamKeyboardController';
 import { todayIso } from '../lib/date';
 
 type DateScope = 'today' | 'week' | 'all';
-type TaskColumnKind = 'up_next' | 'in_progress' | 'done';
-
-const COLUMNS: readonly TaskColumnKind[] = ['up_next', 'in_progress', 'done'] as const;
-const COLUMN_LABELS: Record<TaskColumnKind, string> = {
-  up_next: 'Up Next',
-  in_progress: 'In Progress',
-  done: 'Done',
-};
 
 const SCOPE_LABELS: Record<DateScope, string> = {
   today: 'Today',
@@ -25,19 +18,27 @@ const SCOPE_LABELS: Record<DateScope, string> = {
   all: 'All scheduled',
 };
 
+// Status sort order within a teammate's column: actionable on top,
+// historical at the bottom.
+const STATUS_ORDER: Record<Task['status'], number> = {
+  in_progress: 0,
+  todo: 1,
+  done: 2,
+};
+
 /**
- * Team Task View (/team, spec §9.7). Ordered sections — current user
- * first, then alpha by displayName — each containing a three-column
- * mini-kanban. Keyboard nav is driven by `useTeamKeyboardController`.
+ * Team Task View (/team). One column per teammate (current user first,
+ * then alpha by displayName). Each column contains a flat list of the
+ * teammate's tasks sorted by status, with a status tag on each card.
+ * Keyboard nav is driven by `useTeamKeyboardController`.
  */
 export function TeamPage() {
   const meQ = useMe();
   const rolesQ = useRoles();
   const [scope, setScope] = useState<DateScope>('today');
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
   const roleFilter = useUiStore((s) => s.roleFilter);
+  const drawerOpen = useUiStore((s) => s.drawerOpen);
 
   // Backend supports a single `date` query param. `week` + `all` both
   // skip the filter and let us trim client-side to the 7-day window.
@@ -54,15 +55,23 @@ export function TeamPage() {
 
     return raw.map((s) => ({
       user: s.user,
-      tasks: s.tasks.filter((t) => {
-        if (roleFilter && t.roleId !== roleFilter) return false;
-        if (scope === 'today') return true; // already filtered server-side
-        if (scope === 'week') {
-          if (!t.scheduledDate) return false;
-          return t.scheduledDate >= today && t.scheduledDate <= weekOutIso;
-        }
-        return true; // all scheduled
-      }),
+      tasks: s.tasks
+        .filter((t) => {
+          if (roleFilter && t.roleId !== roleFilter) return false;
+          if (scope === 'today') return true; // already filtered server-side
+          if (scope === 'week') {
+            if (!t.scheduledDate) return false;
+            return t.scheduledDate >= today && t.scheduledDate <= weekOutIso;
+          }
+          return true; // all scheduled
+        })
+        .slice()
+        .sort((a, b) => {
+          const sa = STATUS_ORDER[a.status];
+          const sb = STATUS_ORDER[b.status];
+          if (sa !== sb) return sa - sb;
+          return a.createdAt.localeCompare(b.createdAt);
+        }),
     }));
   }, [tasksQ.data, scope, roleFilter]);
 
@@ -71,17 +80,6 @@ export function TeamPage() {
 
   useTeamKeyboardController({
     sections: sections.map((s) => ({ userId: s.user.id, tasks: s.tasks })),
-    collapsed,
-    editingTaskId,
-    setEditingTaskId,
-    onToggleCollapsed: (userId) => {
-      setCollapsed((prev) => {
-        const next = new Set(prev);
-        if (next.has(userId)) next.delete(userId);
-        else next.add(userId);
-        return next;
-      });
-    },
     onCycleScope: () => {
       setScope((prev) => {
         if (prev === 'today') return 'week';
@@ -93,147 +91,134 @@ export function TeamPage() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-border/60">
-        <div className="flex items-center gap-4">
-          <h1 className="text-lg text-primary">Team</h1>
-          <RoleFilterBar />
-        </div>
+      <div
+        className={cn(
+          'px-6 pt-4 pb-3 border-b border-border/60 shrink-0 flex items-center justify-between gap-4',
+          'transition-[padding] duration-150 ease-out',
+          // Keep the page chrome in the visible area when the drawer is
+          // open — the column board below is what scrolls under the drawer.
+          drawerOpen && 'md:pr-[640px]',
+        )}
+      >
+        <h1 className="text-xs uppercase tracking-widest text-muted-foreground/70 font-semibold">
+          Team
+        </h1>
         <DateScopeChip value={scope} onChange={setScope} />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-        {tasksQ.isLoading && (
-          <p className="text-sm text-muted-foreground">Loading team…</p>
+      <div
+        className={cn(
+          'px-6 pt-4 shrink-0',
+          'transition-[padding] duration-150 ease-out',
+          drawerOpen && 'md:pr-[640px]',
         )}
-        {!tasksQ.isLoading && sections.length === 0 && (
-          <p className="text-sm text-muted-foreground">No active teammates yet.</p>
-        )}
-
-        {sections.map((section) => {
-          const isCollapsed = collapsed.has(section.user.id);
-          const isMe = meQ.data?.id === section.user.id;
-          return (
-            <section key={section.user.id} data-team-section-user={section.user.id}>
-              <SectionHeader
-                section={section}
-                isCollapsed={isCollapsed}
-                isMe={isMe}
-                onToggleCollapse={() =>
-                  setCollapsed((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(section.user.id)) next.delete(section.user.id);
-                    else next.add(section.user.id);
-                    return next;
-                  })
-                }
-              />
-              {!isCollapsed && (
-                <div className="mt-3 grid gap-3 grid-cols-1 md:grid-cols-3">
-                  {COLUMNS.map((col) => (
-                    <TeamColumn
-                      key={col}
-                      column={col}
-                      tasks={section.tasks.filter((t) => t.column === col)}
-                      rolesById={rolesById}
-                      editingTaskId={editingTaskId}
-                      setEditingTaskId={setEditingTaskId}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          );
-        })}
+      >
+        <RoleFilterBar />
       </div>
+
+      {tasksQ.isLoading && (
+        <p className="text-sm text-muted-foreground px-6 py-4">Loading team…</p>
+      )}
+      {!tasksQ.isLoading && sections.length === 0 && (
+        <p className="text-sm text-muted-foreground px-6 py-4">No active teammates yet.</p>
+      )}
+
+      {!tasksQ.isLoading && sections.length > 0 && (
+        <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
+          <div className="flex gap-4 h-full px-6 py-4 pb-2">
+            {sections.map((section) => (
+              <TeammateColumn
+                key={section.user.id}
+                user={section.user}
+                tasks={section.tasks}
+                isMe={meQ.data?.id === section.user.id}
+                rolesById={rolesById}
+                scope={scope}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function SectionHeader({
-  section,
-  isCollapsed,
+function TeammateColumn({
+  user,
+  tasks,
   isMe,
-  onToggleCollapse,
+  rolesById,
+  scope,
 }: {
-  section: { user: { id: string; displayName: string; email: string; avatarColor: string; deactivatedAt: string | null }; tasks: Task[] };
-  isCollapsed: boolean;
+  user: { id: string; displayName: string; email: string; avatarColor: string; deactivatedAt: string | null };
+  tasks: Task[];
   isMe: boolean;
-  onToggleCollapse: () => void;
+  rolesById: Map<string, ReturnType<typeof useRoles>['data'] extends (infer U)[] | undefined ? U : never>;
+  scope: DateScope;
 }) {
+  const selectedTaskId = useUiStore((s) => s.selectedTaskId);
+  const setSelectedTaskId = useUiStore((s) => s.setSelectedTaskId);
+
   const stats = useMemo(() => {
     let upNext = 0;
     let inProgress = 0;
     let doneToday = 0;
     const today = todayIso();
-    for (const t of section.tasks) {
+    for (const t of tasks) {
       if (t.column === 'up_next') upNext++;
       else if (t.column === 'in_progress') inProgress++;
       else if (t.column === 'done' && t.scheduledDate === today) doneToday++;
     }
     return { upNext, inProgress, doneToday };
-  }, [section.tasks]);
+  }, [tasks]);
 
   return (
-    <button
-      type="button"
-      onClick={onToggleCollapse}
-      className="w-full flex items-center gap-3 text-left hover:bg-card/40 rounded-lg px-2 py-1.5 transition"
+    <section
+      data-team-section-user={user.id}
+      className={clsx(
+        'w-[320px] shrink-0 flex flex-col max-h-full rounded-xl border bg-background/40',
+        isMe ? 'border-border' : 'border-border/60',
+      )}
     >
-      <Avatar user={section.user} size="md" />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-foreground truncate">
-            {section.user.displayName || section.user.email}
-          </span>
-          {isMe && (
-            <span className="text-[10px] uppercase tracking-widest text-primary">
-              You
+      <header className="px-3 py-3 border-b border-border/60 flex items-center gap-2 shrink-0">
+        <Avatar user={user} size="md" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-foreground truncate">
+              {user.displayName || user.email}
             </span>
-          )}
+            {isMe && (
+              <span className="text-[10px] uppercase tracking-widest text-primary">
+                You
+              </span>
+            )}
+          </div>
+          <div className="text-2xs text-muted-foreground">
+            {stats.inProgress} in progress · {stats.upNext} up next · {stats.doneToday} done today
+          </div>
         </div>
-        <div className="text-2xs text-muted-foreground">
-          {stats.inProgress} in progress · {stats.upNext} up next · {stats.doneToday} done today
-        </div>
-      </div>
-      <span className="text-xs text-muted-foreground/70 shrink-0">{isCollapsed ? '▸' : '▾'}</span>
-    </button>
-  );
-}
+      </header>
 
-function TeamColumn({
-  column,
-  tasks,
-  rolesById,
-  editingTaskId,
-  setEditingTaskId,
-}: {
-  column: TaskColumnKind;
-  tasks: Task[];
-  rolesById: Map<string, ReturnType<typeof useRoles>['data'] extends (infer U)[] | undefined ? U : never>;
-  editingTaskId: string | null;
-  setEditingTaskId: (id: string | null) => void;
-}) {
-  const selectedTaskId = useUiStore((s) => s.selectedTaskId);
-  const setSelectedTaskId = useUiStore((s) => s.setSelectedTaskId);
-
-  return (
-    <div className="bg-card/40 rounded-lg p-2 min-h-[80px] space-y-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold px-1 flex items-center justify-between">
-        <span>{COLUMN_LABELS[column]}</span>
-        <span className="text-muted-foreground/70 font-mono">{tasks.length}</span>
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
+        {tasks.length === 0 && (
+          <p className="text-xs text-muted-foreground/70 text-center py-8">
+            {scope === 'today'
+              ? 'Nothing scheduled for today.'
+              : 'No tasks in this scope.'}
+          </p>
+        )}
+        {tasks.map((t) => (
+          <TaskCard
+            key={t.id}
+            task={t}
+            role={t.roleId ? rolesById.get(t.roleId) : undefined}
+            selected={selectedTaskId === t.id}
+            onSelect={() => setSelectedTaskId(t.id)}
+            showStatus
+          />
+        ))}
       </div>
-      {tasks.map((t) => (
-        <TaskCard
-          key={t.id}
-          task={t}
-          role={t.roleId ? rolesById.get(t.roleId) : undefined}
-          selected={selectedTaskId === t.id}
-          onSelect={() => setSelectedTaskId(t.id)}
-          editing={editingTaskId === t.id}
-          onEditDone={() => setEditingTaskId(null)}
-        />
-      ))}
-    </div>
+    </section>
   );
 }
 
@@ -254,7 +239,7 @@ function DateScopeChip({ value, onChange }: { value: DateScope; onChange: (v: Da
             aria-checked={active}
             onClick={() => onChange(opt)}
             className={clsx(
-              'px-2.5 py-1 rounded-md transition font-medium',
+              'px-2.5 py-1 rounded-md transition-colors duration-150 font-medium',
               active
                 ? 'bg-primary/20 text-primary'
                 : 'text-muted-foreground hover:text-foreground',

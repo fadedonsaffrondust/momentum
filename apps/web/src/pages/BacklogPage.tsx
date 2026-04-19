@@ -1,11 +1,14 @@
 import { useMemo } from 'react';
+import clsx from 'clsx';
 import type { Task } from '@momentum/shared';
 import { useMe, useRoles, useTasks, useUpdateTask, useUsers } from '../api/hooks';
 import { todayIso } from '../lib/date';
 import { formatMinutes, formatDateShort } from '../lib/format';
 import { useUiStore } from '../store/ui';
-import { TaskAssigneeFilter } from '../components/TaskAssigneeFilter';
 import { Avatar } from '../components/Avatar';
+import { useBacklogKeyboardController } from '../hooks/useBacklogKeyboardController';
+
+const GROUP_ORDER = ['Overdue', 'Tomorrow', 'This Week', 'Later', 'Someday'] as const;
 
 export function BacklogPage() {
   const assigneeFilter = useUiStore((s) => s.taskAssigneeFilter);
@@ -16,6 +19,9 @@ export function BacklogPage() {
   const usersQ = useUsers();
   const meQ = useMe();
   const updateTask = useUpdateTask();
+  const selectedTaskId = useUiStore((s) => s.selectedTaskId);
+  const setSelectedTaskId = useUiStore((s) => s.setSelectedTaskId);
+  const openDrawer = useUiStore((s) => s.openDrawer);
   const today = todayIso();
 
   const tasks = tasksQ.data ?? [];
@@ -56,17 +62,22 @@ export function BacklogPage() {
     } satisfies Record<string, Task[]>;
   }, [tasks, today]);
 
+  // Flat ordered task list for j/k navigation — follows the render order
+  // of GROUP_ORDER so keyboard motion matches what the user sees.
+  const flatTasks = useMemo(
+    () => GROUP_ORDER.flatMap((g) => groups[g]),
+    [groups],
+  );
+
+  useBacklogKeyboardController({ tasks: flatTasks });
+
   const moveToToday = (id: string) =>
     updateTask.mutate({ id, scheduledDate: today, column: 'up_next' });
 
   return (
     <div className="h-full overflow-y-auto px-6 py-5">
-      <div className="flex items-center justify-between mb-4 max-w-3xl">
-        <h1 className="text-xl text-primary">Backlog</h1>
-        <TaskAssigneeFilter />
-      </div>
       <div className="space-y-6 max-w-3xl">
-        {(['Overdue', 'Tomorrow', 'This Week', 'Later', 'Someday'] as const).map((label) => {
+        {GROUP_ORDER.map((label) => {
           const items = groups[label];
           if (!items || items.length === 0) return null;
           return (
@@ -81,10 +92,21 @@ export function BacklogPage() {
                     currentUserId && t.assigneeId !== currentUserId
                       ? usersById.get(t.assigneeId)
                       : undefined;
+                  const isSelected = selectedTaskId === t.id;
                   return (
                     <li
                       key={t.id}
-                      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card/40 px-3 py-2 text-sm"
+                      onClick={() => setSelectedTaskId(t.id)}
+                      onDoubleClick={() => {
+                        setSelectedTaskId(t.id);
+                        openDrawer();
+                      }}
+                      className={clsx(
+                        'flex items-center justify-between gap-3 rounded-lg border bg-card/40 px-3 py-2 text-sm cursor-pointer transition',
+                        isSelected
+                          ? 'border-border ring-2 ring-primary/80'
+                          : 'border-border hover:border-border',
+                      )}
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
@@ -104,7 +126,10 @@ export function BacklogPage() {
                         </div>
                       </div>
                       <button
-                        onClick={() => moveToToday(t.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          moveToToday(t.id);
+                        }}
                         className="text-xs text-primary hover:underline shrink-0"
                       >
                         → Today

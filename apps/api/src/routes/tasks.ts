@@ -1,5 +1,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { eq, and, sql, count, desc, asc, isNull } from 'drizzle-orm';
+import { eq, and, count, desc, asc, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import {
   taskSchema,
@@ -26,6 +26,7 @@ const MAX_IN_PROGRESS = 2;
  */
 const EDIT_NOTIFY_FIELDS = [
   'title',
+  'description',
   'priority',
   'estimateMinutes',
   'roleId',
@@ -146,6 +147,7 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
           creatorId: req.userId,
           assigneeId,
           title: body.title,
+          description: body.description ?? null,
           roleId: body.roleId ?? null,
           priority: body.priority ?? 'medium',
           estimateMinutes: body.estimateMinutes ?? null,
@@ -274,6 +276,20 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  /**
+   * Time-tracking model:
+   *   - `startedAt` is the start of the CURRENT work session (null when not
+   *     actively in progress).
+   *   - `actualMinutes` is the accumulated total across all sessions.
+   *   - On /start: set startedAt = NOW() (a fresh session begins; prior
+   *     startedAt, if any, should already be null because /pause, /complete,
+   *     and /reopen all clear it).
+   *   - On /pause and /complete: roll the current session's elapsed minutes
+   *     into actualMinutes, then clear startedAt.
+   *   - On /reopen: clear startedAt AND completedAt; preserve actualMinutes
+   *     as a historical record of prior work.
+   * This keeps time accurate across multiple pause/resume and reopen cycles.
+   */
   app.post(
     '/tasks/:id/start',
     {
@@ -301,7 +317,7 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
         .set({
           status: 'in_progress',
           column: 'in_progress',
-          startedAt: sql`COALESCE(${tasks.startedAt}, NOW())`,
+          startedAt: new Date(),
         })
         .where(and(eq(tasks.id, req.params.id), eq(tasks.assigneeId, req.userId)))
         .returning();
@@ -319,9 +335,30 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => {
+      const [existing] = await db
+        .select()
+        .from(tasks)
+        .where(and(eq(tasks.id, req.params.id), eq(tasks.assigneeId, req.userId)))
+        .limit(1);
+      if (!existing) throw notFound('Task not found');
+
+      let actualMinutes: number | null = existing.actualMinutes;
+      if (existing.startedAt) {
+        const elapsed = Math.max(
+          0,
+          Math.round((Date.now() - existing.startedAt.getTime()) / 60000),
+        );
+        actualMinutes = (actualMinutes ?? 0) + elapsed;
+      }
+
       const [row] = await db
         .update(tasks)
-        .set({ status: 'todo', column: 'up_next' })
+        .set({
+          status: 'todo',
+          column: 'up_next',
+          startedAt: null,
+          actualMinutes,
+        })
         .where(and(eq(tasks.id, req.params.id), eq(tasks.assigneeId, req.userId)))
         .returning();
       if (!row) throw notFound('Task not found');
@@ -347,10 +384,11 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
 
       let actualMinutes: number | null = existing.actualMinutes;
       if (existing.startedAt) {
-        actualMinutes = Math.max(
-          1,
+        const elapsed = Math.max(
+          0,
           Math.round((Date.now() - existing.startedAt.getTime()) / 60000),
         );
+        actualMinutes = (actualMinutes ?? 0) + elapsed;
       }
 
       const [row] = await db
@@ -359,6 +397,7 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
           status: 'done',
           column: 'done',
           completedAt: new Date(),
+          startedAt: null,
           actualMinutes,
         })
         .where(and(eq(tasks.id, req.params.id), eq(tasks.assigneeId, req.userId)))
@@ -374,6 +413,50 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
           and(
             eq(brandActionItems.linkedTaskId, row.id),
             eq(brandActionItems.status, 'open'),
+          ),
+        );
+
+      return mapTask(row);
+    },
+  );
+
+  /**
+   * Reopen a completed task (undo a /complete, typically after an accidental
+   * drop on the Done column or Space press). Resets status/column to
+   * todo/up_next, clears completedAt + startedAt so a subsequent /start
+   * begins a fresh timer. Preserves actualMinutes as a historical record of
+   * prior work on the task.
+   */
+  app.post(
+    '/tasks/:id/reopen',
+    {
+      schema: {
+        params: z.object({ id: z.string().uuid() }),
+        response: { 200: taskSchema },
+      },
+    },
+    async (req) => {
+      const [row] = await db
+        .update(tasks)
+        .set({
+          status: 'todo',
+          column: 'up_next',
+          completedAt: null,
+          startedAt: null,
+        })
+        .where(and(eq(tasks.id, req.params.id), eq(tasks.assigneeId, req.userId)))
+        .returning();
+      if (!row) throw notFound('Task not found');
+
+      // Mirror /complete's action-item propagation: if the task was linked
+      // to a brand action item and marked done alongside, reopen it too.
+      await db
+        .update(brandActionItems)
+        .set({ status: 'open', completedAt: null })
+        .where(
+          and(
+            eq(brandActionItems.linkedTaskId, row.id),
+            eq(brandActionItems.status, 'done'),
           ),
         );
 

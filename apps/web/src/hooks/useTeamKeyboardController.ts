@@ -2,9 +2,6 @@ import { useEffect } from 'react';
 import type { Task } from '@momentum/shared';
 import { useUiStore } from '../store/ui';
 
-type TaskColumnKind = 'up_next' | 'in_progress' | 'done';
-const COLUMNS: readonly TaskColumnKind[] = ['up_next', 'in_progress', 'done'] as const;
-
 interface Section {
   userId: string;
   tasks: Task[];
@@ -12,10 +9,6 @@ interface Section {
 
 interface Context {
   sections: readonly Section[];
-  collapsed: Set<string>;
-  editingTaskId: string | null;
-  setEditingTaskId: (id: string | null) => void;
-  onToggleCollapsed: (userId: string) => void;
   onCycleScope: () => void;
 }
 
@@ -30,19 +23,24 @@ function isTypingInInput(): boolean {
 }
 
 /**
- * Team-view-scoped keyboard handler (spec §9.7). Active only on /team.
+ * Team-view-scoped keyboard handler (post-redesign). The view is now a
+ * horizontal board with one column per teammate, so nav is two-dimensional:
  *
- * j/k — next/prev task within the focused column
- * h/l — switch column within the focused section
- * ]/[ — next/prev section (hijacks the global view-cycle on /team)
- * f   — cycle date scope (today → week → all)
- * e   — inline-edit selected task title
- * A   — open assignee picker for selected task
- * Enter — open TaskDetailModal for selected task (spec §9.12)
- * Esc — clear selection or close modal (Esc on modals handled inside)
+ * j/k   — next / prev task within the focused teammate's flat list
+ * h/l   — prev / next teammate column (select that column's first task)
+ * ]/[   — aliases for h/l; hijack the global view-cycle on /team
+ * f     — cycle date scope (today → week → all)
+ * e     — open the task detail drawer
+ * A     — open the assignee picker for the selected task
  *
- * The handler uses capture-phase so ]/[ can intercept before the global
- * handler's view-cycle fires. Falls through when a modal or picker is open.
+ * Progression keys (Enter / Space) are intentionally not bound on Team —
+ * those are Today-only. Team is overview + metadata, not a remote-control
+ * for other people's tasks. The backend action routes already restrict to
+ * the assignee, so binding them here would either 404 or let you progress
+ * your own tasks from the wrong surface.
+ *
+ * The handler uses capture-phase so ] / [ can intercept before the global
+ * view-cycle fires. Falls through when a modal or picker is open.
  */
 export function useTeamKeyboardController(ctx: Context) {
   const activeModal = useUiStore((s) => s.activeModal);
@@ -52,20 +50,17 @@ export function useTeamKeyboardController(ctx: Context) {
 
   const selectedTaskId = useUiStore((s) => s.selectedTaskId);
   const setSelectedTaskId = useUiStore((s) => s.setSelectedTaskId);
-  const focusedColumn = useUiStore((s) => s.focusedColumn);
-  const setFocusedColumn = useUiStore((s) => s.setFocusedColumn);
-  const selectedDetailTaskId = useUiStore((s) => s.selectedDetailTaskId);
-  const setSelectedDetailTaskId = useUiStore((s) => s.setSelectedDetailTaskId);
+  const openDrawer = useUiStore((s) => s.openDrawer);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.defaultPrevented) return;
       if (isTypingInInput()) return;
-      if (activeModal || assigneePickerOpen || involvedPickerOpen || selectedDetailTaskId) return;
+      if (activeModal || assigneePickerOpen || involvedPickerOpen) return;
       if (ctx.sections.length === 0) return;
 
-      // Determine the currently-focused section: either the section
-      // containing the selected task, or fall back to the first.
+      // Focused section = the section containing the selected task, or the
+      // first one if nothing is selected.
       const focusedSectionIdx = (() => {
         if (!selectedTaskId) return 0;
         for (let i = 0; i < ctx.sections.length; i++) {
@@ -75,24 +70,14 @@ export function useTeamKeyboardController(ctx: Context) {
       })();
 
       const section = ctx.sections[focusedSectionIdx]!;
-      const columnTasks = section.tasks.filter((t) => t.column === focusedColumn);
-      const currentIdx = columnTasks.findIndex((t) => t.id === selectedTaskId);
+      const currentIdx = section.tasks.findIndex((t) => t.id === selectedTaskId);
 
-      const moveWithinColumn = (delta: number) => {
-        if (columnTasks.length === 0) return;
-        const base = currentIdx < 0 ? (delta > 0 ? -1 : columnTasks.length) : currentIdx;
-        const next = Math.max(0, Math.min(columnTasks.length - 1, base + delta));
-        const nextTask = columnTasks[next];
+      const moveWithin = (delta: number) => {
+        if (section.tasks.length === 0) return;
+        const base = currentIdx < 0 ? (delta > 0 ? -1 : section.tasks.length) : currentIdx;
+        const next = Math.max(0, Math.min(section.tasks.length - 1, base + delta));
+        const nextTask = section.tasks[next];
         if (nextTask) setSelectedTaskId(nextTask.id);
-      };
-
-      const moveColumn = (delta: number) => {
-        const curIdx = COLUMNS.indexOf(focusedColumn);
-        const nextIdx = Math.max(0, Math.min(COLUMNS.length - 1, curIdx + delta));
-        const nextCol = COLUMNS[nextIdx]!;
-        setFocusedColumn(nextCol);
-        const firstInCol = section.tasks.find((t) => t.column === nextCol);
-        setSelectedTaskId(firstInCol ? firstInCol.id : null);
       };
 
       const moveSection = (delta: number) => {
@@ -102,28 +87,28 @@ export function useTeamKeyboardController(ctx: Context) {
         );
         const nextSec = ctx.sections[nextIdx];
         if (!nextSec) return;
-        const firstInCol = nextSec.tasks.find((t) => t.column === focusedColumn);
-        setSelectedTaskId(firstInCol ? firstInCol.id : null);
+        const firstTask = nextSec.tasks[0];
+        setSelectedTaskId(firstTask ? firstTask.id : null);
       };
 
       if (e.key === 'j' || e.key === 'ArrowDown') {
         e.preventDefault();
-        moveWithinColumn(1);
+        moveWithin(1);
         return;
       }
       if (e.key === 'k' || e.key === 'ArrowUp') {
         e.preventDefault();
-        moveWithinColumn(-1);
+        moveWithin(-1);
         return;
       }
       if (e.key === 'h' || e.key === 'ArrowLeft') {
         e.preventDefault();
-        moveColumn(-1);
+        moveSection(-1);
         return;
       }
       if (e.key === 'l' || e.key === 'ArrowRight') {
         e.preventDefault();
-        moveColumn(1);
+        moveSection(1);
         return;
       }
       if (e.key === ']') {
@@ -145,12 +130,12 @@ export function useTeamKeyboardController(ctx: Context) {
         return;
       }
 
-      const selected = columnTasks.find((t) => t.id === selectedTaskId);
+      const selected = section.tasks.find((t) => t.id === selectedTaskId);
       if (!selected) return;
 
       if (e.key === 'e') {
         e.preventDefault();
-        ctx.setEditingTaskId(selected.id);
+        openDrawer();
         return;
       }
       if (e.key === 'A') {
@@ -162,11 +147,6 @@ export function useTeamKeyboardController(ctx: Context) {
         });
         return;
       }
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        setSelectedDetailTaskId(selected.id);
-        return;
-      }
     };
 
     window.addEventListener('keydown', handler, { capture: true });
@@ -176,12 +156,9 @@ export function useTeamKeyboardController(ctx: Context) {
     activeModal,
     assigneePickerOpen,
     involvedPickerOpen,
-    selectedDetailTaskId,
+    openDrawer,
     selectedTaskId,
-    focusedColumn,
     setSelectedTaskId,
-    setFocusedColumn,
-    setSelectedDetailTaskId,
     openAssigneePicker,
   ]);
 }

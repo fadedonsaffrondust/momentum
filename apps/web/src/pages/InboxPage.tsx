@@ -79,9 +79,11 @@ export function InboxPage() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-border/60">
+      <div className="flex items-center justify-between gap-4 px-6 pt-4 pb-3 border-b border-border/60">
         <div className="flex items-center gap-3">
-          <h1 className="text-lg text-primary">Inbox</h1>
+          <h1 className="text-xs uppercase tracking-widest text-muted-foreground/70 font-semibold">
+            Inbox
+          </h1>
           {unread > 0 && (
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
               {unread} unread

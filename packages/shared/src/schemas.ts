@@ -42,6 +42,7 @@ export const taskSchema = z.object({
   creatorId: z.string().uuid(),
   assigneeId: z.string().uuid(),
   title: z.string().min(1).max(500),
+  description: z.string().nullable(),
   roleId: z.string().uuid().nullable(),
   priority: prioritySchema,
   estimateMinutes: z.number().int().nonnegative().nullable(),
@@ -57,6 +58,7 @@ export type Task = z.infer<typeof taskSchema>;
 
 export const createTaskInputSchema = z.object({
   title: z.string().min(1).max(500),
+  description: z.string().max(20_000).nullable().optional(),
   roleId: z.string().uuid().nullable().optional(),
   priority: prioritySchema.optional(),
   estimateMinutes: z.number().int().nonnegative().nullable().optional(),
@@ -652,12 +654,14 @@ export type TeamTodayStats = z.infer<typeof teamTodayStatsSchema>;
 // files (where they're absent) and v1.4 files (where they're populated) parse
 // cleanly. The import route fills defaults per spec §5.10 when absent.
 const exportTaskSchema = taskSchema
-  .omit({ id: true, creatorId: true, assigneeId: true })
+  .omit({ id: true, creatorId: true, assigneeId: true, description: true })
   .extend({
     id: z.string(),
     roleId: z.string().nullable(),
     creatorId: z.string().uuid().optional(),
     assigneeId: z.string().uuid().optional(),
+    // Added post-1.4; older export files parse without it.
+    description: z.string().nullable().optional().default(null),
   });
 
 const exportParkingSchema = parkingSchema

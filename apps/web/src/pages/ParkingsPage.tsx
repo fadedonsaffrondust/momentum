@@ -71,20 +71,18 @@ export function ParkingsPage() {
   // Not auto-focused on mount — `/` (handled globally) focuses the input.
 
   return (
-    <div className="h-full flex flex-col gap-4 px-6 py-5 overflow-hidden">
-      <div>
-        <h1 className="text-lg text-primary">Parkings</h1>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Topics to bring up at upcoming dailies.
-        </p>
-      </div>
-      <ParkingInputBar ref={inputRef} />
-      <div className="flex items-center justify-between gap-4">
-        <RoleFilterBar />
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="px-6 pt-4 pb-3 border-b border-border/60 flex items-center justify-between gap-4 shrink-0">
+        <h1 className="text-xs uppercase tracking-widest text-muted-foreground/70 font-semibold">
+          Parkings
+        </h1>
         <ParkingScopeFilter />
       </div>
+      <div className="flex flex-col gap-4 px-6 py-5 min-h-0 flex-1 overflow-hidden">
+        <ParkingInputBar ref={inputRef} />
+        <RoleFilterBar />
 
-      <div className="flex-1 min-h-0 overflow-y-auto pr-2">
+        <div className="flex-1 min-h-0 overflow-y-auto pr-2">
         <div className="max-w-3xl space-y-6">
           {groups.length === 0 && (
             <div className="flex flex-col items-center gap-1 py-12 text-center">
@@ -125,6 +123,7 @@ export function ParkingsPage() {
             </section>
           ))}
         </div>
+      </div>
       </div>
     </div>
   );

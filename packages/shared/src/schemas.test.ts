@@ -154,6 +154,7 @@ describe('taskSchema', () => {
     creatorId: UUID,
     assigneeId: UUID2,
     title: 'Ship feature',
+    description: null,
     roleId: null,
     priority: 'medium' as const,
     estimateMinutes: null,
@@ -180,12 +181,21 @@ describe('taskSchema', () => {
     expect(() => taskSchema.parse(withoutAssignee)).toThrow();
   });
 
-  it('allows null scheduledDate, roleId, estimateMinutes, actualMinutes', () => {
+  it('allows null scheduledDate, roleId, estimateMinutes, actualMinutes, description', () => {
     const result = taskSchema.parse(validTask);
     expect(result.scheduledDate).toBeNull();
     expect(result.roleId).toBeNull();
     expect(result.estimateMinutes).toBeNull();
     expect(result.actualMinutes).toBeNull();
+    expect(result.description).toBeNull();
+  });
+
+  it('accepts a multiline description', () => {
+    const result = taskSchema.parse({
+      ...validTask,
+      description: '## Definition of done\n- [ ] Tests pass\n- [ ] Demo sent',
+    });
+    expect(result.description).toContain('Definition of done');
   });
 
   it('requires createdAt as datetime', () => {
@@ -218,6 +228,26 @@ describe('createTaskInputSchema', () => {
   it('rejects non-uuid assigneeId', () => {
     expect(() =>
       createTaskInputSchema.parse({ title: 'x', assigneeId: 'not-a-uuid' }),
+    ).toThrow();
+  });
+
+  it('accepts an optional description string', () => {
+    const result = createTaskInputSchema.parse({
+      title: 'x',
+      description: 'Definition of done: ship it.',
+    });
+    expect(result.description).toBe('Definition of done: ship it.');
+  });
+
+  it('accepts null description to explicitly clear it', () => {
+    const result = createTaskInputSchema.parse({ title: 'x', description: null });
+    expect(result.description).toBeNull();
+  });
+
+  it('rejects a description over 20,000 characters', () => {
+    const huge = 'a'.repeat(20_001);
+    expect(() =>
+      createTaskInputSchema.parse({ title: 'x', description: huge }),
     ).toThrow();
   });
 });
@@ -1024,6 +1054,7 @@ describe('teamTaskListSchema', () => {
               creatorId: UUID,
               assigneeId: UUID2,
               title: 'T',
+              description: null,
               roleId: null,
               priority: 'medium',
               estimateMinutes: null,

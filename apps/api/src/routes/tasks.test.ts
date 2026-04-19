@@ -58,6 +58,7 @@ function makeTaskRow(overrides: Record<string, unknown> = {}) {
     creatorId: USER_ID,
     assigneeId: USER_ID,
     title: 'Test task',
+    description: null,
     roleId: null,
     priority: 'medium',
     estimateMinutes: 30,
@@ -160,6 +161,22 @@ describe('tasks routes', () => {
     expect(mockRecordInboxEvent).not.toHaveBeenCalled();
   });
 
+  it('POST /tasks round-trips a description field', async () => {
+    mockDb._pushResult([
+      makeTaskRow({ description: '## Definition of done\n- [ ] Shipped' }),
+    ]);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/tasks',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { title: 'x', description: '## Definition of done\n- [ ] Shipped' },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).description).toContain('Definition of done');
+  });
+
   // ── PATCH /tasks/:id ───────────────────────────────────────────────
 
   it('PATCH /tasks/:id non-assignee edits a field fires task_edited', async () => {
@@ -221,6 +238,42 @@ describe('tasks routes', () => {
     });
 
     expect(mockRecordInboxEvent).not.toHaveBeenCalled();
+  });
+
+  it('PATCH /tasks/:id updates description and returns it', async () => {
+    const existing = makeTaskRow({ creatorId: USER_ID, assigneeId: USER_ID });
+    mockDb._pushResult([existing]);
+    mockDb._pushResult([makeTaskRow({ ...existing, description: 'New context.' })]);
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/tasks/${TASK_ID}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: { description: 'New context.' },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).description).toBe('New context.');
+  });
+
+  it('PATCH /tasks/:id clears the description when sent as null', async () => {
+    const existing = makeTaskRow({
+      creatorId: USER_ID,
+      assigneeId: USER_ID,
+      description: 'Previously set.',
+    });
+    mockDb._pushResult([existing]);
+    mockDb._pushResult([makeTaskRow({ ...existing, description: null })]);
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/tasks/${TASK_ID}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: { description: null },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).description).toBeNull();
   });
 
   it('PATCH /tasks/:id reassignment fires task_assigned for new assignee', async () => {
@@ -430,14 +483,59 @@ describe('tasks routes', () => {
     expect(JSON.parse(res.body).actualMinutes).toBe(15);
   });
 
+  it('POST /tasks/:id/complete accumulates current session onto prior actualMinutes', async () => {
+    // Scenario: task was started, paused (15min logged), restarted, then
+    // completed 10 min into the second session. Expect 15 + 10 = 25.
+    const now = new Date('2026-04-15T12:10:00Z').getTime();
+    const dateNowSpy = vi.spyOn(Date, 'now').mockReturnValue(now);
+
+    const existingRow = makeTaskRow({
+      status: 'in_progress',
+      column: 'in_progress',
+      startedAt: new Date('2026-04-15T12:00:00Z'), // current session, 10 min ago
+      actualMinutes: 15, // prior session(s)
+    });
+    const completedRow = makeTaskRow({
+      status: 'done',
+      column: 'done',
+      startedAt: null,
+      actualMinutes: 25,
+      completedAt: new Date('2026-04-15T12:10:00Z'),
+    });
+
+    mockDb._pushResult([existingRow]);
+    mockDb._pushResult([completedRow]);
+    mockDb._pushResult([]);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/tasks/${TASK_ID}/complete`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.actualMinutes).toBe(25);
+    expect(body.startedAt).toBeNull();
+
+    dateNowSpy.mockRestore();
+  });
+
   // ── POST /tasks/:id/pause ──────────────────────────────────────────
 
   it('POST /tasks/:id/pause sets status to todo and column to up_next', async () => {
+    const existingRow = makeTaskRow({
+      status: 'in_progress',
+      column: 'in_progress',
+      startedAt: null,
+      actualMinutes: null,
+    });
     const pausedRow = makeTaskRow({
       status: 'todo',
       column: 'up_next',
-      startedAt: new Date('2026-04-15T10:00:00Z'),
+      startedAt: null,
     });
+    mockDb._pushResult([existingRow]);
     mockDb._pushResult([pausedRow]);
 
     const res = await app.inject({
@@ -450,6 +548,118 @@ describe('tasks routes', () => {
     const body = JSON.parse(res.body);
     expect(body.status).toBe('todo');
     expect(body.column).toBe('up_next');
+  });
+
+  it('POST /tasks/:id/pause accumulates session elapsed into actualMinutes and clears startedAt', async () => {
+    const now = new Date('2026-04-15T12:30:00Z').getTime();
+    const dateNowSpy = vi.spyOn(Date, 'now').mockReturnValue(now);
+
+    const existingRow = makeTaskRow({
+      status: 'in_progress',
+      column: 'in_progress',
+      startedAt: new Date('2026-04-15T12:00:00Z'), // 30 min ago
+      actualMinutes: 15, // prior session logged 15 min
+    });
+    const pausedRow = makeTaskRow({
+      status: 'todo',
+      column: 'up_next',
+      startedAt: null,
+      actualMinutes: 45, // 15 + 30
+    });
+    mockDb._pushResult([existingRow]);
+    mockDb._pushResult([pausedRow]);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/tasks/${TASK_ID}/pause`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.actualMinutes).toBe(45);
+    expect(body.startedAt).toBeNull();
+
+    dateNowSpy.mockRestore();
+  });
+
+  it('POST /tasks/:id/pause with no startedAt leaves actualMinutes unchanged', async () => {
+    const existingRow = makeTaskRow({
+      status: 'in_progress',
+      column: 'in_progress',
+      startedAt: null,
+      actualMinutes: 20,
+    });
+    const pausedRow = makeTaskRow({
+      status: 'todo',
+      column: 'up_next',
+      startedAt: null,
+      actualMinutes: 20,
+    });
+    mockDb._pushResult([existingRow]);
+    mockDb._pushResult([pausedRow]);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/tasks/${TASK_ID}/pause`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).actualMinutes).toBe(20);
+  });
+
+  it('POST /tasks/:id/pause returns 404 when task not found', async () => {
+    mockDb._pushResult([]);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/tasks/${TASK_ID}/pause`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(404);
+  });
+
+  // ── POST /tasks/:id/reopen ─────────────────────────────────────────
+
+  it('POST /tasks/:id/reopen returns task reset to todo/up_next with completion fields cleared', async () => {
+    const reopenedRow = makeTaskRow({
+      status: 'todo',
+      column: 'up_next',
+      startedAt: null,
+      completedAt: null,
+      actualMinutes: 45,
+    });
+    mockDb._pushResult([reopenedRow]);
+    mockDb._pushResult([]); // brandActionItems update
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/tasks/${TASK_ID}/reopen`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.status).toBe('todo');
+    expect(body.column).toBe('up_next');
+    expect(body.completedAt).toBeNull();
+    expect(body.startedAt).toBeNull();
+    // actualMinutes is preserved as a record of prior work on the task.
+    expect(body.actualMinutes).toBe(45);
+  });
+
+  it('POST /tasks/:id/reopen returns 404 when task not found', async () => {
+    mockDb._pushResult([]);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/tasks/${TASK_ID}/reopen`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(404);
   });
 
   // ── POST /tasks/:id/defer ──────────────────────────────────────────

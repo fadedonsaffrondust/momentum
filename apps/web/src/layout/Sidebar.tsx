@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   CheckSquare,
-  Pin,
+  CarFront,
   Users,
   ShoppingBag,
   Inbox,
@@ -199,7 +199,7 @@ export function Sidebar() {
           to="/parkings"
           label="Parkings"
           shortcut="g p"
-          icon={Pin}
+          icon={CarFront}
         />
         <SidebarNavItem to="/team" label="Team" shortcut="g u" icon={Users} />
         <SidebarNavItem

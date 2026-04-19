@@ -262,7 +262,7 @@ export function useDeleteTask() {
   });
 }
 
-function useTaskAction(action: 'start' | 'pause' | 'complete' | 'defer') {
+function useTaskAction(action: 'start' | 'pause' | 'complete' | 'defer' | 'reopen') {
   const token = useToken();
   const qc = useQueryClient();
   return useMutation({
@@ -276,6 +276,7 @@ export const useStartTask = () => useTaskAction('start');
 export const usePauseTask = () => useTaskAction('pause');
 export const useCompleteTask = () => useTaskAction('complete');
 export const useDeferTask = () => useTaskAction('defer');
+export const useReopenTask = () => useTaskAction('reopen');
 
 /* ─────────────── parkings ─────────────── */
 

@@ -58,6 +58,7 @@ export function mapTask(row: DbTask): Task {
     creatorId: row.creatorId,
     assigneeId: row.assigneeId,
     title: row.title,
+    description: row.description,
     roleId: row.roleId,
     priority: row.priority,
     estimateMinutes: row.estimateMinutes,

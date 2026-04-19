@@ -89,12 +89,17 @@ interface UiState {
   setFocusedColumn: (c: UiState['focusedColumn']) => void;
 
   /**
-   * When non-null, `TaskDetailModal` is open with this task id.
-   * Opened by Enter on /team (spec §9.7) and the Team Task View row
-   * click. Closed by Esc or outside click.
+   * Task detail drawer — non-modal, pinned to the right edge. The drawer
+   * reads `selectedTaskId` for which task to show, so opening the drawer
+   * and navigating between tasks are orthogonal (press `j/k` with the
+   * drawer open and it follows the selection). Opened by `e` on any of
+   * Today / Team / Backlog, or double-click on a Backlog row. Closed by
+   * Escape, the close button, or an explicit save.
    */
-  selectedDetailTaskId: string | null;
-  setSelectedDetailTaskId: (id: string | null) => void;
+  drawerOpen: boolean;
+  openDrawer: () => void;
+  closeDrawer: () => void;
+  toggleDrawer: () => void;
 
   selectedParkingId: string | null;
   setSelectedParkingId: (id: string | null) => void;
@@ -140,8 +145,10 @@ export const useUiStore = create<UiState>((set, get) => ({
   focusedColumn: 'up_next',
   setFocusedColumn: (c) => set({ focusedColumn: c }),
 
-  selectedDetailTaskId: null,
-  setSelectedDetailTaskId: (id) => set({ selectedDetailTaskId: id }),
+  drawerOpen: false,
+  openDrawer: () => set({ drawerOpen: true }),
+  closeDrawer: () => set({ drawerOpen: false }),
+  toggleDrawer: () => set((s) => ({ drawerOpen: !s.drawerOpen })),
 
   selectedParkingId: null,
   setSelectedParkingId: (id) => set({ selectedParkingId: id }),

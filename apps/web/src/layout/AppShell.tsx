@@ -1,12 +1,13 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useMe, useSettings } from '../api/hooks';
+import { useUiStore } from '../store/ui';
 import { ToastStack } from '../components/ToastStack';
 import { FirstRunWizard } from '../pages/FirstRunWizard';
 import { ModalRoot } from '../modals/ModalRoot';
 import { CommandPaletteModal } from '../modals/CommandPaletteModal';
 import { AssigneePickerHost } from '../modals/AssigneePickerHost';
 import { InvolvedPickerHost } from '../modals/InvolvedPickerHost';
-import { TaskDetailModal } from '../modals/TaskDetailModal';
+import { TaskDetailDrawer } from '../modals/TaskDetailDrawer';
 import { DataSync } from '../components/DataSync';
 import { BackupReminder } from '../components/BackupReminder';
 import { ShortcutsHint } from '../components/ShortcutsHint';
@@ -20,6 +21,14 @@ import { useGlobalShortcuts } from '../hooks/useGlobalShortcuts';
 export function AppShell() {
   const meQ = useMe();
   const settingsQ = useSettings();
+  const drawerOpen = useUiStore((s) => s.drawerOpen);
+  const { pathname } = useLocation();
+
+  // Team is an edge case: its layout is a horizontal column board that
+  // should slide under the drawer (columns keep their fixed width and
+  // you scroll horizontally past the drawer). Every other page wants the
+  // reflow-behind-padding behavior.
+  const drawerReservesSpace = drawerOpen && pathname !== '/team';
 
   // Register app-wide keyboard shortcuts — fires on every view, including
   // pages that don't call `useKeyboardController`.
@@ -52,7 +61,18 @@ export function AppShell() {
       <div className="h-screen flex bg-background text-foreground font-sans overflow-hidden">
         <Sidebar />
 
-        <main className="flex-1 min-w-0 overflow-hidden">
+        <main
+          className={[
+            'flex-1 min-w-0 overflow-hidden',
+            'transition-[padding] duration-150 ease-out',
+            // Reserve 640px on the right while the task drawer is open, so
+            // the main grids reflow instead of slipping under the drawer.
+            // Below md the drawer takes the full viewport, so no padding.
+            // Team opts out — its horizontal column board scrolls under the
+            // drawer instead of being squeezed into a narrow strip.
+            drawerReservesSpace ? 'md:pr-[640px]' : '',
+          ].join(' ')}
+        >
           <Outlet />
         </main>
 
@@ -61,7 +81,7 @@ export function AppShell() {
         <CommandPaletteModal />
         <AssigneePickerHost />
         <InvolvedPickerHost />
-        <TaskDetailModal />
+        <TaskDetailDrawer />
         <DataSync />
         <BackupReminder />
         <ShortcutsHint />

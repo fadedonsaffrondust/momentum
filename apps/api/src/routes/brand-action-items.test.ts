@@ -80,6 +80,7 @@ function makeTaskRow(overrides: Record<string, unknown> = {}) {
     creatorId: USER_ID,
     assigneeId: USER_ID,
     title: 'Send proposal to Boudin',
+    description: null,
     roleId: null,
     priority: 'medium',
     estimateMinutes: null,

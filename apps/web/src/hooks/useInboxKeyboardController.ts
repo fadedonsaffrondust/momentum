@@ -37,7 +37,6 @@ export function useInboxKeyboardController(ctx: Context) {
   const activeModal = useUiStore((s) => s.activeModal);
   const assigneePickerOpen = useUiStore((s) => s.assigneePickerTarget !== null);
   const involvedPickerOpen = useUiStore((s) => s.involvedPickerTarget !== null);
-  const selectedDetailTaskId = useUiStore((s) => s.selectedDetailTaskId);
   const selected = useUiStore((s) => s.selectedInboxEventId);
   const setSelected = useUiStore((s) => s.setSelectedInboxEventId);
 
@@ -56,7 +55,7 @@ export function useInboxKeyboardController(ctx: Context) {
     const handler = (e: KeyboardEvent) => {
       if (e.defaultPrevented) return;
       if (isTypingInInput()) return;
-      if (activeModal || assigneePickerOpen || involvedPickerOpen || selectedDetailTaskId) {
+      if (activeModal || assigneePickerOpen || involvedPickerOpen) {
         return;
       }
 
@@ -131,7 +130,6 @@ export function useInboxKeyboardController(ctx: Context) {
     activeModal,
     assigneePickerOpen,
     involvedPickerOpen,
-    selectedDetailTaskId,
     selected,
     setSelected,
   ]);

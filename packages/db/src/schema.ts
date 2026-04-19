@@ -64,13 +64,22 @@ export const userSettings = pgTable('user_settings', {
 
 /* ─────────────── roles (team-wide in team-space) ─────────────── */
 
-export const roles = pgTable('roles', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
-  color: text('color').notNull().default('#0FB848'),
-  position: integer('position').notNull().default(0),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+export const roles = pgTable(
+  'roles',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    color: text('color').notNull().default('#0FB848'),
+    position: integer('position').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    // Case-insensitive uniqueness on name so "Product" and "product" can't
+    // both exist. The API layer enforces the same rule for a friendly 409;
+    // this index is the DB backstop.
+    nameUniqueIdx: uniqueIndex('roles_name_lower_unique').on(sql`LOWER(${table.name})`),
+  }),
+);
 
 /* ─────────────── tasks ─────────────── */
 
@@ -85,6 +94,7 @@ export const tasks = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
+    description: text('description'),
     roleId: uuid('role_id').references(() => roles.id, { onDelete: 'set null' }),
     priority: priorityEnum('priority').notNull().default('medium'),
     estimateMinutes: integer('estimate_minutes'),

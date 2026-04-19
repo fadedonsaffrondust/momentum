@@ -25,6 +25,166 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.12.0',
+    date: '2026-04-18',
+    headline: 'Team view is now a column-per-teammate board',
+    summary:
+      'The Team page used to stack teammates vertically, each with their own 3-column mini-kanban. That layout collapsed the moment anyone accumulated tasks — Done tasks on one row would push the next teammate off-screen. It\'s now a horizontal board: one column per teammate, with each task card carrying its own status tag (Up Next / In Progress / Done). Scroll horizontally to browse teammates; scroll vertically within a column. Current user\'s column is always first.',
+    items: [
+      {
+        title: 'One column per teammate',
+        description:
+          'Horizontal board layout. Every teammate is a 320px column with a sticky header showing their stats. Cards are sorted In Progress → Up Next → Done so the most actionable work is at the top of each column.',
+      },
+      {
+        title: 'Status on the card, not in the grid',
+        description:
+          'Each task card shows its stage as a small tag next to the role pill — green for In Progress, neutral for Up Next, muted for Done. No more guessing what column a task lives in; it\'s right there on the card.',
+      },
+      {
+        title: 'Updated keyboard model',
+        description:
+          'j / k move between tasks in the focused teammate\'s column. h / l (and [ / ] as aliases) jump to the previous or next teammate. e opens the detail drawer, A reassigns. Progression keys (Enter / Space) stayed on Today — Team is an overview surface, not a remote-control for other people\'s tasks.',
+        shortcuts: ['j', 'k', 'h', 'l'],
+      },
+    ],
+  },
+  {
+    version: '0.11.0',
+    date: '2026-04-18',
+    headline: 'Tasks now have a description field',
+    summary:
+      'Every task gets a multi-line description you can fill in from the detail drawer. Use it for a definition of done, links, context, or anything that doesn\'t fit in the title. The textarea ships with smart helpers: type `/todo ` for a checkbox, `-` or `1.` for bullet / numbered lists (auto-continues on Enter), and Tab to indent. Quick-add stays title-only — descriptions are edit-only and optional.',
+    items: [
+      {
+        title: 'Definition of done lives with the task',
+        description:
+          'Open any task with `e` and you\'ll see a Description textarea under the title. Type a checklist, paste a link, drop the acceptance criteria — whatever the title alone can\'t capture. Save to persist; leave it blank to clear.',
+        shortcuts: ['e'],
+      },
+      {
+        title: 'Smart list helpers out of the box',
+        description:
+          'The description textarea uses the same smart helpers as meeting notes: `/todo ` converts to `- [ ]`, `- ` and `1. ` auto-continue on Enter, Tab indents a list item, Shift+Tab outdents. Hit Enter on an empty bullet to exit the list.',
+        shortcuts: ['Tab', '↵'],
+      },
+    ],
+  },
+  {
+    version: '0.10.0',
+    date: '2026-04-18',
+    headline: 'Task detail is now a side drawer',
+    summary:
+      'Pressing `e` on a task no longer pops a blocking modal — a non-modal drawer slides in from the right edge. The page behind stays fully interactive: j / k keep navigating and the drawer follows along, showing whichever task is currently selected. Today and Team grids reflow from 3 columns to 2 while the drawer is open so nothing hides beneath it. Escape or the close button dismisses the drawer; it also persists across page navigation until you explicitly close it.',
+    items: [
+      {
+        title: 'Drawer follows selection',
+        description:
+          'Open the drawer with `e` on any task, then keep using j / k to move between cards — the drawer updates live to show the task you\'re on. No more open-edit-close-nav-open-edit cycles.',
+        shortcuts: ['e', 'j', 'k'],
+      },
+      {
+        title: 'Grids reflow instead of hiding content',
+        description:
+          'On Today and Team, the kanban grid drops from 3 → 2 columns while the drawer is open (widens back to 3 at very wide viewports). The Done column stays reachable by scroll or h / l nav.',
+      },
+      {
+        title: 'Escape to close · persists across navigation',
+        description:
+          'The drawer stays open when you navigate between views (g t / g l / g u) — useful for bouncing through pages while keeping a task pinned for edit. Press Escape or the close button when you\'re done.',
+        shortcuts: ['Esc'],
+      },
+    ],
+  },
+  {
+    version: '0.9.5',
+    date: '2026-04-18',
+    headline: 'Plan My Day now scrolls when leftovers run long',
+    summary:
+      'The Plan My Day modal used to grow past the viewport when yesterday\'s leftovers or the backlog had many items — the Next / Back buttons ended up below the fold. The modal now caps its height and scrolls the list inside, keeping the step chips and footer buttons pinned.',
+    items: [
+      {
+        title: 'Scrollable leftovers and backlog list',
+        description:
+          'When the Leftovers or Backlog step contains more tasks than fit on screen, the list now scrolls inside the modal. The step navigation at the top and the Back / Next buttons at the bottom stay visible as you work through a long list.',
+      },
+    ],
+  },
+  {
+    version: '0.9.4',
+    date: '2026-04-18',
+    headline: 'Time tracking is correct across pauses and reopens',
+    summary:
+      'Paused intervals no longer count as work. Before, pausing a task and resuming later would count the gap between pause and resume as time spent on the task. Completing a reopened task would also overwrite — not add to — previously logged minutes. Both are fixed: each start/pause/complete cycle now rolls its elapsed minutes into the task\'s running total, and multi-session totals are preserved across reopens.',
+    items: [
+      {
+        title: 'Accurate time across pause → resume cycles',
+        description:
+          'When you pause a task, the minutes you actually spent in that session are added to the task\'s total and the timer clears. Starting again begins a fresh session, so gaps between pause and resume (lunch, meetings, distractions) are no longer counted as work on the task.',
+      },
+      {
+        title: 'Reopen preserves history, next complete accumulates',
+        description:
+          'Dragging a Done task back to Up Next keeps its prior actual minutes as a record. If you restart and complete it again, the new session\'s time is added to the prior total instead of replacing it.',
+      },
+    ],
+  },
+  {
+    version: '0.9.3',
+    date: '2026-04-18',
+    headline: 'Drag tasks between columns on Today',
+    summary:
+      'The Today kanban now supports mouse drag-and-drop between Up Next, In Progress, and Done. The keyboard model is unchanged — Enter / Space / e still work — drag is just an alternative path for mouse users. Dragging a task from Done back to Up Next or In Progress reopens it (clears the completion timestamp and start timer) so accidental completes are easy to undo.',
+    items: [
+      {
+        title: 'Drag between columns',
+        description:
+          'Grab any task on Today and drop it on another column. Dropping on In Progress starts the task (same as Enter), dropping on Done completes it (same as Space), dropping back on Up Next pauses the timer. A small 6px activation distance means a plain click still selects without triggering drag.',
+      },
+      {
+        title: 'Reopen a completed task by dragging it out of Done',
+        description:
+          'Drop a Done task on Up Next (or In Progress) to reopen it — completion timestamp is cleared, the timer resets, and prior time logged on the task is preserved as history. Useful when you hit Space by accident or marked the wrong task.',
+      },
+    ],
+  },
+  {
+    version: '0.9.2',
+    date: '2026-04-18',
+    headline: 'Enter now advances tasks through the kanban',
+    summary:
+      'Pressing Enter on a selected task on Today now moves it to the next stage: Up Next → In Progress on the first press, In Progress → Done on the second. Space still completes a task from any state in one shot, so nothing you already learned goes away — Enter just fills in the missing step-through.',
+    items: [
+      {
+        title: 'Enter advances one stage at a time',
+        description:
+          'Select a task and press Enter. If it\'s in Up Next, it moves to In Progress. If it\'s already In Progress, Enter now completes it. Space continues to work as a one-shot "mark done" from any state — use it when you finished something without formally starting it.',
+        shortcuts: ['Enter', 'Space'],
+      },
+    ],
+  },
+  {
+    version: '0.9.1',
+    date: '2026-04-18',
+    headline: 'One key to edit any task — from Today, Backlog, or Team',
+    summary:
+      'Pressing `e` on a selected task now opens the full task detail modal so you can edit the title, priority, role, estimate, scheduled date, and assignee in one place. Works the same way on Today, Team, and now Backlog — which just got keyboard navigation too. The old inline title-only edit is gone; the detail modal covers everything it did and more.',
+    items: [
+      {
+        title: '`e` edits the whole task, everywhere',
+        description:
+          'Select a task with j/k and press e — the task detail modal opens with every field editable: title, priority, role, estimate, scheduled date, and assignee. Previously e only let you rename the task inline, and estimate had no keyboard path at all. Now one key covers the full edit.',
+        shortcuts: ['e'],
+      },
+      {
+        title: 'Backlog is keyboard-navigable',
+        description:
+          'The Backlog view now supports j/k to move through tasks across all date groups (Overdue → Tomorrow → This Week → Later → Someday) and e to open the detail modal for the selected task. Double-click a row to open the detail modal with the mouse.',
+        shortcuts: ['j', 'k', 'e'],
+      },
+    ],
+  },
+  {
     version: '0.9.0',
     date: '2026-04-17',
     headline: 'Every surface now runs on the new design tokens',
