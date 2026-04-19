@@ -31,30 +31,18 @@ function renderShortcut(shortcut: string | undefined) {
   );
 }
 
-function CommandRow({
-  command,
-  onRun,
-}: {
-  command: Command;
-  onRun: (c: Command) => void;
-}) {
+function CommandRow({ command, onRun }: { command: Command; onRun: (c: Command) => void }) {
   const Icon = command.icon;
   // cmdk uses textContent for fuzzy-match scoring. The `value` prop makes
   // id + label + description all searchable regardless of rendering.
-  const value = [command.id, command.label, command.description ?? '']
-    .join(' ')
-    .toLowerCase();
+  const value = [command.id, command.label, command.description ?? ''].join(' ').toLowerCase();
   return (
     <CommandItem value={value} onSelect={() => onRun(command)}>
-      {Icon ? (
-        <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-      ) : null}
+      {Icon ? <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" /> : null}
       <div className="flex min-w-0 flex-col">
         <span className="truncate text-foreground">{command.label}</span>
         {command.description ? (
-          <span className="truncate text-2xs text-muted-foreground">
-            {command.description}
-          </span>
+          <span className="truncate text-2xs text-muted-foreground">{command.description}</span>
         ) : null}
       </div>
       {renderShortcut(command.shortcut)}
@@ -122,11 +110,7 @@ export function CommandPaletteModal() {
         {recents.length > 0 ? (
           <CommandGroup heading={RECENT_SECTION}>
             {recents.map((c) => (
-              <CommandRow
-                key={`recent-${c.id}`}
-                command={c}
-                onRun={handleRun}
-              />
+              <CommandRow key={`recent-${c.id}`} command={c} onRun={handleRun} />
             ))}
           </CommandGroup>
         ) : null}

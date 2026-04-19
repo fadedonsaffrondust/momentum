@@ -156,8 +156,7 @@ export function GlobalCommands(): null {
         icon: theme === 'dark' ? Sun : Moon,
         section: 'Preferences',
         priority: 30,
-        run: () =>
-          updateSettings.mutate({ theme: theme === 'dark' ? 'light' : 'dark' }),
+        run: () => updateSettings.mutate({ theme: theme === 'dark' ? 'light' : 'dark' }),
       },
       {
         id: 'open-settings',

@@ -19,8 +19,7 @@ export function TeamPulseStrip() {
   return (
     <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-2xs text-muted-foreground">
       <span>
-        Team today:{' '}
-        <span className="text-foreground font-medium">{pct}% completion</span>
+        Team today: <span className="text-foreground font-medium">{pct}% completion</span>
       </span>
       <span>
         {usersWithInProgressCount === 0

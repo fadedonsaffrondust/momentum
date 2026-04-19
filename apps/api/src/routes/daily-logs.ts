@@ -1,11 +1,7 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import {
-  dailyLogSchema,
-  upsertDailyLogInputSchema,
-  isoDateSchema,
-} from '@momentum/shared';
+import { dailyLogSchema, upsertDailyLogInputSchema, isoDateSchema } from '@momentum/shared';
 import { dailyLogs, tasks } from '@momentum/db';
 import { db } from '../db.ts';
 import { mapDailyLog } from '../mappers.ts';

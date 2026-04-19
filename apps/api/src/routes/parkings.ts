@@ -38,10 +38,7 @@ export const parkingsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req) => {
       const visibleConds = or(
         eq(parkings.visibility, 'team'),
-        and(
-          eq(parkings.visibility, 'private'),
-          eq(parkings.creatorId, req.userId),
-        ),
+        and(eq(parkings.visibility, 'private'), eq(parkings.creatorId, req.userId)),
       );
       const conds = [visibleConds];
       if (req.query.status) conds.push(eq(parkings.status, req.query.status));

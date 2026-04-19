@@ -39,14 +39,9 @@ export function AssigneePickerModal({
 
   const allUsers: readonly UserSummary[] = usersQ.data ?? [];
 
-  const filtered = useMemo(
-    () => filterUsers(allUsers, query),
-    [allUsers, query],
-  );
+  const filtered = useMemo(() => filterUsers(allUsers, query), [allUsers, query]);
 
-  type Option =
-    | { kind: 'user'; user: UserSummary }
-    | { kind: 'clear'; user: null };
+  type Option = { kind: 'user'; user: UserSummary } | { kind: 'clear'; user: null };
 
   const options = useMemo<Option[]>(() => {
     const base: Option[] = filtered.map((u) => ({ kind: 'user', user: u }));
@@ -131,9 +126,7 @@ export function AssigneePickerModal({
     >
       <div className="w-full max-w-sm rounded-xl border border-border bg-background shadow-2xl p-4 animate-scaleIn">
         <div className="mb-3">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            {title}
-          </div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{title}</div>
           <input
             data-assignee-search="true"
             type="text"
@@ -168,7 +161,9 @@ export function AssigneePickerModal({
                   onClick={() => commit(opt)}
                   className={clsx(
                     'flex items-center justify-between gap-3 rounded-md px-2 py-1.5 text-sm cursor-pointer transition',
-                    cursor === i ? 'bg-card text-foreground' : 'text-muted-foreground hover:bg-card/60',
+                    cursor === i
+                      ? 'bg-card text-foreground'
+                      : 'text-muted-foreground hover:bg-card/60',
                   )}
                 >
                   {opt.kind === 'user' ? (
@@ -219,9 +214,7 @@ function filterUsers(users: readonly UserSummary[], query: string): UserSummary[
   if (!query.trim()) return [...users];
   const q = query.toLowerCase().trim();
   return users.filter(
-    (u) =>
-      u.displayName.toLowerCase().includes(q) ||
-      u.email.toLowerCase().includes(q),
+    (u) => u.displayName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q),
   );
 }
 

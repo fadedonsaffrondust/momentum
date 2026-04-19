@@ -16,8 +16,7 @@ export function TimeBudgetBar({ tasks, capacityMinutes }: Props) {
   const pct = Math.min(100, ratio * 100);
   const over = planned - capacityMinutes;
 
-  const state: 'ok' | 'warn' | 'over' =
-    ratio >= 1 ? 'over' : ratio >= 0.8 ? 'warn' : 'ok';
+  const state: 'ok' | 'warn' | 'over' = ratio >= 1 ? 'over' : ratio >= 0.8 ? 'warn' : 'ok';
 
   return (
     <div className="space-y-2">

@@ -39,7 +39,10 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       const { email, password, userName } = req.body;
 
       const domain = extractDomain(email);
-      if (!domain || !ALLOWED_SIGNUP_DOMAINS.includes(domain as (typeof ALLOWED_SIGNUP_DOMAINS)[number])) {
+      if (
+        !domain ||
+        !ALLOWED_SIGNUP_DOMAINS.includes(domain as (typeof ALLOWED_SIGNUP_DOMAINS)[number])
+      ) {
         throw badRequest(SIGNUP_DOMAIN_ERROR);
       }
 

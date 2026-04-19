@@ -7,14 +7,7 @@ import {
   type InboxEvent,
   type InboxEventType,
 } from '@momentum/shared';
-import {
-  inboxEvents,
-  users,
-  tasks,
-  parkings,
-  brandActionItems,
-  brands,
-} from '@momentum/db';
+import { inboxEvents, users, tasks, parkings, brandActionItems, brands } from '@momentum/db';
 import { db } from '../db.ts';
 import { mapUserSummary } from '../mappers.ts';
 import { notFound } from '../errors.ts';
@@ -159,9 +152,9 @@ export const inboxRoutes: FastifyPluginAsyncZod = async (app) => {
       const [row] = (await db
         .select({ count: sql<number>`cast(count(*) as int)` })
         .from(inboxEvents)
-        .where(
-          and(eq(inboxEvents.userId, req.userId), isNull(inboxEvents.readAt)),
-        )) as [{ count: number }];
+        .where(and(eq(inboxEvents.userId, req.userId), isNull(inboxEvents.readAt)))) as [
+        { count: number },
+      ];
 
       return { count: row?.count ?? 0 };
     },
@@ -179,9 +172,7 @@ export const inboxRoutes: FastifyPluginAsyncZod = async (app) => {
       const [row] = await db
         .update(inboxEvents)
         .set({ readAt: new Date() })
-        .where(
-          and(eq(inboxEvents.id, req.params.id), eq(inboxEvents.userId, req.userId)),
-        )
+        .where(and(eq(inboxEvents.id, req.params.id), eq(inboxEvents.userId, req.userId)))
         .returning({ id: inboxEvents.id });
       if (!row) throw notFound('Inbox event not found');
       return { ok: true as const };
@@ -199,9 +190,7 @@ export const inboxRoutes: FastifyPluginAsyncZod = async (app) => {
       const rows = await db
         .update(inboxEvents)
         .set({ readAt: new Date() })
-        .where(
-          and(eq(inboxEvents.userId, req.userId), isNull(inboxEvents.readAt)),
-        )
+        .where(and(eq(inboxEvents.userId, req.userId), isNull(inboxEvents.readAt)))
         .returning({ id: inboxEvents.id });
 
       return { updated: rows.length };

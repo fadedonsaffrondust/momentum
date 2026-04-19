@@ -19,13 +19,7 @@ const TITLE_HINT: Record<TaskColumn, string> = {
   done: 'Nice work.',
 };
 
-export function KanbanColumn({
-  column,
-  title,
-  tasks,
-  roles,
-  dnd = false,
-}: Props) {
+export function KanbanColumn({ column, title, tasks, roles, dnd = false }: Props) {
   const focusedColumn = useUiStore((s) => s.focusedColumn);
   const selectedTaskId = useUiStore((s) => s.selectedTaskId);
   const setSelectedTaskId = useUiStore((s) => s.setSelectedTaskId);
@@ -47,7 +41,9 @@ export function KanbanColumn({
       <header className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
         <div>
           <h2 className="text-xs uppercase tracking-wider text-muted-foreground">{title}</h2>
-          <p className="text-xs text-muted-foreground/70 mt-0.5">{tasks.length} · {TITLE_HINT[column]}</p>
+          <p className="text-xs text-muted-foreground/70 mt-0.5">
+            {tasks.length} · {TITLE_HINT[column]}
+          </p>
         </div>
       </header>
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
@@ -55,13 +51,15 @@ export function KanbanColumn({
           <div className="flex flex-col items-center gap-1 py-8 text-center">
             <p className="text-xs text-muted-foreground">No tasks up next.</p>
             <p className="text-2xs text-muted-foreground/70">
-              Press <kbd className="font-mono">/</kbd> or <kbd className="font-mono">n</kbd> to add one.
+              Press <kbd className="font-mono">/</kbd> or <kbd className="font-mono">n</kbd> to add
+              one.
             </p>
           </div>
         )}
         {tasks.length === 0 && column === 'in_progress' && (
           <p className="text-xs text-muted-foreground/70 text-center py-8">
-            Nothing in progress. Press <kbd className="font-mono">Enter</kbd> on an Up Next task to start.
+            Nothing in progress. Press <kbd className="font-mono">Enter</kbd> on an Up Next task to
+            start.
           </p>
         )}
         {tasks.length === 0 && column === 'done' && (

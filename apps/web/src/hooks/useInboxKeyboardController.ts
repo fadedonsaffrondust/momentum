@@ -83,9 +83,7 @@ export function useInboxKeyboardController(ctx: Context) {
       }
 
       if (ctx.events.length === 0) return;
-      const currentIdx = selected
-        ? ctx.events.findIndex((ev) => ev.id === selected)
-        : -1;
+      const currentIdx = selected ? ctx.events.findIndex((ev) => ev.id === selected) : -1;
 
       const move = (delta: number) => {
         const base = currentIdx < 0 ? (delta > 0 ? -1 : ctx.events.length) : currentIdx;
@@ -125,12 +123,5 @@ export function useInboxKeyboardController(ctx: Context) {
       window.removeEventListener('keydown', handler, { capture: true });
       clearChord();
     };
-  }, [
-    ctx,
-    activeModal,
-    assigneePickerOpen,
-    involvedPickerOpen,
-    selected,
-    setSelected,
-  ]);
+  }, [ctx, activeModal, assigneePickerOpen, involvedPickerOpen, selected, setSelected]);
 }

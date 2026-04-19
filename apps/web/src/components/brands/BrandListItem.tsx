@@ -30,9 +30,7 @@ export function BrandListItem({ brand, meetings, actionItems, selected, onClick 
     >
       <div className="flex items-center gap-2">
         <HealthPill status={health} />
-        <span className="flex-1 text-sm text-foreground truncate font-medium">
-          {brand.name}
-        </span>
+        <span className="flex-1 text-sm text-foreground truncate font-medium">{brand.name}</span>
         {hasUnseen && !selected && (
           <span
             className="w-1.5 h-1.5 rounded-full bg-primary shrink-0"
@@ -45,9 +43,7 @@ export function BrandListItem({ brand, meetings, actionItems, selected, onClick 
         )}
       </div>
       <div className="mt-0.5 pl-[14px] text-[10px] text-muted-foreground/70">
-        {brand.status === 'import_failed'
-          ? 'Import failed'
-          : formatTimeAgo(brand.updatedAt)}
+        {brand.status === 'import_failed' ? 'Import failed' : formatTimeAgo(brand.updatedAt)}
       </div>
     </button>
   );

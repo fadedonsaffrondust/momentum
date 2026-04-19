@@ -681,11 +681,9 @@ const exportBrandActionItemSchema = brandActionItemSchema
     assigneeId: z.string().uuid().nullable().optional(),
   });
 
-const exportBrandMeetingSchema = brandMeetingSchema
-  .omit({ attendeeUserIds: true })
-  .extend({
-    attendeeUserIds: z.array(z.string().uuid()).optional(),
-  });
+const exportBrandMeetingSchema = brandMeetingSchema.omit({ attendeeUserIds: true }).extend({
+  attendeeUserIds: z.array(z.string().uuid()).optional(),
+});
 
 export const exportFileSchema = z.object({
   version: z.enum(['1.0', '1.1', '1.2', '1.3', '1.4']),
@@ -693,9 +691,7 @@ export const exportFileSchema = z.object({
   settings: userSettingsSchema.omit({ userId: true }),
   roles: z.array(roleSchema.omit({ id: true }).extend({ id: z.string() })),
   tasks: z.array(exportTaskSchema),
-  dailyLogs: z.array(
-    dailyLogSchema.omit({ userId: true, id: true }).extend({ id: z.string() }),
-  ),
+  dailyLogs: z.array(dailyLogSchema.omit({ userId: true, id: true }).extend({ id: z.string() })),
   // Added in 1.1 — older files are treated as an empty list.
   parkings: z.array(exportParkingSchema).optional().default([]),
   // Added in 1.2.

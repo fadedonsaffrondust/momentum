@@ -1,0 +1,13 @@
+# Pre-commit hooks. Installed automatically by `pnpm install` (root `prepare` script).
+# Skipping a hook locally: `LEFTHOOK=0 git commit ...`
+pre-commit:
+  parallel: true
+  commands:
+    eslint:
+      glob: '*.{ts,tsx}'
+      run: pnpm exec eslint --max-warnings=0 --no-warn-ignored --fix {staged_files}
+      stage_fixed: true
+    prettier:
+      glob: '*.{ts,tsx,json,md,yml,yaml}'
+      run: pnpm exec prettier --write {staged_files}
+      stage_fixed: true

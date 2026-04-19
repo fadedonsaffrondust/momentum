@@ -24,10 +24,7 @@ export function scoreMeeting(
   // Stakeholder email matching (+50 per match)
   if (rules.stakeholderEmails.length > 0) {
     const lowerEmails = new Set(rules.stakeholderEmails.map((e) => e.toLowerCase()));
-    const allParticipants = [
-      meeting.organizer,
-      ...meeting.invitees,
-    ];
+    const allParticipants = [meeting.organizer, ...meeting.invitees];
     for (const person of allParticipants) {
       if (person.email && lowerEmails.has(person.email.toLowerCase())) {
         score += 50;

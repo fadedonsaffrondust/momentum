@@ -15,14 +15,10 @@ import { conflict, notFound } from '../errors.ts';
 export const rolesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.addHook('preHandler', app.authenticate);
 
-  app.get(
-    '/roles',
-    { schema: { response: { 200: z.array(roleSchema) } } },
-    async () => {
-      const rows = await db.select().from(roles).orderBy(asc(roles.position));
-      return rows.map(mapRole);
-    },
-  );
+  app.get('/roles', { schema: { response: { 200: z.array(roleSchema) } } }, async () => {
+    const rows = await db.select().from(roles).orderBy(asc(roles.position));
+    return rows.map(mapRole);
+  });
 
   app.post(
     '/roles',
@@ -47,13 +43,12 @@ export const rolesRoutes: FastifyPluginAsyncZod = async (app) => {
         throw conflict(`A role named "${existing.name}" already exists.`);
       }
 
-      const [{ maxPos }] = (await db
-        .select({ maxPos: max(roles.position) })
-        .from(roles)) as [{ maxPos: number | null }];
+      const [{ maxPos }] = (await db.select({ maxPos: max(roles.position) }).from(roles)) as [
+        { maxPos: number | null },
+      ];
 
       const nextPosition = (maxPos ?? -1) + 1;
-      const resolvedColor =
-        color ?? ROLE_COLOR_PALETTE[nextPosition % ROLE_COLOR_PALETTE.length]!;
+      const resolvedColor = color ?? ROLE_COLOR_PALETTE[nextPosition % ROLE_COLOR_PALETTE.length]!;
 
       const [row] = await db
         .insert(roles)
@@ -86,10 +81,7 @@ export const rolesRoutes: FastifyPluginAsyncZod = async (app) => {
           .select({ name: roles.name })
           .from(roles)
           .where(
-            and(
-              sql`LOWER(${roles.name}) = LOWER(${req.body.name})`,
-              ne(roles.id, req.params.id),
-            ),
+            and(sql`LOWER(${roles.name}) = LOWER(${req.body.name})`, ne(roles.id, req.params.id)),
           )
           .limit(1);
         if (existing) {

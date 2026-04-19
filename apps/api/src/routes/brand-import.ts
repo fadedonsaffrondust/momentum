@@ -59,7 +59,10 @@ async function processImportAsync(
     if (!apiKey) {
       await db
         .update(brands)
-        .set({ status: 'import_failed', importError: 'OPENAI_API_KEY not configured on the server.' })
+        .set({
+          status: 'import_failed',
+          importError: 'OPENAI_API_KEY not configured on the server.',
+        })
         .where(eq(brands.id, brandId));
       return;
     }

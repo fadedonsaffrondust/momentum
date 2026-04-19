@@ -11,14 +11,10 @@ import { recordBrandEvent } from '../services/events.ts';
 export const brandsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.addHook('preHandler', app.authenticate);
 
-  app.get(
-    '/brands',
-    { schema: { response: { 200: z.array(brandSchema) } } },
-    async () => {
-      const rows = await db.select().from(brands).orderBy(desc(brands.updatedAt));
-      return rows.map(mapBrand);
-    },
-  );
+  app.get('/brands', { schema: { response: { 200: z.array(brandSchema) } } }, async () => {
+    const rows = await db.select().from(brands).orderBy(desc(brands.updatedAt));
+    return rows.map(mapBrand);
+  });
 
   app.post(
     '/brands',
@@ -61,11 +57,7 @@ export const brandsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => {
-      const [row] = await db
-        .select()
-        .from(brands)
-        .where(eq(brands.id, req.params.id))
-        .limit(1);
+      const [row] = await db.select().from(brands).where(eq(brands.id, req.params.id)).limit(1);
       if (!row) throw notFound('Brand not found');
       return mapBrand(row);
     },

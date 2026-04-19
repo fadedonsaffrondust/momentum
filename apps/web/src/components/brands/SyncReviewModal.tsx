@@ -192,7 +192,8 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
             </h2>
             {phase === 'review' && (
               <p className="text-xs text-muted-foreground mt-0.5">
-                Found {allCandidates.length} meeting{allCandidates.length !== 1 ? 's' : ''} {sinceText}
+                Found {allCandidates.length} meeting{allCandidates.length !== 1 ? 's' : ''}{' '}
+                {sinceText}
               </p>
             )}
           </div>
@@ -246,7 +247,8 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
                   </p>
                   {syncResult.pendingTranscripts > 0 && (
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {syncResult.pendingTranscripts} still processing — re-sync later to extract content
+                      {syncResult.pendingTranscripts} still processing — re-sync later to extract
+                      content
                     </p>
                   )}
                 </div>
@@ -258,7 +260,8 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
                   <ArrowRight size={18} className="text-primary mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-foreground">
-                      {syncResult.actionItemStats.extracted} action item{syncResult.actionItemStats.extracted !== 1 ? 's' : ''} extracted
+                      {syncResult.actionItemStats.extracted} action item
+                      {syncResult.actionItemStats.extracted !== 1 ? 's' : ''} extracted
                     </p>
                     <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
                       <span className="text-xs text-emerald-500">
@@ -266,7 +269,8 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
                       </span>
                       {syncResult.actionItemStats.skipped > 0 && (
                         <span className="text-xs text-muted-foreground">
-                          {syncResult.actionItemStats.skipped} duplicate{syncResult.actionItemStats.skipped !== 1 ? 's' : ''} skipped
+                          {syncResult.actionItemStats.skipped} duplicate
+                          {syncResult.actionItemStats.skipped !== 1 ? 's' : ''} skipped
                         </span>
                       )}
                       {syncResult.actionItemStats.updated > 0 && (
@@ -282,7 +286,9 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
               {syncResult.actionItemStats.extracted === 0 && syncResult.imported > 0 && (
                 <div className="flex items-start gap-3">
                   <ArrowRight size={18} className="text-muted-foreground/70 mt-0.5 shrink-0" />
-                  <p className="text-sm text-muted-foreground">No action items found in these recordings</p>
+                  <p className="text-sm text-muted-foreground">
+                    No action items found in these recordings
+                  </p>
                 </div>
               )}
 
@@ -296,7 +302,9 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
                     </p>
                     <ul className="mt-1 space-y-0.5">
                       {syncResult.errors.map((err, i) => (
-                        <li key={i} className="text-xs text-muted-foreground">{err}</li>
+                        <li key={i} className="text-xs text-muted-foreground">
+                          {err}
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -305,16 +313,19 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
             </div>
           )}
 
-          {phase === 'review' && likely.length === 0 && possible.length === 0 && manual.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
-              <p className="text-sm text-muted-foreground">
-                No new recordings found matching your rules for {brandName}.
-              </p>
-              <p className="text-xs text-muted-foreground/70">
-                Try adjusting your matching rules, or link a recording manually below.
-              </p>
-            </div>
-          )}
+          {phase === 'review' &&
+            likely.length === 0 &&
+            possible.length === 0 &&
+            manual.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
+                <p className="text-sm text-muted-foreground">
+                  No new recordings found matching your rules for {brandName}.
+                </p>
+                <p className="text-xs text-muted-foreground/70">
+                  Try adjusting your matching rules, or link a recording manually below.
+                </p>
+              </div>
+            )}
 
           {phase === 'review' && likely.length > 0 && (
             <div className="mb-4">
@@ -412,9 +423,7 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
                   )}
                 </button>
               </div>
-              {manualError && (
-                <p className="text-xs text-red-400 mt-1.5">{manualError}</p>
-              )}
+              {manualError && <p className="text-xs text-red-400 mt-1.5">{manualError}</p>}
             </div>
           )}
         </div>
@@ -424,7 +433,8 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
           <div className="px-5 py-3 border-t border-border flex items-center justify-between">
             <div className="text-[10px] text-muted-foreground/70">
               <kbd className="px-1 py-0.5 bg-secondary rounded text-muted-foreground">Enter</kbd> or{' '}
-              <kbd className="px-1 py-0.5 bg-secondary rounded text-muted-foreground ml-1">Esc</kbd> to close
+              <kbd className="px-1 py-0.5 bg-secondary rounded text-muted-foreground ml-1">Esc</kbd>{' '}
+              to close
             </div>
             <button
               onClick={onClose}
@@ -438,9 +448,16 @@ export function SyncReviewModal({ brandId, brandName, onClose }: Props) {
         {phase === 'review' && (
           <div className="px-5 py-3 border-t border-border flex items-center justify-between">
             <div className="text-[10px] text-muted-foreground/70">
-              <kbd className="px-1 py-0.5 bg-secondary rounded text-muted-foreground">j/k</kbd> navigate{' '}
-              <kbd className="px-1 py-0.5 bg-secondary rounded text-muted-foreground ml-1">Enter</kbd> toggle{' '}
-              <kbd className="px-1 py-0.5 bg-secondary rounded text-muted-foreground ml-1">Cmd+Enter</kbd> sync
+              <kbd className="px-1 py-0.5 bg-secondary rounded text-muted-foreground">j/k</kbd>{' '}
+              navigate{' '}
+              <kbd className="px-1 py-0.5 bg-secondary rounded text-muted-foreground ml-1">
+                Enter
+              </kbd>{' '}
+              toggle{' '}
+              <kbd className="px-1 py-0.5 bg-secondary rounded text-muted-foreground ml-1">
+                Cmd+Enter
+              </kbd>{' '}
+              sync
             </div>
             <div className="flex gap-2">
               <button

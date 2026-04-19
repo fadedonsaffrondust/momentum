@@ -87,8 +87,8 @@ export function ImportBrandModal({ onClose, onImportStarted }: Props) {
           <p className="text-xs text-muted-foreground">
             Upload a <code className="text-muted-foreground">.md</code> or{' '}
             <code className="text-muted-foreground">.txt</code> file with client notes. The server
-            will analyze it with AI and create a structured brand with meetings,
-            stakeholders, and action items.
+            will analyze it with AI and create a structured brand with meetings, stakeholders, and
+            action items.
           </p>
 
           {/* File picker */}
@@ -114,9 +114,7 @@ export function ImportBrandModal({ onClose, onImportStarted }: Props) {
             ) : (
               <div className="space-y-2">
                 <Upload size={24} className="mx-auto text-muted-foreground/70" />
-                <p className="text-xs text-muted-foreground">
-                  Click to select a file
-                </p>
+                <p className="text-xs text-muted-foreground">Click to select a file</p>
               </div>
             )}
           </div>

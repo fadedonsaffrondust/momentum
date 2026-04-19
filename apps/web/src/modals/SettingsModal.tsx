@@ -62,9 +62,7 @@ export function SettingsModal() {
       jobs.push(updateMe.mutateAsync({ displayName: displayName.trim() }));
     }
     if (capacityDirty) {
-      jobs.push(
-        updateSettings.mutateAsync({ dailyCapacityMinutes: capacityHours * 60 }),
-      );
+      jobs.push(updateSettings.mutateAsync({ dailyCapacityMinutes: capacityHours * 60 }));
     }
     await Promise.all(jobs);
     close();
@@ -93,9 +91,7 @@ export function SettingsModal() {
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Settings
             </div>
-            <div className="text-sm text-foreground truncate">
-              {meQ.data?.email ?? '—'}
-            </div>
+            <div className="text-sm text-foreground truncate">{meQ.data?.email ?? '—'}</div>
           </div>
         </header>
 
@@ -119,9 +115,7 @@ export function SettingsModal() {
             </label>
 
             <label className="block text-sm">
-              <span className="text-muted-foreground">
-                Daily capacity — {capacityHours}h
-              </span>
+              <span className="text-muted-foreground">Daily capacity — {capacityHours}h</span>
               <input
                 type="range"
                 min={1}
@@ -144,9 +138,7 @@ export function SettingsModal() {
             </div>
 
             {(updateMe.isError || updateSettings.isError) && (
-              <p className="text-xs text-red-400">
-                Save failed. Try again.
-              </p>
+              <p className="text-xs text-red-400">Save failed. Try again.</p>
             )}
 
             <div className="flex gap-2 pt-2">

@@ -2,8 +2,14 @@ import { useMemo } from 'react';
 import type { BrandStakeholder } from '@momentum/shared';
 
 const BADGE_COLORS = [
-  '#0FB848', '#F7B24F', '#4FD1C5', '#F76C6C',
-  '#B184F7', '#4F8EF7', '#F78FB3', '#FFD93D',
+  '#0FB848',
+  '#F7B24F',
+  '#4FD1C5',
+  '#F76C6C',
+  '#B184F7',
+  '#4F8EF7',
+  '#F78FB3',
+  '#FFD93D',
 ];
 
 interface Props {

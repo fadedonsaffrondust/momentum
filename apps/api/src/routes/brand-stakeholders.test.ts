@@ -20,7 +20,9 @@ const { mockDb, mockRecordBrandEvent } = vi.hoisted(() => {
         }
         return (..._args: unknown[]) => chain;
       },
-      apply() { return chain; },
+      apply() {
+        return chain;
+      },
     });
     return chain;
   }
@@ -30,8 +32,12 @@ const { mockDb, mockRecordBrandEvent } = vi.hoisted(() => {
     update: vi.fn((..._args: unknown[]) => createChain()),
     delete: vi.fn((..._args: unknown[]) => createChain()),
     _results: results,
-    _pushResult(value: unknown) { results.push(value); },
-    _pushResults(...values: unknown[]) { results.push(...values); },
+    _pushResult(value: unknown) {
+      results.push(value);
+    },
+    _pushResults(...values: unknown[]) {
+      results.push(...values);
+    },
   };
   const mockRecordBrandEvent = vi.fn(async (..._args: unknown[]) => undefined);
   return { mockDb, mockRecordBrandEvent };
@@ -92,7 +98,10 @@ describe('brand stakeholders routes', () => {
   });
 
   it('GET returns the stakeholder list (no user scoping)', async () => {
-    mockDb._pushResult([makeStakeholderRow(), makeStakeholderRow({ id: 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', name: 'John' })]);
+    mockDb._pushResult([
+      makeStakeholderRow(),
+      makeStakeholderRow({ id: 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', name: 'John' }),
+    ]);
 
     const res = await app.inject({
       method: 'GET',

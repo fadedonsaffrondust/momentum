@@ -3,6 +3,7 @@
 > Execution tracker for `docs/MOMENTUM-TEAM-SPACE-SPEC.md`. Each task below is a single Claude Code session producing a single commit. When a task completes, tick its checkbox here and **stop** — wait for explicit go-ahead before starting the next task.
 >
 > **Rules that apply to every task:**
+>
 > - Commit includes runtime change **+** colocated unit tests (`foo.ts` → `foo.test.ts`) per CLAUDE.md.
 > - Any keydown change updates `apps/web/src/modals/ShortcutsModal.tsx` in the same commit.
 > - Any user-visible change appends to `apps/web/src/lib/releaseNotes.ts` in the same commit (version bump rule in CLAUDE.md). Accumulate under a single `0.7.0` entry — prepend new items to its `items[]` as phases land, don't ship multiple 0.7.x entries during the build.
@@ -299,7 +300,7 @@
     - [x] All tests pass: **322 api + 163 shared + 100 web + 12 db = 597 total**, zero failures.
   - **Notes:**
     - Inbox-invalidation on mutations is conservative — most of the time the actor won't produce an event for themselves (self-suppressed in `recordInboxEvent`), but the invalidation is cheap and catches edge cases like assigning to someone else in the same tab.
-    - `useInboxUnreadCount` intentionally uses `refetchInterval: 30_000` instead of `staleTime`, since the sidebar badge needs *active* refetching even when the user isn't interacting with the inbox.
+    - `useInboxUnreadCount` intentionally uses `refetchInterval: 30_000` instead of `staleTime`, since the sidebar badge needs _active_ refetching even when the user isn't interacting with the inbox.
     - `SHARED_STALE_TIME` is the single knob for tuning team-sharing freshness — if 30s proves too aggressive or too lax, one change updates every hook.
 
 - [x] **Task 14 — Auth UX + First-run wizard**

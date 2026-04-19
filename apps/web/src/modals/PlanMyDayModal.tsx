@@ -1,13 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Modal } from '../components/Modal';
 import { useUiStore } from '../store/ui';
-import {
-  useDeferTask,
-  useDeleteTask,
-  useSettings,
-  useTasks,
-  useUpdateTask,
-} from '../api/hooks';
+import { useDeferTask, useDeleteTask, useSettings, useTasks, useUpdateTask } from '../api/hooks';
 import { todayIso, tomorrowIso } from '../lib/date';
 import { formatMinutes } from '../lib/format';
 
@@ -26,10 +20,7 @@ export function PlanMyDayModal() {
   const leftovers = useMemo(
     () =>
       allTasks.filter(
-        (t) =>
-          t.scheduledDate !== null &&
-          t.scheduledDate < today &&
-          t.status !== 'done',
+        (t) => t.scheduledDate !== null && t.scheduledDate < today && t.status !== 'done',
       ),
     [allTasks, today],
   );
@@ -88,91 +79,91 @@ export function PlanMyDayModal() {
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto mt-4 pr-1">
-        {step === 0 && (
-          <section className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Yesterday's leftovers — {leftovers.length} incomplete.
-            </p>
-            {leftovers.length === 0 && (
-              <p className="text-xs text-muted-foreground/70">Nothing left behind. Nice.</p>
-            )}
-            {leftovers.map((t) => (
-              <div
-                key={t.id}
-                className="flex items-center justify-between rounded border border-border px-3 py-2 text-sm"
-              >
-                <span className="text-foreground">{t.title}</span>
-                <div className="flex gap-2">
+          {step === 0 && (
+            <section className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Yesterday's leftovers — {leftovers.length} incomplete.
+              </p>
+              {leftovers.length === 0 && (
+                <p className="text-xs text-muted-foreground/70">Nothing left behind. Nice.</p>
+              )}
+              {leftovers.map((t) => (
+                <div
+                  key={t.id}
+                  className="flex items-center justify-between rounded border border-border px-3 py-2 text-sm"
+                >
+                  <span className="text-foreground">{t.title}</span>
+                  <div className="flex gap-2">
+                    <button
+                      className="text-xs text-primary hover:underline"
+                      onClick={() => moveToToday(t.id)}
+                    >
+                      Move to today
+                    </button>
+                    <button
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => deferTask.mutate(t.id)}
+                    >
+                      Defer
+                    </button>
+                    <button
+                      className="text-xs text-red-400 hover:text-red-300"
+                      onClick={() => deleteTask.mutate(t.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </section>
+          )}
+
+          {step === 1 && (
+            <section className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Top {backlogSuggestions.length} from backlog
+              </p>
+              {backlogSuggestions.length === 0 && (
+                <p className="text-xs text-muted-foreground/70">Backlog is clean.</p>
+              )}
+              {backlogSuggestions.map((t) => (
+                <div
+                  key={t.id}
+                  className="flex items-center justify-between rounded border border-border px-3 py-2 text-sm"
+                >
+                  <div>
+                    <div className="text-foreground">{t.title}</div>
+                    <div className="text-xs text-muted-foreground/70">
+                      {t.priority} · {formatMinutes(t.estimateMinutes)}
+                    </div>
+                  </div>
                   <button
                     className="text-xs text-primary hover:underline"
                     onClick={() => moveToToday(t.id)}
                   >
-                    Move to today
-                  </button>
-                  <button
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() =>
-                      deferTask.mutate(t.id)
-                    }
-                  >
-                    Defer
-                  </button>
-                  <button
-                    className="text-xs text-red-400 hover:text-red-300"
-                    onClick={() => deleteTask.mutate(t.id)}
-                  >
-                    Delete
+                    Pull to today
                   </button>
                 </div>
-              </div>
-            ))}
-          </section>
-        )}
-
-        {step === 1 && (
-          <section className="space-y-2">
-            <p className="text-sm text-muted-foreground">Top {backlogSuggestions.length} from backlog</p>
-            {backlogSuggestions.length === 0 && (
-              <p className="text-xs text-muted-foreground/70">Backlog is clean.</p>
-            )}
-            {backlogSuggestions.map((t) => (
-              <div
-                key={t.id}
-                className="flex items-center justify-between rounded border border-border px-3 py-2 text-sm"
-              >
-                <div>
-                  <div className="text-foreground">{t.title}</div>
-                  <div className="text-xs text-muted-foreground/70">
-                    {t.priority} · {formatMinutes(t.estimateMinutes)}
-                  </div>
-                </div>
-                <button
-                  className="text-xs text-primary hover:underline"
-                  onClick={() => moveToToday(t.id)}
-                >
-                  Pull to today
-                </button>
-              </div>
-            ))}
-          </section>
-        )}
-
-        {step === 2 && (
-          <section className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              {todayTasks.length} tasks planned · {formatMinutes(totalMinutes)} /{' '}
-              {formatMinutes(capacity)}
-            </p>
-            <p className="text-foreground">{message}</p>
-            <ul className="space-y-1">
-              {todayTasks.map((t) => (
-                <li key={t.id} className="text-xs text-muted-foreground">
-                  • {t.title}
-                </li>
               ))}
-            </ul>
-          </section>
-        )}
+            </section>
+          )}
+
+          {step === 2 && (
+            <section className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {todayTasks.length} tasks planned · {formatMinutes(totalMinutes)} /{' '}
+                {formatMinutes(capacity)}
+              </p>
+              <p className="text-foreground">{message}</p>
+              <ul className="space-y-1">
+                {todayTasks.map((t) => (
+                  <li key={t.id} className="text-xs text-muted-foreground">
+                    • {t.title}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
 
         <div className="flex gap-2 pt-4 shrink-0">

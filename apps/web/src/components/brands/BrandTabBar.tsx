@@ -21,7 +21,13 @@ const TABS: { id: BrandTab; label: string }[] = [
   { id: 'feature-requests', label: 'Feature Requests' },
 ];
 
-export function BrandTabBar({ activeTab, onChangeTab, openItemCount, openFeatureRequestCount, featureRequestsStale }: Props) {
+export function BrandTabBar({
+  activeTab,
+  onChangeTab,
+  openItemCount,
+  openFeatureRequestCount,
+  featureRequestsStale,
+}: Props) {
   const badges: BadgeConfig[] = [
     { tabId: 'work', count: openItemCount },
     { tabId: 'feature-requests', count: openFeatureRequestCount },
@@ -49,7 +55,10 @@ export function BrandTabBar({ activeTab, onChangeTab, openItemCount, openFeature
               </span>
             )}
             {tab.id === 'feature-requests' && featureRequestsStale && (
-              <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-amber-400" title="Data may be stale" />
+              <span
+                className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-amber-400"
+                title="Data may be stale"
+              />
             )}
             {activeTab === tab.id && (
               <span className="absolute left-0 right-0 -bottom-px h-[2px] rounded-full bg-primary" />

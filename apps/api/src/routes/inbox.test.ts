@@ -20,7 +20,9 @@ const { mockDb } = vi.hoisted(() => {
         }
         return (..._args: unknown[]) => chain;
       },
-      apply() { return chain; },
+      apply() {
+        return chain;
+      },
     });
     return chain;
   }
@@ -30,8 +32,12 @@ const { mockDb } = vi.hoisted(() => {
     update: vi.fn((..._args: unknown[]) => createChain()),
     delete: vi.fn((..._args: unknown[]) => createChain()),
     _results: results,
-    _pushResult(value: unknown) { results.push(value); },
-    _pushResults(...values: unknown[]) { results.push(...values); },
+    _pushResult(value: unknown) {
+      results.push(value);
+    },
+    _pushResults(...values: unknown[]) {
+      results.push(...values);
+    },
   };
   return { mockDb };
 });

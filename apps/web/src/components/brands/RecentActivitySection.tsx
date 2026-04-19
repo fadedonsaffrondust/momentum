@@ -32,9 +32,7 @@ export function RecentActivitySection({ brandId, onOpenActionItems, onOpenMeetin
   const hiddenCount = Math.max(0, events.length - PREVIEW_COUNT);
 
   if (eventsQ.isLoading) {
-    return (
-      <div className="text-xs text-muted-foreground px-1 py-2">Loading activity…</div>
-    );
+    return <div className="text-xs text-muted-foreground px-1 py-2">Loading activity…</div>;
   }
 
   if (events.length === 0) {
@@ -142,7 +140,8 @@ function describeEvent(event: BrandEvent): { description: string; canClick: bool
   const text = typeof payload['text'] === 'string' ? (payload['text'] as string) : undefined;
   const title = typeof payload['title'] === 'string' ? (payload['title'] as string) : undefined;
   const name = typeof payload['name'] === 'string' ? (payload['name'] as string) : undefined;
-  const request = typeof payload['request'] === 'string' ? (payload['request'] as string) : undefined;
+  const request =
+    typeof payload['request'] === 'string' ? (payload['request'] as string) : undefined;
   const action = typeof payload['action'] === 'string' ? (payload['action'] as string) : undefined;
 
   switch (event.eventType) {
@@ -225,14 +224,13 @@ function describeEvent(event: BrandEvent): { description: string; canClick: bool
         description: `synced recording ${title ? `"${title}"` : ''}`,
         canClick: true,
       };
-    default:
+    default: {
       // Exhaustive switch guarded by `BrandEventType`; keeping a branch
-      // for forward-compat if the enum grows before this component
-      // does. `unknownType` is just for string manipulation.
-      {
-        const unknownType: string = event.eventType;
-        return { description: unknownType.replace(/_/g, ' '), canClick: false };
-      }
+      // for forward-compat if the enum grows before this component does.
+      // `unknownType` is just for string manipulation.
+      const unknownType: string = event.eventType;
+      return { description: unknownType.replace(/_/g, ' '), canClick: false };
+    }
   }
 }
 

@@ -22,8 +22,7 @@ export function LoginPage() {
 
   if (token) return <Navigate to="/" replace />;
 
-  const errorMessage =
-    login.error instanceof Error ? login.error.message : null;
+  const errorMessage = login.error instanceof Error ? login.error.message : null;
   const isDeactivated = errorMessage === 'This account has been deactivated.';
 
   return (
@@ -37,9 +36,7 @@ export function LoginPage() {
       >
         <div>
           <h1 className="text-2xl font-semibold text-primary">Momentum</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Sign in to keep moving.
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Sign in to keep moving.</p>
         </div>
 
         <label className="block text-sm">
@@ -56,17 +53,12 @@ export function LoginPage() {
 
         <label className="block text-sm">
           <span className="text-muted-foreground">Password</span>
-          <PasswordInput
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <PasswordInput required value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
 
         {isDeactivated && (
           <div className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
-            This account has been deactivated. Reach out to a teammate to
-            reactivate it.
+            This account has been deactivated. Reach out to a teammate to reactivate it.
           </div>
         )}
 

@@ -41,16 +41,17 @@ export function MeetingNoteModal({
   const [attendees, setAttendees] = useState<string[]>(existingMeeting?.attendees ?? []);
   const [attendeeHighlight, setAttendeeHighlight] = useState(0);
   const [notes, setNotes] = useState(existingMeeting?.rawNotes ?? '');
-  const [decisions, setDecisions] = useState(
-    existingMeeting?.decisions?.join('\n') ?? '',
-  );
+  const [decisions, setDecisions] = useState(existingMeeting?.decisions?.join('\n') ?? '');
   const [titleSuggestions, setTitleSuggestions] = useState<string[]>([]);
   const [titleHighlight, setTitleHighlight] = useState(0);
   const [dirty, setDirty] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const smartNotes = useSmartTextarea({
     value: notes,
-    onChange: (v) => { setNotes(v); markDirty(); },
+    onChange: (v) => {
+      setNotes(v);
+      markDirty();
+    },
   });
 
   useEffect(() => {
@@ -96,13 +97,12 @@ export function MeetingNoteModal({
   };
 
   const stakeholderNames = stakeholders.map((s) => s.name);
-  const attendeeSuggestions = attendeeInput.length >= 1
-    ? stakeholderNames.filter(
-        (n) =>
-          n.toLowerCase().includes(attendeeInput.toLowerCase()) &&
-          !attendees.includes(n),
-      )
-    : [];
+  const attendeeSuggestions =
+    attendeeInput.length >= 1
+      ? stakeholderNames.filter(
+          (n) => n.toLowerCase().includes(attendeeInput.toLowerCase()) && !attendees.includes(n),
+        )
+      : [];
 
   useEffect(() => {
     setAttendeeHighlight(0);

@@ -35,16 +35,19 @@ Add "Brands" as a top-level section in the app shell, alongside Tasks, and Parki
 A clean two-column layout:
 
 **Left rail (fixed, ~280px):**
+
 - Search/filter input at the top
 - Brand list — each item shows: brand name, health pill, last activity recency (e.g., "2d ago")
 - "+ New Brand" button at the bottom
 - "Import from file" button below that
 
 **Main content:**
+
 - When no brand is selected: show a minimal empty state with a single line of copy — "Select a brand or create a new one" — and a subtle illustration or geometric accent.
 - When a brand is selected: show its detail view (specified below).
 
 **Health pill logic (computed, not stored):**
+
 - **On track** (green dot) — Last meeting within 7 days AND ≤3 open action items AND no overdue items
 - **Quiet** (amber dot) — No meeting in 14+ days OR no activity at all
 - **Needs attention** (red dot) — Overdue action items OR >5 open action items OR meeting >30 days ago
@@ -58,6 +61,7 @@ Health is computed on render from underlying data — it is never stored as a fi
 Single scrollable page with a strict visual hierarchy. Use collapsible sections with clear state indicators.
 
 ### Header (always visible, sticky on scroll)
+
 - Brand name (large, editable on double-click)
 - Health pill
 - Two primary action buttons on the right: **"+ New Meeting Note"** and **"⋯"** (menu: Edit, Delete, Export)
@@ -69,16 +73,19 @@ This is the focal point. A compact, high-density summary of current state.
 Three subcomponents laid out horizontally on desktop, stacked on mobile:
 
 **1A — Activity Snapshot:**
+
 - Last meeting: date + title (e.g., "2d ago — One-on-one with Danna")
 - Meeting cadence: "Avg 5.2 days between meetings"
 - Total meetings logged: "17 meetings"
 
 **1B — Open Action Items (top 3):**
+
 - Show the 3 most recent open action items
 - Each item has a title, age ("3d old"), and two inline actions: **"Send to Today"** (pushes to Momentum's Today view with the brand tagged) and **"Mark Done"**
 - A "View all X open items" link at the bottom that scrolls to the Action Items section
 
 **1C — Stakeholder Activity:**
+
 - Show up to 4 stakeholders as circular initials with colored backgrounds
 - Tooltip on hover: name, role, last mentioned in meeting date
 - Click a stakeholder to filter the Meetings archive to only meetings they appeared in
@@ -100,6 +107,7 @@ Use minimal affordances — no save button. Auto-save on blur/change with a subt
 Section header: "Action Items (X open, Y done)"
 
 When expanded:
+
 - Two tabs: "Open" (default) and "Done"
 - Each action item shows: checkbox, text, owner (if set), due date (if set), source meeting link, age
 - Inline create at the top: "+ Add action item" with optional owner and due date fields
@@ -111,6 +119,7 @@ When expanded:
 Section header: "Meetings (X)"
 
 When expanded:
+
 - Reverse chronological list
 - Each entry shows: date, title, attendees (as initials), 1-line summary
 - Click expands inline to show full notes
@@ -121,6 +130,7 @@ When expanded:
 ### Section 5: Raw Context (advanced, default collapsed)
 
 For power users and future extensibility:
+
 - Shows raw imported text (if brand was imported)
 - Custom fields slot for future metrics (empty in V1 — but render the section with a "Coming soon" state so the architecture is clear)
 
@@ -133,6 +143,7 @@ Triggered via "+ New Meeting Note" button or `n` keyboard shortcut from a brand 
 A focused modal (full-width overlay, not a dialog box):
 
 **Fields:**
+
 - Date (defaults to today, date picker)
 - Title (text input, with auto-suggestions from past meeting titles, e.g., "Weekly", "One on One with [stakeholder]")
 - Attendees (chip input, autocomplete from this brand's stakeholders, allow creating new)
@@ -140,6 +151,7 @@ A focused modal (full-width overlay, not a dialog box):
 - Decisions (optional, separate textarea)
 
 **On Save:**
+
 1. Save the meeting note
 2. Auto-extract action items from notes using a simple regex first (look for lines starting with `→`, `- [ ]`, "Action item:", etc.)
 3. If the user has an OpenAI API key configured, offer a button "Enhance with AI" that:

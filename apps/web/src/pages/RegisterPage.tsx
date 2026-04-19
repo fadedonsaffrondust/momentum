@@ -19,8 +19,7 @@ export function RegisterPage() {
 
   if (token) return <Navigate to="/" replace />;
 
-  const errorMessage =
-    register.error instanceof Error ? register.error.message : null;
+  const errorMessage = register.error instanceof Error ? register.error.message : null;
   const isDomainError = errorMessage?.includes('@omnirev.ai') ?? false;
 
   return (
@@ -34,9 +33,7 @@ export function RegisterPage() {
       >
         <div>
           <h1 className="text-2xl font-semibold text-primary">Momentum</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Build your daily execution engine.
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Build your daily execution engine.</p>
         </div>
 
         <label className="block text-sm">
@@ -65,9 +62,7 @@ export function RegisterPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <span className="text-xs text-muted-foreground block mt-1">
-            Minimum 8 characters.
-          </span>
+          <span className="text-xs text-muted-foreground block mt-1">Minimum 8 characters.</span>
         </label>
 
         {register.isError && !isDomainError && errorMessage && (

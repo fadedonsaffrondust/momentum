@@ -93,6 +93,7 @@ JWT payload stays minimal: `{ sub: userId, email }`. No team claim, no domain cl
 The Fastify auth plugin (`apps/api/src/plugins/auth.ts`) continues to expose `req.userId`. That's all route handlers need.
 
 Signup gate logic lives in `routes/auth.ts`:
+
 ```ts
 const ALLOWED_DOMAINS = ['omnirev.ai'];
 const domain = email.split('@')[1]?.toLowerCase();
@@ -103,21 +104,21 @@ if (!ALLOWED_DOMAINS.includes(domain)) {
 
 ### 4.3 Personal vs. shared entity scoping
 
-| Entity | Scope | Column(s) |
-|---|---|---|
-| `users` | N/A (auth primitive) | — |
-| `user_settings` | Personal | `user_id` |
-| `daily_logs` | Personal | `user_id` |
-| `roles` | Team-shared | (no user_id) |
-| `tasks` | Personal workspace, team-visible | `creator_id`, `assignee_id` |
-| `parkings` | Mostly shared; private if `visibility='private'` | `creator_id`, `involved_ids[]`, `visibility` |
-| `brands` | Team-shared | (no user_id) |
-| `brand_stakeholders` | Team-shared | (no user_id) |
-| `brand_meetings` | Team-shared | (no user_id) |
-| `brand_action_items` | Team-shared | `creator_id`, `assignee_id` (nullable) |
-| `brand_feature_requests` | Team-shared | (no user_id) |
-| `brand_events` (new) | Team-shared | (no user_id — events reference `actor_id`) |
-| `inbox_events` (new) | Per-user | `user_id` (the recipient), `actor_id` (the initiator) |
+| Entity                   | Scope                                            | Column(s)                                             |
+| ------------------------ | ------------------------------------------------ | ----------------------------------------------------- |
+| `users`                  | N/A (auth primitive)                             | —                                                     |
+| `user_settings`          | Personal                                         | `user_id`                                             |
+| `daily_logs`             | Personal                                         | `user_id`                                             |
+| `roles`                  | Team-shared                                      | (no user_id)                                          |
+| `tasks`                  | Personal workspace, team-visible                 | `creator_id`, `assignee_id`                           |
+| `parkings`               | Mostly shared; private if `visibility='private'` | `creator_id`, `involved_ids[]`, `visibility`          |
+| `brands`                 | Team-shared                                      | (no user_id)                                          |
+| `brand_stakeholders`     | Team-shared                                      | (no user_id)                                          |
+| `brand_meetings`         | Team-shared                                      | (no user_id)                                          |
+| `brand_action_items`     | Team-shared                                      | `creator_id`, `assignee_id` (nullable)                |
+| `brand_feature_requests` | Team-shared                                      | (no user_id)                                          |
+| `brand_events` (new)     | Team-shared                                      | (no user_id — events reference `actor_id`)            |
+| `inbox_events` (new)     | Per-user                                         | `user_id` (the recipient), `actor_id` (the initiator) |
 
 ### 4.4 Flat edit permissions
 
@@ -168,6 +169,7 @@ DROP INDEX roles_user_id_idx;
 ```
 
 Existing routes:
+
 - `GET /roles` — no change in shape; returns all roles (team-wide).
 - `POST /roles` / `DELETE /roles/:id` — now affect the whole team. This is intentional; consistent with flat permissions.
 
@@ -256,6 +258,7 @@ CREATE INDEX idx_be_brand_created ON brand_events(brand_id, created_at DESC);
 ```
 
 Event types (V1 set):
+
 - `stakeholder_added`, `stakeholder_removed`, `stakeholder_edited`
 - `meeting_added`, `meeting_edited`, `meeting_deleted`
 - `action_item_created`, `action_item_completed`, `action_item_reopened`, `action_item_assigned`
@@ -286,6 +289,7 @@ CREATE INDEX idx_ie_entity ON inbox_events(entity_type, entity_id);
 ```
 
 Event types (V1 set):
+
 - `task_assigned` — task assigned to you (creator ≠ assignee, or reassigned to you)
 - `task_edited` — a task assigned to you was edited by someone else (title, priority, estimate, role, scheduled_date)
 - `action_item_assigned` — brand_action_item assigned to you
@@ -324,18 +328,22 @@ Route: `POST /auth/register` — already exists. Changes:
 // routes/auth.ts
 const ALLOWED_SIGNUP_DOMAINS = ['omnirev.ai']; // hardcoded constant
 
-app.post('/auth/register', {
-  schema: { body: registerInputSchema, response: { 201: authResponseSchema } }
-}, async (req) => {
-  const { email, password } = req.body;
-  const domain = email.split('@')[1]?.toLowerCase();
-  if (!domain || !ALLOWED_SIGNUP_DOMAINS.includes(domain)) {
-    throw badRequest('Signup is restricted to @omnirev.ai email addresses.');
-  }
-  // ... existing password hashing + user insert
-  // NEW: generate avatar_color from email hash, leave display_name empty
-  //      (first-run wizard fills display_name).
-});
+app.post(
+  '/auth/register',
+  {
+    schema: { body: registerInputSchema, response: { 201: authResponseSchema } },
+  },
+  async (req) => {
+    const { email, password } = req.body;
+    const domain = email.split('@')[1]?.toLowerCase();
+    if (!domain || !ALLOWED_SIGNUP_DOMAINS.includes(domain)) {
+      throw badRequest('Signup is restricted to @omnirev.ai email addresses.');
+    }
+    // ... existing password hashing + user insert
+    // NEW: generate avatar_color from email hash, leave display_name empty
+    //      (first-run wizard fills display_name).
+  },
+);
 ```
 
 The frontend's `RegisterPage` catches this error and renders a friendly inline message beneath the email field.
@@ -476,16 +484,16 @@ export async function recordBrandEvent(params: {
   entityType: string;
   entityId?: string;
   payload?: Record<string, unknown>;
-}): Promise<void>
+}): Promise<void>;
 
 export async function recordInboxEvent(params: {
-  userId: string;    // recipient
-  actorId: string;   // initiator
+  userId: string; // recipient
+  actorId: string; // initiator
   eventType: string;
   entityType: string;
   entityId: string;
   payload?: Record<string, unknown>;
-}): Promise<void> // no-op if userId === actorId
+}): Promise<void>; // no-op if userId === actorId
 ```
 
 Both helpers are fire-and-forget from route handlers (awaited to guarantee ordering, but failures are logged and swallowed — they must not break the main mutation).
@@ -588,16 +596,19 @@ Matching is case-insensitive on the first name or display name. If no match, `@a
 `pages/TeamPage.tsx` (new). Route: `/team`. Accessible via `g u` keyboard shortcut or sidebar nav.
 
 Layout: vertically stacked sections, one per active team user, ordered by:
+
 1. Current user first (your own section is always on top)
 2. Then alphabetically by display name
 3. Deactivated users hidden by default (toggle to show)
 
 Each section:
+
 - Header: user avatar (md) + display name + small stats strip (`{X in progress} · {Y up next} · {Z done today}`)
 - Three-column mini-kanban: Up Next / In Progress / Done (same column model as Today, scoped to that user and today by default)
 - Collapsible — clicking header collapses/expands
 
 Keyboard:
+
 - `j/k` — navigate tasks within the currently-focused section's active column
 - `h/l` — switch columns within the current section
 - `]` / `[` — move to next / previous user's section
@@ -614,6 +625,7 @@ Scope filter (top bar): "Today (default) / This week / All scheduled". Role filt
 `pages/InboxPage.tsx` (new). Route: `/inbox`. Accessible via `g i` keyboard shortcut or sidebar nav.
 
 Layout: single scrollable list, reverse-chronological. Each row:
+
 - Actor avatar + display name (leading)
 - Event description, bolded if unread
 - Relative timestamp (trailing)
@@ -622,18 +634,21 @@ Layout: single scrollable list, reverse-chronological. Each row:
 - Keyboard focus ring when navigating via `j/k`
 
 Top bar:
+
 - Unread count badge
 - "Mark all as read" button (clears all unread for current user)
 - Filter chip: "Unread / All" (default "Unread")
 
 Event rendering:
-- `task_assigned`: "**Sara** assigned you a task: *Review Boudin proposal*"
-- `task_edited`: "**Sara** changed the priority on *Review Boudin proposal* from medium to high"
-- `action_item_assigned`: "**Sara** assigned you an action item on *Boudin*: *Send proposal draft*"
-- `action_item_edited`: "**Sara** updated an action item on *Boudin*"
-- `parking_involvement`: "**Sara** added you to a parking: *Pipeline review — need a decision from Nader*"
+
+- `task_assigned`: "**Sara** assigned you a task: _Review Boudin proposal_"
+- `task_edited`: "**Sara** changed the priority on _Review Boudin proposal_ from medium to high"
+- `action_item_assigned`: "**Sara** assigned you an action item on _Boudin_: _Send proposal draft_"
+- `action_item_edited`: "**Sara** updated an action item on _Boudin_"
+- `parking_involvement`: "**Sara** added you to a parking: _Pipeline review — need a decision from Nader_"
 
 Keyboard:
+
 - `j/k` — navigate list
 - `Enter` — open selected entity (marks read)
 - `Space` — toggle read/unread on selected
@@ -742,6 +757,7 @@ Migration script `packages/db/drizzle/0005_team_space.sql` + a one-off TypeScrip
 11. Export file version bumps to `1.4` with backward-compat loaders.
 
 **Data preservation guarantees:**
+
 - Nader loses nothing: all his tasks, parkings, brands, action items remain.
 - His existing parkings default to private — when Sara and Ryan join, they won't see parkings he wrote in isolation.
 - His existing tasks remain his (creator = assignee = him).
@@ -872,6 +888,7 @@ To be added to `apps/web/src/lib/releaseNotes.ts`:
 > **Summary:** Momentum is now a shared operating system for the Omnirev team. Brands, meetings, and action items are team-visible. Tasks and parkings support assignment and involvement. A new Team Task View shows everyone's current work. A new Inbox surfaces things assigned to or involving you.
 >
 > **Items:**
+>
 > - Sign up with your @omnirev.ai email; your teammates can join the same way.
 > - Tasks have creators and assignees. Press `A` to assign; type `@alice` in the quick-add bar.
 > - Parkings can be shared (default) or marked private with `v`. Tag teammates to involve them.

@@ -49,9 +49,7 @@ export function RawContextSection({ brand }: Props) {
           )}
 
           <div className="border border-dashed border-border rounded-lg p-4 text-center">
-            <p className="text-xs text-muted-foreground/70">
-              Custom fields — coming soon.
-            </p>
+            <p className="text-xs text-muted-foreground/70">Custom fields — coming soon.</p>
           </div>
         </div>
       )}

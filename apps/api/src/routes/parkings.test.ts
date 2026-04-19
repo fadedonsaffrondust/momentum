@@ -20,7 +20,9 @@ const { mockDb, mockRecordInboxEvent } = vi.hoisted(() => {
         }
         return (..._args: unknown[]) => chain;
       },
-      apply() { return chain; },
+      apply() {
+        return chain;
+      },
     });
     return chain;
   }
@@ -30,8 +32,12 @@ const { mockDb, mockRecordInboxEvent } = vi.hoisted(() => {
     update: vi.fn((..._args: unknown[]) => createChain()),
     delete: vi.fn((..._args: unknown[]) => createChain()),
     _results: results,
-    _pushResult(value: unknown) { results.push(value); },
-    _pushResults(...values: unknown[]) { results.push(...values); },
+    _pushResult(value: unknown) {
+      results.push(value);
+    },
+    _pushResults(...values: unknown[]) {
+      results.push(...values);
+    },
   };
   const mockRecordInboxEvent = vi.fn(async (..._args: unknown[]) => undefined);
   return { mockDb, mockRecordInboxEvent };
@@ -146,9 +152,7 @@ describe('parkings routes', () => {
   });
 
   it('POST /parkings with involvedIds fires parking_involvement per user (skipping self)', async () => {
-    mockDb._pushResult([
-      makeParkingRow({ involvedIds: [USER_ID, OTHER_USER, THIRD_USER] }),
-    ]);
+    mockDb._pushResult([makeParkingRow({ involvedIds: [USER_ID, OTHER_USER, THIRD_USER] })]);
 
     await app.inject({
       method: 'POST',
@@ -201,9 +205,7 @@ describe('parkings routes', () => {
   // ── PATCH /parkings/:id ────────────────────────────────────────────
 
   it('PATCH /parkings/:id on a private parking owned by someone else returns 404', async () => {
-    mockDb._pushResult([
-      makeParkingRow({ visibility: 'private', creatorId: OTHER_USER }),
-    ]);
+    mockDb._pushResult([makeParkingRow({ visibility: 'private', creatorId: OTHER_USER })]);
 
     const res = await app.inject({
       method: 'PATCH',
@@ -405,9 +407,7 @@ describe('parkings routes', () => {
 
   it('POST /parkings/:id/reopen resets status to open', async () => {
     mockDb._pushResult([{ visibility: 'team', creatorId: USER_ID }]);
-    mockDb._pushResult([
-      makeParkingRow({ status: 'open', discussedAt: null }),
-    ]);
+    mockDb._pushResult([makeParkingRow({ status: 'open', discussedAt: null })]);
 
     const res = await app.inject({
       method: 'POST',

@@ -25,6 +25,35 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.14.0',
+    date: '2026-04-19',
+    headline: 'Continuous integration, linting, and pre-commit checks land',
+    summary:
+      'Under-the-hood reliability work. Every change now ships against an automatic typecheck + lint + test + format gate on every pull request, ESLint is wired up across all four workspaces, and a lefthook pre-commit hook auto-fixes formatting and lint issues before they reach a commit. No user-facing behavior change — this is the foundation that makes the rest of the technical-debt cleanup safe to land.',
+    items: [
+      {
+        title: 'Automatic checks on every pull request',
+        description:
+          'A new GitHub Actions workflow runs `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm format:check` on every PR and on pushes to main, then runs `pnpm build` if the verify step passes. Concurrency-cancelled per branch so a fresh push supersedes an in-flight run.',
+      },
+      {
+        title: 'ESLint flat config across the monorepo',
+        description:
+          'Each workspace now has a `lint` script (`eslint . --max-warnings=0`) backed by a single root `eslint.config.mjs`. Phase one is intentionally lean — the only enforced rule today bans the all-property Tailwind transition utility per the frontend design rules. Rules for explicit-any, ban-ts-comment, exhaustive-deps, and import/order will tighten in a follow-up release after the codebase-wide sweep.',
+      },
+      {
+        title: 'Lefthook pre-commit hook',
+        description:
+          'Staged TypeScript files are auto-fixed by ESLint and Prettier before the commit lands, so formatting and trivial lint issues never reach review. Installed automatically on `pnpm install` via the new root `prepare` script.',
+      },
+      {
+        title: 'Faster Turbo cache + unified Vitest config',
+        description:
+          'turbo.json now declares per-task `inputs` and `outputs` for typecheck / lint / test, so warm-cache runs are near-instant. Each package`s `vitest.config.ts` extends a shared `vitest.shared.ts` so configuration drift across packages is gone.',
+      },
+    ],
+  },
+  {
     version: '0.13.3',
     date: '2026-04-18',
     headline: 'Today board reshapes smoothly when the drawer opens',
@@ -34,7 +63,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       {
         title: 'One smooth motion for the drawer + board reshape',
         description:
-          'The Done column, the remaining two columns\' widths, the cards inside, and the drawer all animate in 150ms ease-out so opening / closing the drawer feels like one gesture instead of three competing ones.',
+          "The Done column, the remaining two columns' widths, the cards inside, and the drawer all animate in 150ms ease-out so opening / closing the drawer feels like one gesture instead of three competing ones.",
       },
     ],
   },
@@ -67,7 +96,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-04-18',
     headline: 'Task detail drawer autosaves',
     summary:
-      'The Save button is gone. Every field in the task detail drawer — title, description, priority, role, estimate, scheduled date, assignee — now saves itself about half a second after you stop editing. Navigate to another task with j/k and the previous task\'s pending changes flush immediately, so nothing gets lost when you switch focus mid-edit.',
+      "The Save button is gone. Every field in the task detail drawer — title, description, priority, role, estimate, scheduled date, assignee — now saves itself about half a second after you stop editing. Navigate to another task with j/k and the previous task's pending changes flush immediately, so nothing gets lost when you switch focus mid-edit.",
     items: [
       {
         title: 'Autosave on every edit',
@@ -106,7 +135,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-04-18',
     headline: 'Team view is now a column-per-teammate board',
     summary:
-      'The Team page used to stack teammates vertically, each with their own 3-column mini-kanban. That layout collapsed the moment anyone accumulated tasks — Done tasks on one row would push the next teammate off-screen. It\'s now a horizontal board: one column per teammate, with each task card carrying its own status tag (Up Next / In Progress / Done). Scroll horizontally to browse teammates; scroll vertically within a column. Current user\'s column is always first.',
+      "The Team page used to stack teammates vertically, each with their own 3-column mini-kanban. That layout collapsed the moment anyone accumulated tasks — Done tasks on one row would push the next teammate off-screen. It's now a horizontal board: one column per teammate, with each task card carrying its own status tag (Up Next / In Progress / Done). Scroll horizontally to browse teammates; scroll vertically within a column. Current user's column is always first.",
     items: [
       {
         title: 'One column per teammate',
@@ -116,12 +145,12 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       {
         title: 'Status on the card, not in the grid',
         description:
-          'Each task card shows its stage as a small tag next to the role pill — green for In Progress, neutral for Up Next, muted for Done. No more guessing what column a task lives in; it\'s right there on the card.',
+          "Each task card shows its stage as a small tag next to the role pill — green for In Progress, neutral for Up Next, muted for Done. No more guessing what column a task lives in; it's right there on the card.",
       },
       {
         title: 'Updated keyboard model',
         description:
-          'j / k move between tasks in the focused teammate\'s column. h / l (and [ / ] as aliases) jump to the previous or next teammate. e opens the detail drawer, A reassigns. Progression keys (Enter / Space) stayed on Today — Team is an overview surface, not a remote-control for other people\'s tasks.',
+          "j / k move between tasks in the focused teammate's column. h / l (and [ / ] as aliases) jump to the previous or next teammate. e opens the detail drawer, A reassigns. Progression keys (Enter / Space) stayed on Today — Team is an overview surface, not a remote-control for other people's tasks.",
         shortcuts: ['j', 'k', 'h', 'l'],
       },
     ],
@@ -131,12 +160,12 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-04-18',
     headline: 'Tasks now have a description field',
     summary:
-      'Every task gets a multi-line description you can fill in from the detail drawer. Use it for a definition of done, links, context, or anything that doesn\'t fit in the title. The textarea ships with smart helpers: type `/todo ` for a checkbox, `-` or `1.` for bullet / numbered lists (auto-continues on Enter), and Tab to indent. Quick-add stays title-only — descriptions are edit-only and optional.',
+      "Every task gets a multi-line description you can fill in from the detail drawer. Use it for a definition of done, links, context, or anything that doesn't fit in the title. The textarea ships with smart helpers: type `/todo ` for a checkbox, `-` or `1.` for bullet / numbered lists (auto-continues on Enter), and Tab to indent. Quick-add stays title-only — descriptions are edit-only and optional.",
     items: [
       {
         title: 'Definition of done lives with the task',
         description:
-          'Open any task with `e` and you\'ll see a Description textarea under the title. Type a checklist, paste a link, drop the acceptance criteria — whatever the title alone can\'t capture. Save to persist; leave it blank to clear.',
+          "Open any task with `e` and you'll see a Description textarea under the title. Type a checklist, paste a link, drop the acceptance criteria — whatever the title alone can't capture. Save to persist; leave it blank to clear.",
         shortcuts: ['e'],
       },
       {
@@ -157,7 +186,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       {
         title: 'Drawer follows selection',
         description:
-          'Open the drawer with `e` on any task, then keep using j / k to move between cards — the drawer updates live to show the task you\'re on. No more open-edit-close-nav-open-edit cycles.',
+          "Open the drawer with `e` on any task, then keep using j / k to move between cards — the drawer updates live to show the task you're on. No more open-edit-close-nav-open-edit cycles.",
         shortcuts: ['e', 'j', 'k'],
       },
       {
@@ -168,7 +197,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       {
         title: 'Escape to close · persists across navigation',
         description:
-          'The drawer stays open when you navigate between views (g t / g l / g u) — useful for bouncing through pages while keeping a task pinned for edit. Press Escape or the close button when you\'re done.',
+          "The drawer stays open when you navigate between views (g t / g l / g u) — useful for bouncing through pages while keeping a task pinned for edit. Press Escape or the close button when you're done.",
         shortcuts: ['Esc'],
       },
     ],
@@ -178,7 +207,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-04-18',
     headline: 'Plan My Day now scrolls when leftovers run long',
     summary:
-      'The Plan My Day modal used to grow past the viewport when yesterday\'s leftovers or the backlog had many items — the Next / Back buttons ended up below the fold. The modal now caps its height and scrolls the list inside, keeping the step chips and footer buttons pinned.',
+      "The Plan My Day modal used to grow past the viewport when yesterday's leftovers or the backlog had many items — the Next / Back buttons ended up below the fold. The modal now caps its height and scrolls the list inside, keeping the step chips and footer buttons pinned.",
     items: [
       {
         title: 'Scrollable leftovers and backlog list',
@@ -192,17 +221,17 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-04-18',
     headline: 'Time tracking is correct across pauses and reopens',
     summary:
-      'Paused intervals no longer count as work. Before, pausing a task and resuming later would count the gap between pause and resume as time spent on the task. Completing a reopened task would also overwrite — not add to — previously logged minutes. Both are fixed: each start/pause/complete cycle now rolls its elapsed minutes into the task\'s running total, and multi-session totals are preserved across reopens.',
+      "Paused intervals no longer count as work. Before, pausing a task and resuming later would count the gap between pause and resume as time spent on the task. Completing a reopened task would also overwrite — not add to — previously logged minutes. Both are fixed: each start/pause/complete cycle now rolls its elapsed minutes into the task's running total, and multi-session totals are preserved across reopens.",
     items: [
       {
         title: 'Accurate time across pause → resume cycles',
         description:
-          'When you pause a task, the minutes you actually spent in that session are added to the task\'s total and the timer clears. Starting again begins a fresh session, so gaps between pause and resume (lunch, meetings, distractions) are no longer counted as work on the task.',
+          "When you pause a task, the minutes you actually spent in that session are added to the task's total and the timer clears. Starting again begins a fresh session, so gaps between pause and resume (lunch, meetings, distractions) are no longer counted as work on the task.",
       },
       {
         title: 'Reopen preserves history, next complete accumulates',
         description:
-          'Dragging a Done task back to Up Next keeps its prior actual minutes as a record. If you restart and complete it again, the new session\'s time is added to the prior total instead of replacing it.',
+          "Dragging a Done task back to Up Next keeps its prior actual minutes as a record. If you restart and complete it again, the new session's time is added to the prior total instead of replacing it.",
       },
     ],
   },
@@ -271,7 +300,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       {
         title: 'Consistent tokens across the whole app',
         description:
-          'Every surface now reads from the same shadcn-compatible semantic tokens (background / foreground / primary / secondary / muted / border / ring). Light and dark themes switch as a single operation. If you noticed subtle visual drift between surfaces before, that\'s gone.',
+          "Every surface now reads from the same shadcn-compatible semantic tokens (background / foreground / primary / secondary / muted / border / ring). Light and dark themes switch as a single operation. If you noticed subtle visual drift between surfaces before, that's gone.",
       },
       {
         title: 'Today columns tell you what to press',
@@ -297,7 +326,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       {
         title: 'New typography and shell',
         description:
-          'The app shell and navigation rail now use Geist Sans for UI text; mono is reserved for keycaps, counters, and IDs. Dark and light themes both shipped with refreshed tokens. Existing surfaces keep their current style until they\'re rebuilt one by one in later phases.',
+          "The app shell and navigation rail now use Geist Sans for UI text; mono is reserved for keycaps, counters, and IDs. Dark and light themes both shipped with refreshed tokens. Existing surfaces keep their current style until they're rebuilt one by one in later phases.",
       },
       {
         title: 'Command palette — now worth opening',
@@ -329,7 +358,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-04-17',
     headline: 'Momentum is now a team space',
     summary:
-      'Momentum is now a shared operating system for the Omnirev team. Brands, meetings, and action items are team-visible. Tasks and parkings support assignment and involvement. A new Team Task View shows everyone\'s current work, a new Inbox surfaces things assigned to or involving you, and End of Day + Weekly Stats pick up a team pulse.',
+      "Momentum is now a shared operating system for the Omnirev team. Brands, meetings, and action items are team-visible. Tasks and parkings support assignment and involvement. A new Team Task View shows everyone's current work, a new Inbox surfaces things assigned to or involving you, and End of Day + Weekly Stats pick up a team pulse.",
     items: [
       {
         title: 'Sign up with your @omnirev.ai email',
@@ -363,10 +392,10 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       {
         title: 'Brand recent activity + team-visible meetings',
         description:
-          'Every brand\'s Overview tab now shows a Recent Activity panel with stakeholder edits, meetings logged, action items created and completed, recordings synced, and feature-request changes — with the teammate who did each action. Meetings show attendee avatars for anyone matched to a teammate. Work (action items) cards show creator and assignee so handoffs are visible at a glance.',
+          "Every brand's Overview tab now shows a Recent Activity panel with stakeholder edits, meetings logged, action items created and completed, recordings synced, and feature-request changes — with the teammate who did each action. Meetings show attendee avatars for anyone matched to a teammate. Work (action items) cards show creator and assignee so handoffs are visible at a glance.",
       },
       {
-        title: 'Team Task View — everyone\'s today in one place',
+        title: "Team Task View — everyone's today in one place",
         description:
           'A new /team page groups tasks by person. Each teammate gets their own mini-kanban (Up next · In progress · Done). Navigate with j/k within a column, h/l between columns, ]/[ between teammate sections, press Enter on a task to open its detail modal, or A to reassign it without leaving the page.',
         shortcuts: ['g', 'u'],
@@ -380,7 +409,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       {
         title: 'End of Day team pulse + Weekly Stats Team tab',
         description:
-          'Your End of Day Review still belongs to you — your journal entry, your completed/incomplete lists, your stats. Below the Save button, a quiet strip now shows the team\'s completion rate for today and how many teammates are still working. The Weekly Stats modal gained a Mine | Team tab bar; switch with [ and ] to see per-person completion rate, estimation accuracy, streak, and top role across the team.',
+          "Your End of Day Review still belongs to you — your journal entry, your completed/incomplete lists, your stats. Below the Save button, a quiet strip now shows the team's completion rate for today and how many teammates are still working. The Weekly Stats modal gained a Mine | Team tab bar; switch with [ and ] to see per-person completion rate, estimation accuracy, streak, and top role across the team.",
         shortcuts: ['[', ']'],
       },
       {
@@ -472,7 +501,8 @@ export const RELEASE_NOTES: ReleaseNote[] = [
         title: 'Spreadsheet connection',
         description:
           'Connect a spreadsheet URL per brand. Momentum analyzes the column structure, optionally standardizes headers, and imports all existing rows. Changes sync both ways — edits in Momentum push to the sheet, and edits in the sheet pull into Momentum.',
-        howTo: 'Go to the Feature Requests tab and click "Connect spreadsheet", then paste the URL.',
+        howTo:
+          'Go to the Feature Requests tab and click "Connect spreadsheet", then paste the URL.',
       },
       {
         title: 'Inline Editing',
@@ -509,7 +539,8 @@ export const RELEASE_NOTES: ReleaseNote[] = [
         description:
           'The brand detail page is now split into an Overview tab and an Action Items & Meetings tab, eliminating the need to scroll through collapsed sections. Switch between them with a click or keyboard shortcuts.',
         shortcuts: ['1', '2'],
-        howTo: 'Open any brand and use the tab bar below the header, or press 1 for Overview and 2 for Action Items & Meetings.',
+        howTo:
+          'Open any brand and use the tab bar below the header, or press 1 for Overview and 2 for Action Items & Meetings.',
       },
       {
         title: 'Stakeholder Cards',
@@ -535,7 +566,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
         description:
           'During recording sync, Momentum uses an LLM to compare each extracted action item against your existing open items. Items that are essentially the same are skipped, items with new details are merged into the existing entry, and genuinely new items are created as before.',
         howTo:
-          'Just sync recordings as usual — deduplication happens automatically. You\'ll see fewer duplicate action items after importing multiple recordings.',
+          "Just sync recordings as usual — deduplication happens automatically. You'll see fewer duplicate action items after importing multiple recordings.",
       },
     ],
   },

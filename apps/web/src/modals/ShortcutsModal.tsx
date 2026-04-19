@@ -207,8 +207,8 @@ export function ShortcutsModal() {
             </div>
             <h2 className="text-xl font-semibold text-foreground">Shortcuts</h2>
             <p className="text-xs text-muted-foreground mt-1">
-              Press{' '}
-              <Kbd subtle>?</Kbd> anywhere to reopen this. Press <Kbd subtle>Esc</Kbd> to close.
+              Press <Kbd subtle>?</Kbd> anywhere to reopen this. Press <Kbd subtle>Esc</Kbd> to
+              close.
             </p>
           </div>
           <button
@@ -231,13 +231,12 @@ export function ShortcutsModal() {
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
                   {section.title}
                 </h3>
-                <p className="text-xs text-muted-foreground/70 mt-0.5 mb-3">{section.description}</p>
+                <p className="text-xs text-muted-foreground/70 mt-0.5 mb-3">
+                  {section.description}
+                </p>
                 <ul className="space-y-2">
                   {section.rows.map((row) => (
-                    <li
-                      key={row.label}
-                      className="flex items-center justify-between gap-4 text-sm"
-                    >
+                    <li key={row.label} className="flex items-center justify-between gap-4 text-sm">
                       <span className="text-muted-foreground">{row.label}</span>
                       <span className="flex items-center gap-1 shrink-0">
                         {row.keys.map((k, i) => (

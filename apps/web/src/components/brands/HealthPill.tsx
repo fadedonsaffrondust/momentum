@@ -16,9 +16,7 @@ export function HealthPill({ status, showLabel = false }: Props) {
   const cfg = STATUS_CONFIG[status];
   return (
     <span className="inline-flex items-center gap-1.5" title={cfg.label}>
-      <span
-        className={clsx('inline-block w-2 h-2 rounded-full shadow-sm', cfg.color, cfg.glow)}
-      />
+      <span className={clsx('inline-block w-2 h-2 rounded-full shadow-sm', cfg.color, cfg.glow)} />
       {showLabel && <span className="text-xs text-foreground">{cfg.label}</span>}
     </span>
   );

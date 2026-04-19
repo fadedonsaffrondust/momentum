@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  parseQuickAdd,
-  resolveDateToken,
-  resolveAssigneeToken,
-  toLocalIsoDate,
-} from './parser.ts';
+import { parseQuickAdd, resolveDateToken, resolveAssigneeToken, toLocalIsoDate } from './parser.ts';
 
 describe('parseQuickAdd', () => {
   it('parses a plain title', () => {
@@ -205,11 +200,9 @@ describe('resolveAssigneeToken', () => {
 
   it('resolves full display name (lowercased) when first name does not match', () => {
     // synthetic case: token matches only the full name string
-    expect(
-      resolveAssigneeToken('nadersamadyan', [
-        { id: 'x', displayName: 'NaderSamadyan' },
-      ]),
-    ).toBe('x');
+    expect(resolveAssigneeToken('nadersamadyan', [{ id: 'x', displayName: 'NaderSamadyan' }])).toBe(
+      'x',
+    );
   });
 
   it('prefers first-name over later full-name match', () => {

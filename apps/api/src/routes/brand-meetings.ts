@@ -97,10 +97,7 @@ export const brandMeetingsRoutes: FastifyPluginAsyncZod = async (app) => {
         .select()
         .from(brandMeetings)
         .where(
-          and(
-            eq(brandMeetings.id, req.params.id),
-            eq(brandMeetings.brandId, req.params.brandId),
-          ),
+          and(eq(brandMeetings.id, req.params.id), eq(brandMeetings.brandId, req.params.brandId)),
         )
         .limit(1);
       if (!existing) throw notFound('Meeting not found');
@@ -115,10 +112,7 @@ export const brandMeetingsRoutes: FastifyPluginAsyncZod = async (app) => {
         .update(brandMeetings)
         .set(updates)
         .where(
-          and(
-            eq(brandMeetings.id, req.params.id),
-            eq(brandMeetings.brandId, req.params.brandId),
-          ),
+          and(eq(brandMeetings.id, req.params.id), eq(brandMeetings.brandId, req.params.brandId)),
         )
         .returning();
       if (!row) throw notFound('Meeting not found');
@@ -149,10 +143,7 @@ export const brandMeetingsRoutes: FastifyPluginAsyncZod = async (app) => {
         .select({ id: brandMeetings.id, title: brandMeetings.title, date: brandMeetings.date })
         .from(brandMeetings)
         .where(
-          and(
-            eq(brandMeetings.id, req.params.id),
-            eq(brandMeetings.brandId, req.params.brandId),
-          ),
+          and(eq(brandMeetings.id, req.params.id), eq(brandMeetings.brandId, req.params.brandId)),
         )
         .limit(1);
       if (!existing) throw notFound('Meeting not found');
@@ -174,10 +165,7 @@ export const brandMeetingsRoutes: FastifyPluginAsyncZod = async (app) => {
       const [row] = await db
         .delete(brandMeetings)
         .where(
-          and(
-            eq(brandMeetings.id, req.params.id),
-            eq(brandMeetings.brandId, req.params.brandId),
-          ),
+          and(eq(brandMeetings.id, req.params.id), eq(brandMeetings.brandId, req.params.brandId)),
         )
         .returning({ id: brandMeetings.id });
       if (!row) throw notFound('Meeting not found');

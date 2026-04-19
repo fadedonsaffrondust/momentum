@@ -45,7 +45,9 @@ export const users = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
-    activeIdx: index('idx_users_active').on(t.id).where(sql`${t.deactivatedAt} IS NULL`),
+    activeIdx: index('idx_users_active')
+      .on(t.id)
+      .where(sql`${t.deactivatedAt} IS NULL`),
   }),
 );
 
@@ -219,14 +221,20 @@ export const brandMeetings = pgTable(
       .references(() => brands.id, { onDelete: 'cascade' }),
     date: date('date').notNull(),
     title: text('title').notNull(),
-    attendees: text('attendees').array().notNull().default(sql`'{}'::text[]`),
+    attendees: text('attendees')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     attendeeUserIds: uuid('attendee_user_ids')
       .array()
       .notNull()
       .default(sql`'{}'::uuid[]`),
     summary: text('summary'),
     rawNotes: text('raw_notes').notNull().default(''),
-    decisions: text('decisions').array().notNull().default(sql`'{}'::text[]`),
+    decisions: text('decisions')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     source: meetingSourceEnum('source').notNull().default('manual'),
     externalMeetingId: text('external_meeting_id'),
     recordingUrl: text('recording_url'),

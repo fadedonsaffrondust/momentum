@@ -30,7 +30,9 @@ export function BrandsPage() {
   // Poll importing brands: refetch the brands list periodically while any are importing.
   useEffect(() => {
     if (importingBrandIds.size === 0) return;
-    const interval = setInterval(() => { brandsQ.refetch(); }, 3000);
+    const interval = setInterval(() => {
+      brandsQ.refetch();
+    }, 3000);
     return () => clearInterval(interval);
   }, [importingBrandIds.size, brandsQ]);
 
@@ -135,9 +137,7 @@ export function BrandsPage() {
                 <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/30" />
               </div>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Select a brand or create a new one.
-            </p>
+            <p className="text-sm text-muted-foreground">Select a brand or create a new one.</p>
           </div>
         )}
 

@@ -66,9 +66,7 @@ export function FirstRunWizard() {
             </label>
             {updateMe.isError && (
               <p className="text-sm text-red-400">
-                {updateMe.error instanceof Error
-                  ? updateMe.error.message
-                  : 'Failed to save name'}
+                {updateMe.error instanceof Error ? updateMe.error.message : 'Failed to save name'}
               </p>
             )}
             <button
@@ -85,9 +83,7 @@ export function FirstRunWizard() {
           <section className="space-y-4">
             <div>
               <label className="block text-sm">
-                <span className="text-muted-foreground">
-                  How many focused hours per day?
-                </span>
+                <span className="text-muted-foreground">How many focused hours per day?</span>
                 <input
                   type="range"
                   min={1}

@@ -5,6 +5,7 @@
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "packageManager": "pnpm@10.33.0",
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema.ts"
@@ -15,6 +16,7 @@
     "migrate:team-space-backfill": "tsx src/migrations/team-space-backfill.ts",
     "studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "clean": "rm -rf dist .turbo"
   },

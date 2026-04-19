@@ -65,9 +65,7 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
       <div className="w-full max-w-[520px] mx-4 rounded-xl border border-border bg-background shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <h2 className="text-sm font-semibold text-foreground">
-            Connect spreadsheet
-          </h2>
+          <h2 className="text-sm font-semibold text-foreground">Connect spreadsheet</h2>
           <button
             onClick={onClose}
             className="p-1 text-muted-foreground hover:text-foreground transition"
@@ -81,9 +79,7 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
           {phase === 'input' && (
             <>
               <div className="space-y-2">
-                <label className="block text-xs font-medium text-foreground">
-                  Spreadsheet URL
-                </label>
+                <label className="block text-xs font-medium text-foreground">Spreadsheet URL</label>
                 <input
                   ref={inputRef}
                   autoFocus
@@ -111,16 +107,18 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
                   className="mt-0.5 accent-primary"
                 />
                 <label htmlFor="standardize" className="text-xs text-foreground leading-relaxed">
-                  <span className="font-medium">Standardize headers</span> — rewrite the sheet&apos;s
-                  header row to &quot;Date, Request, Response, Resolved&quot; for consistency.
-                  Existing data is preserved.
+                  <span className="font-medium">Standardize headers</span> — rewrite the
+                  sheet&apos;s header row to &quot;Date, Request, Response, Resolved&quot; for
+                  consistency. Existing data is preserved.
                 </label>
               </div>
 
               <div className="rounded-lg bg-card/50 px-3 py-2 text-xs text-muted-foreground leading-relaxed">
                 <p className="font-medium text-foreground mb-1">How it works</p>
                 <ul className="list-disc pl-4 space-y-0.5">
-                  <li>Momentum reads the sheet and detects columns (Date, Request, Response, Resolved)</li>
+                  <li>
+                    Momentum reads the sheet and detects columns (Date, Request, Response, Resolved)
+                  </li>
                   <li>All existing rows are imported as feature requests</li>
                   <li>Changes in Momentum sync back to the sheet, and vice versa</li>
                 </ul>
@@ -131,20 +129,17 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
           {phase === 'connecting' && (
             <div className="flex flex-col items-center gap-3 py-6">
               <Loader2 size={28} className="animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">
-                Reading sheet and importing data…
-              </p>
+              <p className="text-sm text-muted-foreground">Reading sheet and importing data…</p>
             </div>
           )}
 
           {phase === 'done' && (
             <div className="flex flex-col items-center gap-3 py-6">
               <CheckCircle2 size={28} className="text-emerald-400" />
-              <p className="text-sm text-foreground">
-                Connected successfully!
-              </p>
+              <p className="text-sm text-foreground">Connected successfully!</p>
               <p className="text-xs text-muted-foreground">
-                Imported {importedCount} feature request{importedCount !== 1 ? 's' : ''} from the sheet.
+                Imported {importedCount} feature request{importedCount !== 1 ? 's' : ''} from the
+                sheet.
               </p>
               {originalHeaders.length > 0 && (
                 <p className="text-xs text-muted-foreground">
@@ -157,12 +152,8 @@ export function ConnectSheetModal({ brandId, brandName, onClose }: Props) {
           {phase === 'error' && (
             <div className="flex flex-col items-center gap-3 py-6">
               <AlertTriangle size={28} className="text-amber-400" />
-              <p className="text-sm text-foreground">
-                Connection failed
-              </p>
-              <p className="text-xs text-muted-foreground text-center max-w-sm">
-                {errorMessage}
-              </p>
+              <p className="text-sm text-foreground">Connection failed</p>
+              <p className="text-xs text-muted-foreground text-center max-w-sm">{errorMessage}</p>
             </div>
           )}
         </div>

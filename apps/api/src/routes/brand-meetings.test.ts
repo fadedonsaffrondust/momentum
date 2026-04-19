@@ -20,7 +20,9 @@ const { mockDb, mockRecordBrandEvent, mockResolveAttendees } = vi.hoisted(() => 
         }
         return (..._args: unknown[]) => chain;
       },
-      apply() { return chain; },
+      apply() {
+        return chain;
+      },
     });
     return chain;
   }
@@ -30,8 +32,12 @@ const { mockDb, mockRecordBrandEvent, mockResolveAttendees } = vi.hoisted(() => 
     update: vi.fn((..._args: unknown[]) => createChain()),
     delete: vi.fn((..._args: unknown[]) => createChain()),
     _results: results,
-    _pushResult(value: unknown) { results.push(value); },
-    _pushResults(...values: unknown[]) { results.push(...values); },
+    _pushResult(value: unknown) {
+      results.push(value);
+    },
+    _pushResults(...values: unknown[]) {
+      results.push(...values);
+    },
   };
   const mockRecordBrandEvent = vi.fn(async (..._args: unknown[]) => undefined);
   const mockResolveAttendees = vi.fn(async (..._args: unknown[]) => [] as string[]);

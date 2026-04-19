@@ -54,12 +54,16 @@ export function EndOfDayModal() {
                 </span>
               </li>
             ))}
-            {done.length === 0 && <li className="text-xs text-muted-foreground/70">Nothing done.</li>}
+            {done.length === 0 && (
+              <li className="text-xs text-muted-foreground/70">Nothing done.</li>
+            )}
           </ul>
         </section>
 
         <section>
-          <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Incomplete</h3>
+          <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+            Incomplete
+          </h3>
           <ul className="space-y-1 text-sm">
             {incomplete.map((t) => (
               <li key={t.id} className="flex items-center justify-between gap-3">

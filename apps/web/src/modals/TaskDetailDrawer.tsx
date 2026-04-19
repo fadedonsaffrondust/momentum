@@ -5,10 +5,7 @@ import type { Priority, Task } from '@momentum/shared';
 import { useMe, useRoles, useTasks, useTeamTasks, useUpdateTask, useUsers } from '../api/hooks';
 import { Avatar } from '../components/Avatar';
 import { PropertyPicker, type PropertyPickerItem } from '../components/PropertyPicker';
-import {
-  RichDescriptionEditor,
-  isEmptyEditorHtml,
-} from '../components/RichDescriptionEditor';
+import { RichDescriptionEditor, isEmptyEditorHtml } from '../components/RichDescriptionEditor';
 import { useUiStore } from '../store/ui';
 import { todayIso } from '../lib/date';
 import { formatMinutes, formatTimeAgo } from '../lib/format';
@@ -68,9 +65,7 @@ export function TaskDetailDrawer() {
   const [description, setDescription] = useState(task?.description ?? '');
   const [priority, setPriority] = useState<Priority>(task?.priority ?? 'medium');
   const [estimate, setEstimate] = useState<number | null>(task?.estimateMinutes ?? null);
-  const [scheduledDate, setScheduledDate] = useState<string | null>(
-    task?.scheduledDate ?? null,
-  );
+  const [scheduledDate, setScheduledDate] = useState<string | null>(task?.scheduledDate ?? null);
   const [roleId, setRoleId] = useState<string | null>(task?.roleId ?? null);
   const [assigneeId, setAssigneeId] = useState<string>(task?.assigneeId ?? '');
 
@@ -119,18 +114,13 @@ export function TaskDetailDrawer() {
       {
         value: '',
         label: 'No role',
-        leading: (
-          <span className="w-2 h-2 rounded-full bg-muted-foreground/30 shrink-0" />
-        ),
+        leading: <span className="w-2 h-2 rounded-full bg-muted-foreground/30 shrink-0" />,
       },
       ...roles.map((r) => ({
         value: r.id,
         label: r.name,
         leading: (
-          <span
-            className="w-2 h-2 rounded-full shrink-0"
-            style={{ backgroundColor: r.color }}
-          />
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: r.color }} />
         ),
       })),
     ],
@@ -155,10 +145,9 @@ export function TaskDetailDrawer() {
   // outgoing task's edits don't get silently dropped) or when the drawer
   // unmounts.
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingSaveRef = useRef<
-    | { taskId: string; payload: Omit<UpdateTaskInput, 'id'> }
-    | null
-  >(null);
+  const pendingSaveRef = useRef<{ taskId: string; payload: Omit<UpdateTaskInput, 'id'> } | null>(
+    null,
+  );
   // Latest mutate fn in a ref so cleanup callbacks always see it without
   // needing react-query's object in their deps.
   const mutateRef = useRef(updateTask.mutate);
@@ -326,9 +315,7 @@ export function TaskDetailDrawer() {
                   value={priority}
                   onChange={(v) => setPriority(v)}
                 >
-                  <span className="text-foreground truncate">
-                    {PRIORITY_LABELS[priority]}
-                  </span>
+                  <span className="text-foreground truncate">{PRIORITY_LABELS[priority]}</span>
                 </PropertyPicker>
               </div>
 
@@ -351,10 +338,7 @@ export function TaskDetailDrawer() {
                         className="w-2 h-2 rounded-full shrink-0"
                         style={{ backgroundColor: selectedRole.color }}
                       />
-                      <span
-                        className="truncate"
-                        style={{ color: selectedRole.color }}
-                      >
+                      <span className="truncate" style={{ color: selectedRole.color }}>
                         {selectedRole.name}
                       </span>
                     </>
@@ -385,9 +369,7 @@ export function TaskDetailDrawer() {
                     className="w-20 bg-transparent text-foreground focus:outline-none placeholder:text-muted-foreground/70"
                   />
                   {estimate !== null && estimate > 0 && (
-                    <span className="text-xs text-muted-foreground">
-                      {formatMinutes(estimate)}
-                    </span>
+                    <span className="text-xs text-muted-foreground">{formatMinutes(estimate)}</span>
                   )}
                 </div>
               </div>

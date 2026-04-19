@@ -31,7 +31,9 @@ export function ConfirmProvider() {
 
   useEffect(() => {
     globalShow = show;
-    return () => { globalShow = null; };
+    return () => {
+      globalShow = null;
+    };
   }, [show]);
 
   if (!state) return null;

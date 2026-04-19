@@ -52,12 +52,7 @@ const SLASH_ITEMS: SlashItem[] = [
     description: 'Checkbox list item',
     keywords: ['todo', 'task', 'check', 'checkbox', 'checklist'],
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .toggleList('taskList', 'taskItem')
-        .run();
+      editor.chain().focus().deleteRange(range).toggleList('taskList', 'taskItem').run();
     },
   },
 ];
@@ -136,9 +131,9 @@ function createSlashExtension(onOpenChange: (open: boolean) => void) {
           items: ({ query }) => {
             const q = query.toLowerCase();
             if (!q) return SLASH_ITEMS;
-            return SLASH_ITEMS.filter((item) =>
-              item.keywords.some((k) => k.startsWith(q)) ||
-              item.title.toLowerCase().includes(q),
+            return SLASH_ITEMS.filter(
+              (item) =>
+                item.keywords.some((k) => k.startsWith(q)) || item.title.toLowerCase().includes(q),
             );
           },
           command: ({ editor, range, props }) => {
@@ -220,8 +215,7 @@ function createSlashExtension(onOpenChange: (open: boolean) => void) {
                   return true;
                 }
                 if (props.event.key === 'ArrowDown') {
-                  activeIndex =
-                    (activeIndex + 1) % Math.max(1, currentProps.items.length);
+                  activeIndex = (activeIndex + 1) % Math.max(1, currentProps.items.length);
                   update();
                   return true;
                 }

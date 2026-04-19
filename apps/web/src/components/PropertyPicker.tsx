@@ -78,9 +78,7 @@ export function PropertyPicker<V extends string>({
       </PopoverTrigger>
       <PopoverContent align={align} className={cn('w-64 p-0', contentClassName)}>
         <Command>
-          {searchable && (
-            <CommandInput placeholder={searchPlaceholder ?? 'Search…'} />
-          )}
+          {searchable && <CommandInput placeholder={searchPlaceholder ?? 'Search…'} />}
           <CommandList>
             <CommandEmpty>{emptyLabel}</CommandEmpty>
             {items.map((item) => (
@@ -95,12 +93,8 @@ export function PropertyPicker<V extends string>({
               >
                 {item.leading}
                 <span className="flex-1 truncate">{item.label}</span>
-                {item.hint && (
-                  <span className="text-2xs text-muted-foreground">{item.hint}</span>
-                )}
-                {value === item.value && (
-                  <Check className="h-4 w-4 text-primary shrink-0" />
-                )}
+                {item.hint && <span className="text-2xs text-muted-foreground">{item.hint}</span>}
+                {value === item.value && <Check className="h-4 w-4 text-primary shrink-0" />}
               </CommandItem>
             ))}
           </CommandList>

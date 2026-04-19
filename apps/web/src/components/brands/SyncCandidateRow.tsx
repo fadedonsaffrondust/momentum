@@ -28,9 +28,7 @@ export function SyncCandidateRow({ candidate, checked, focused, onToggle }: Prop
     <button
       onClick={onToggle}
       className={`w-full text-left flex items-start gap-3 px-4 py-3 rounded-lg border transition ${
-        focused
-          ? 'border-primary/50 bg-primary/5'
-          : 'border-border/50 hover:bg-card/40'
+        focused ? 'border-primary/50 bg-primary/5' : 'border-border/50 hover:bg-card/40'
       }`}
     >
       <input
@@ -43,9 +41,7 @@ export function SyncCandidateRow({ candidate, checked, focused, onToggle }: Prop
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-foreground truncate">
-            {meeting.name}
-          </span>
+          <span className="text-sm font-medium text-foreground truncate">{meeting.name}</span>
           <span
             className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
               confidence === 'high'
@@ -58,10 +54,10 @@ export function SyncCandidateRow({ candidate, checked, focused, onToggle }: Prop
         </div>
 
         <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-          <span>{date} at {time}</span>
-          {meeting.duration != null && (
-            <span>{Math.round(meeting.duration / 60)} min</span>
-          )}
+          <span>
+            {date} at {time}
+          </span>
+          {meeting.duration != null && <span>{Math.round(meeting.duration / 60)} min</span>}
         </div>
 
         {attendeeNames.length > 0 && (

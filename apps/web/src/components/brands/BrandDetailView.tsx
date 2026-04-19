@@ -72,14 +72,21 @@ export function BrandDetailView({ brandId }: Props) {
     return Date.now() - new Date(lastSync).getTime() > 5 * 60_000;
   }, [brand?.featureRequestsConfig?.lastSyncedAt]);
 
-  const anyModalOpen = showMeetingModal || showSyncSettings || showSyncReview || showConnectSheet || !!activeModal;
+  const anyModalOpen =
+    showMeetingModal || showSyncSettings || showSyncReview || showConnectSheet || !!activeModal;
 
   useEffect(() => {
     if (!brand || anyModalOpen) return;
 
     const handler = (e: KeyboardEvent) => {
       const el = document.activeElement;
-      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || (el as HTMLElement).isContentEditable)) return;
+      if (
+        el &&
+        (el.tagName === 'INPUT' ||
+          el.tagName === 'TEXTAREA' ||
+          (el as HTMLElement).isContentEditable)
+      )
+        return;
 
       if (e.key === 's' && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
@@ -147,12 +154,20 @@ export function BrandDetailView({ brandId }: Props) {
             });
           },
           onError: () => {
-            pushToast({ kind: 'error', message: 'Failed to push feature-request changes to the external sheet', durationMs: 4000 });
+            pushToast({
+              kind: 'error',
+              message: 'Failed to push feature-request changes to the external sheet',
+              durationMs: 4000,
+            });
           },
         });
       },
       onError: () => {
-        pushToast({ kind: 'error', message: 'Failed to pull updates from the external sheet', durationMs: 4000 });
+        pushToast({
+          kind: 'error',
+          message: 'Failed to pull updates from the external sheet',
+          durationMs: 4000,
+        });
       },
     });
   };

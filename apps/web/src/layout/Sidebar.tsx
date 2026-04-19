@@ -12,12 +12,7 @@ import {
   LogOut,
   type LucideIcon,
 } from 'lucide-react';
-import {
-  useInboxUnreadCount,
-  useMe,
-  useSettings,
-  useUpdateSettings,
-} from '../api/hooks';
+import { useInboxUnreadCount, useMe, useSettings, useUpdateSettings } from '../api/hooks';
 import { useAuthStore } from '../store/auth';
 import { useUiStore } from '../store/ui';
 import { LATEST_VERSION } from '../lib/releaseNotes';
@@ -27,13 +22,7 @@ import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Kbd } from '@/components/ui/kbd';
 
-function TooltipLabel({
-  label,
-  shortcut,
-}: {
-  label: string;
-  shortcut?: string;
-}) {
+function TooltipLabel({ label, shortcut }: { label: string; shortcut?: string }) {
   if (!shortcut) return <span>{label}</span>;
   const tokens = shortcut.split(' ').filter(Boolean);
   return (
@@ -79,9 +68,7 @@ function SidebarNavItem({
         <NavLink
           to={to}
           className="group relative flex items-center justify-center w-full py-3"
-          aria-label={
-            badgeCount ? `${label} (${badgeCount} unread)` : label
-          }
+          aria-label={badgeCount ? `${label} (${badgeCount} unread)` : label}
         >
           <span
             className={cn(
@@ -195,19 +182,9 @@ export function Sidebar() {
           icon={CheckSquare}
           matchPaths={['/backlog']}
         />
-        <SidebarNavItem
-          to="/parkings"
-          label="Parkings"
-          shortcut="g p"
-          icon={CarFront}
-        />
+        <SidebarNavItem to="/parkings" label="Parkings" shortcut="g p" icon={CarFront} />
         <SidebarNavItem to="/team" label="Team" shortcut="g u" icon={Users} />
-        <SidebarNavItem
-          to="/brands"
-          label="Brands"
-          shortcut="g b"
-          icon={ShoppingBag}
-        />
+        <SidebarNavItem to="/brands" label="Brands" shortcut="g b" icon={ShoppingBag} />
       </nav>
 
       <div className="flex w-full flex-col items-center border-t border-border pt-2 pb-2">
@@ -235,31 +212,19 @@ export function Sidebar() {
           label={theme === 'dark' ? 'Light mode' : 'Dark mode'}
           icon={theme === 'dark' ? Sun : Moon}
         />
-        <SidebarIconButton
-          onClick={() => clearAuth()}
-          label="Sign out"
-          icon={LogOut}
-        />
+        <SidebarIconButton onClick={() => clearAuth()} label="Sign out" icon={LogOut} />
 
         {meQ.data ? (
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="mt-2">
-                <Avatar
-                  user={meQ.data}
-                  size="md"
-                  onClick={() => openModal('settings')}
-                />
+                <Avatar user={meQ.data} size="md" onClick={() => openModal('settings')} />
               </div>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
               <div className="flex flex-col">
-                <span className="text-foreground">
-                  {meQ.data.displayName || 'Set a name'}
-                </span>
-                <span className="text-[10px] text-muted-foreground">
-                  {meQ.data.email}
-                </span>
+                <span className="text-foreground">{meQ.data.displayName || 'Set a name'}</span>
+                <span className="text-[10px] text-muted-foreground">{meQ.data.email}</span>
               </div>
             </TooltipContent>
           </Tooltip>

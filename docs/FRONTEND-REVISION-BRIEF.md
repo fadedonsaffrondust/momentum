@@ -133,6 +133,7 @@ Semantic tokens (define as CSS variables, consume via Tailwind):
 - `--success` / `--warning` / `--danger` — status only, never decoration
 
 Rules:
+
 - No more than one accent color used per screen region.
 - Status colors (green/yellow/red) appear only on status indicators, never as general-purpose styling.
 - Health pills, priority indicators, and similar use opacity and desaturation over bright colors.
@@ -196,6 +197,7 @@ Visible focus ring on every interactive element (Radix/shadcn handle this by def
 ### Empty states
 
 Every list, table, and panel has a purposeful empty state:
+
 - What this surface is for (one line)
 - What action the user can take (a button or shortcut hint)
 - No illustrations. No empty-state clipart.
@@ -221,6 +223,7 @@ Every list, table, and panel has a purposeful empty state:
 Do not refactor the entire frontend in one PR. Break the work into the following phases. Each phase must ship independently and not break the app.
 
 **Phase 1 — Foundation (no visible change expected)**
+
 - Install and configure Tailwind with our design tokens
 - Set up shadcn CLI, install initial primitives (Button, Input, Dialog, Popover, Dropdown, Tooltip)
 - Load Geist fonts
@@ -228,11 +231,13 @@ Do not refactor the entire frontend in one PR. Break the work into the following
 - Add Framer Motion and cmdk as dependencies
 
 **Phase 2 — Global chrome**
+
 - Rebuild app shell: top nav, side nav, main content area
 - Implement global command palette (cmd+k) with a seed set of commands
 - Implement global keyboard shortcut handler
 
 **Phase 3 — Primary surfaces (one at a time, in this order)**
+
 1. Today view (highest-traffic surface)
 2. Brand list + brand detail
 3. Feature requests table
@@ -242,6 +247,7 @@ Do not refactor the entire frontend in one PR. Break the work into the following
 For each surface, match the design tokens, keyboard shortcuts, and interaction patterns defined above. Do not mix old and new styles in the same surface.
 
 **Phase 4 — Polish pass**
+
 - Animation audit — every transition ≤ 150ms, `prefers-reduced-motion` respected
 - Keyboard shortcut audit — every action reachable without a mouse
 - Empty/loading/error state audit — every list/table/panel handled

@@ -107,16 +107,11 @@ function MinePanel() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-        <Stat
-          label="Avg completion"
-          value={`${Math.round(stats.averageCompletionRate * 100)}%`}
-        />
+        <Stat label="Avg completion" value={`${Math.round(stats.averageCompletionRate * 100)}%`} />
         <Stat label="Streak" value={`${stats.streak}d`} />
         <Stat
           label="Est. accuracy"
-          value={
-            stats.estimationAccuracy != null ? `${stats.estimationAccuracy.toFixed(2)}×` : '—'
-          }
+          value={stats.estimationAccuracy != null ? `${stats.estimationAccuracy.toFixed(2)}×` : '—'}
         />
         <Stat label="Top role" value={mostActiveRole?.name ?? '—'} />
       </div>
@@ -153,14 +148,9 @@ function TeamPanel() {
         </thead>
         <tbody>
           {rows.map((r) => {
-            const role = r.mostActiveRoleId
-              ? roles.find((x) => x.id === r.mostActiveRoleId)
-              : null;
+            const role = r.mostActiveRoleId ? roles.find((x) => x.id === r.mostActiveRoleId) : null;
             return (
-              <tr
-                key={r.user.id}
-                className="border-t border-border/60 hover:bg-card/60 transition"
-              >
+              <tr key={r.user.id} className="border-t border-border/60 hover:bg-card/60 transition">
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <Avatar user={r.user} size="sm" showTooltip={false} />
@@ -175,9 +165,7 @@ function TeamPanel() {
                 <td className="text-right px-3 py-2 text-foreground tabular-nums">
                   {r.estimationAccuracy != null ? `${r.estimationAccuracy.toFixed(2)}×` : '—'}
                 </td>
-                <td className="text-right px-3 py-2 text-foreground tabular-nums">
-                  {r.streak}d
-                </td>
+                <td className="text-right px-3 py-2 text-foreground tabular-nums">{r.streak}d</td>
                 <td className="px-3 py-2">
                   {role ? (
                     <span

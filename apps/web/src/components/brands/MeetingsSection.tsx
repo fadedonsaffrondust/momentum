@@ -62,23 +62,19 @@ export function MeetingsSection({ brandId, meetings, stakeholders }: Props) {
 
         <div className="space-y-2">
           {sorted.length === 0 && (
-            <p className="text-sm text-muted-foreground py-4 text-center">No meetings logged yet.</p>
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              No meetings logged yet.
+            </p>
           )}
           {sorted.map((m) => {
             const isExpanded = expandedId === m.id;
             const linkedAttendees = m.attendeeUserIds
               .map((id) => usersById.get(id))
               .filter((u): u is UserSummary => u !== undefined);
-            const externalCount = Math.max(
-              0,
-              m.attendees.length - linkedAttendees.length,
-            );
+            const externalCount = Math.max(0, m.attendees.length - linkedAttendees.length);
 
             return (
-              <div
-                key={m.id}
-                className="border border-border/60 rounded-lg overflow-hidden"
-              >
+              <div key={m.id} className="border border-border/60 rounded-lg overflow-hidden">
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : m.id)}
                   className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-card/40 transition"
@@ -86,19 +82,10 @@ export function MeetingsSection({ brandId, meetings, stakeholders }: Props) {
                   <span className="text-xs font-mono text-muted-foreground shrink-0 w-20">
                     {formatDateShort(m.date)}
                   </span>
-                  <span className="flex-1 text-sm text-foreground truncate">
-                    {m.title}
-                  </span>
-                  {m.recordingUrl && (
-                    <Play size={12} className="text-primary/60 shrink-0" />
-                  )}
+                  <span className="flex-1 text-sm text-foreground truncate">{m.title}</span>
+                  {m.recordingUrl && <Play size={12} className="text-primary/60 shrink-0" />}
                   {linkedAttendees.length > 0 && (
-                    <AvatarStack
-                      users={linkedAttendees}
-                      max={3}
-                      size="xs"
-                      className="shrink-0"
-                    />
+                    <AvatarStack users={linkedAttendees} max={3} size="xs" className="shrink-0" />
                   )}
                   {externalCount > 0 && (
                     <span
@@ -286,9 +273,8 @@ function NotesSection({ rawNotes }: { rawNotes: string }) {
   }
 
   const isLong = rawNotes.length > NOTES_PREVIEW_LENGTH;
-  const displayText = isLong && !showFull
-    ? rawNotes.slice(0, NOTES_PREVIEW_LENGTH) + '…'
-    : rawNotes;
+  const displayText =
+    isLong && !showFull ? rawNotes.slice(0, NOTES_PREVIEW_LENGTH) + '…' : rawNotes;
 
   return (
     <div>

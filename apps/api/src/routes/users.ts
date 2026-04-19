@@ -1,11 +1,7 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { asc, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
-import {
-  authUserSchema,
-  updateMeInputSchema,
-  userSummarySchema,
-} from '@momentum/shared';
+import { authUserSchema, updateMeInputSchema, userSummarySchema } from '@momentum/shared';
 import { users } from '@momentum/db';
 import { db } from '../db.ts';
 import { mapUserSummary } from '../mappers.ts';

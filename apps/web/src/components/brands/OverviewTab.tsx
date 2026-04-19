@@ -1,5 +1,11 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import type { Brand, BrandMeeting, BrandActionItem, BrandStakeholder, BrandFeatureRequest } from '@momentum/shared';
+import type {
+  Brand,
+  BrandMeeting,
+  BrandActionItem,
+  BrandStakeholder,
+  BrandFeatureRequest,
+} from '@momentum/shared';
 import { Check, ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
 import { StakeholderBadge } from './StakeholderBadge';
 import { RecentActivitySection } from './RecentActivitySection';
@@ -91,9 +97,7 @@ export function OverviewTab({
   };
 
   const itemAge = (createdAt: string) => {
-    const diff = Math.floor(
-      (Date.now() - new Date(createdAt).getTime()) / 86_400_000,
-    );
+    const diff = Math.floor((Date.now() - new Date(createdAt).getTime()) / 86_400_000);
     if (diff === 0) return 'today';
     if (diff === 1) return '1d old';
     return `${diff}d old`;
@@ -137,9 +141,7 @@ export function OverviewTab({
           <div className="space-y-3">
             <h3 className="text-xs uppercase tracking-wide text-foreground font-semibold">
               Open items
-              {openCount > 0 && (
-                <span className="ml-1 text-muted-foreground">({openCount})</span>
-              )}
+              {openCount > 0 && <span className="ml-1 text-muted-foreground">({openCount})</span>}
             </h3>
             {topOpenItems.length === 0 ? (
               <p className="text-sm text-muted-foreground">No open action items.</p>
@@ -147,10 +149,10 @@ export function OverviewTab({
               <ul className="space-y-2">
                 {topOpenItems.map((item) => (
                   <li key={item.id} className="flex items-start gap-2 text-sm group">
-                    <span className="flex-1 text-foreground leading-snug">
-                      {item.text}
+                    <span className="flex-1 text-foreground leading-snug">{item.text}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {itemAge(item.createdAt)}
                     </span>
-                    <span className="shrink-0 text-xs text-muted-foreground">{itemAge(item.createdAt)}</span>
                     <div className="shrink-0 flex gap-1.5 opacity-0 group-hover:opacity-100 transition">
                       <button
                         onClick={() => onSendToToday(item.id)}
@@ -172,9 +174,7 @@ export function OverviewTab({
               </ul>
             )}
             {openCount > 3 && (
-              <p className="text-xs text-primary">
-                +{openCount - 3} more open items
-              </p>
+              <p className="text-xs text-primary">+{openCount - 3} more open items</p>
             )}
           </div>
 
@@ -199,9 +199,7 @@ export function OverviewTab({
                   <span className="text-muted-foreground">resolved</span>
                 </div>
                 {brand.featureRequestsConfig?.connected && (
-                  <div className="text-xs text-muted-foreground">
-                    Sheet connected
-                  </div>
+                  <div className="text-xs text-muted-foreground">Sheet connected</div>
                 )}
               </div>
             )}
@@ -236,12 +234,7 @@ export function OverviewTab({
           North Star
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <EditableCard
-            label="Goals"
-            value={brand.goals ?? ''}
-            brandId={brand.id}
-            field="goals"
-          />
+          <EditableCard label="Goals" value={brand.goals ?? ''} brandId={brand.id} field="goals" />
           <EditableCard
             label="Success Definition"
             value={brand.successDefinition ?? ''}
@@ -529,13 +522,7 @@ function StakeholdersGrid({
   );
 }
 
-function RawContextCollapsible({
-  content,
-  source,
-}: {
-  content: string;
-  source: string | null;
-}) {
+function RawContextCollapsible({ content, source }: { content: string; source: string | null }) {
   const [open, setOpen] = useState(false);
 
   return (

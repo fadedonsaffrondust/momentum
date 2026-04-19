@@ -38,9 +38,7 @@ export function ParkingScopeFilter() {
             onClick={() => set(opt)}
             className={clsx(
               'px-2.5 py-1 rounded-md transition font-medium',
-              active
-                ? 'bg-primary/20 text-primary'
-                : 'text-muted-foreground hover:text-foreground',
+              active ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground',
             )}
           >
             {LABELS[opt]}

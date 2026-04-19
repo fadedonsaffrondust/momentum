@@ -20,7 +20,9 @@ const { mockDb } = vi.hoisted(() => {
         }
         return (..._args: unknown[]) => chain;
       },
-      apply() { return chain; },
+      apply() {
+        return chain;
+      },
     });
     return chain;
   }
@@ -30,8 +32,12 @@ const { mockDb } = vi.hoisted(() => {
     update: vi.fn((..._args: unknown[]) => createChain()),
     delete: vi.fn((..._args: unknown[]) => createChain()),
     _results: results,
-    _pushResult(value: unknown) { results.push(value); },
-    _pushResults(...values: unknown[]) { results.push(...values); },
+    _pushResult(value: unknown) {
+      results.push(value);
+    },
+    _pushResults(...values: unknown[]) {
+      results.push(...values);
+    },
   };
   return { mockDb };
 });
@@ -146,7 +152,13 @@ describe('brand feature request sync routes', () => {
       ]);
       mockRewriteHeaders.mockResolvedValue(undefined);
       mockParseRows.mockReturnValue([
-        { rowIndex: 1, date: '2026/04/14', request: 'Add car dealership', response: '', resolved: false },
+        {
+          rowIndex: 1,
+          date: '2026/04/14',
+          request: 'Add car dealership',
+          response: '',
+          resolved: false,
+        },
       ]);
 
       // update brands returning
@@ -248,7 +260,13 @@ describe('brand feature request sync routes', () => {
         ['2026/04/14', 'Updated request', 'Some response', 'FALSE'],
       ]);
       mockParseRows.mockReturnValue([
-        { rowIndex: 1, date: '2026/04/14', request: 'Updated request', response: 'Some response', resolved: false },
+        {
+          rowIndex: 1,
+          date: '2026/04/14',
+          request: 'Updated request',
+          response: 'Some response',
+          resolved: false,
+        },
       ]);
 
       // update row

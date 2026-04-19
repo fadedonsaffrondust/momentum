@@ -45,14 +45,9 @@ export function CommandsProvider({ children }: { children: ReactNode }) {
     [version],
   );
 
-  const value = useMemo<CommandsContextValue>(
-    () => ({ commands, register }),
-    [commands, register],
-  );
+  const value = useMemo<CommandsContextValue>(() => ({ commands, register }), [commands, register]);
 
-  return (
-    <CommandsContext.Provider value={value}>{children}</CommandsContext.Provider>
-  );
+  return <CommandsContext.Provider value={value}>{children}</CommandsContext.Provider>;
 }
 
 export function useCommands(): readonly Command[] {

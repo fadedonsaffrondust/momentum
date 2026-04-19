@@ -16,9 +16,7 @@ function Tab({ to, label, end }: TabProps) {
       className={({ isActive }) =>
         clsx(
           'relative px-4 py-2 text-sm rounded-md transition',
-          isActive
-            ? 'text-foreground'
-            : 'text-muted-foreground hover:text-foreground',
+          isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
         )
       }
     >

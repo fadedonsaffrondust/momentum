@@ -13,9 +13,7 @@ describe('parseSheetUrl', () => {
   });
 
   it('extracts gid from URL with hash fragment', () => {
-    const result = parseSheetUrl(
-      'https://docs.google.com/spreadsheets/d/1abc123/edit#gid=456',
-    );
+    const result = parseSheetUrl('https://docs.google.com/spreadsheets/d/1abc123/edit#gid=456');
     expect(result).toEqual({
       spreadsheetId: '1abc123',
       gid: '456',
@@ -23,9 +21,7 @@ describe('parseSheetUrl', () => {
   });
 
   it('extracts gid from URL with query param', () => {
-    const result = parseSheetUrl(
-      'https://docs.google.com/spreadsheets/d/1abc123/edit?gid=789',
-    );
+    const result = parseSheetUrl('https://docs.google.com/spreadsheets/d/1abc123/edit?gid=789');
     expect(result).toEqual({
       spreadsheetId: '1abc123',
       gid: '789',
@@ -33,9 +29,7 @@ describe('parseSheetUrl', () => {
   });
 
   it('defaults gid to 0 when not present', () => {
-    const result = parseSheetUrl(
-      'https://docs.google.com/spreadsheets/d/1abc123/edit',
-    );
+    const result = parseSheetUrl('https://docs.google.com/spreadsheets/d/1abc123/edit');
     expect(result?.gid).toBe('0');
   });
 
@@ -46,9 +40,7 @@ describe('parseSheetUrl', () => {
   });
 
   it('handles URLs with hyphens and underscores in the ID', () => {
-    const result = parseSheetUrl(
-      'https://docs.google.com/spreadsheets/d/1a-b_c/edit',
-    );
+    const result = parseSheetUrl('https://docs.google.com/spreadsheets/d/1a-b_c/edit');
     expect(result?.spreadsheetId).toBe('1a-b_c');
   });
 });
@@ -85,7 +77,12 @@ describe('analyzeColumns', () => {
   });
 
   it('matches plural headers (Questions, Responses, etc.)', () => {
-    const result = analyzeColumns(['Date Requested', 'Omni Rev Questions', 'Responses', 'Completed']);
+    const result = analyzeColumns([
+      'Date Requested',
+      'Omni Rev Questions',
+      'Responses',
+      'Completed',
+    ]);
     expect(result).toEqual({ date: 0, request: 1, response: 2, resolved: 3 });
   });
 

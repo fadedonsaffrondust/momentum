@@ -2,12 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
 import type { InboxEvent } from '@momentum/shared';
-import {
-  useInbox,
-  useInboxUnreadCount,
-  useMarkAllInboxRead,
-  useMarkInboxRead,
-} from '../api/hooks';
+import { useInbox, useInboxUnreadCount, useMarkAllInboxRead, useMarkInboxRead } from '../api/hooks';
 import { useUiStore, type InboxFilter } from '../store/ui';
 import { Avatar } from '../components/Avatar';
 import { useInboxKeyboardController } from '../hooks/useInboxKeyboardController';
@@ -172,10 +167,7 @@ function InboxRow({
       )}
     >
       {unread && (
-        <span
-          className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0"
-          aria-label="Unread"
-        />
+        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-label="Unread" />
       )}
       {!unread && <span className="mt-1.5 w-1.5 h-1.5 shrink-0" />}
       <Avatar user={event.actor} size="sm" showTooltip={false} className="mt-0.5" />
@@ -186,14 +178,10 @@ function InboxRow({
             unread ? 'text-foreground font-medium' : 'text-muted-foreground',
           )}
         >
-          <span className="text-foreground">
-            {event.actor.displayName || event.actor.email}
-          </span>{' '}
+          <span className="text-foreground">{event.actor.displayName || event.actor.email}</span>{' '}
           {description}
         </div>
-        {preview && (
-          <div className="text-xs text-muted-foreground mt-0.5 truncate">{preview}</div>
-        )}
+        {preview && <div className="text-xs text-muted-foreground mt-0.5 truncate">{preview}</div>}
       </div>
       <div className="text-[10px] text-muted-foreground/70 shrink-0 mt-1">
         {formatTimeAgo(event.createdAt)}
@@ -226,9 +214,7 @@ function FilterChip({
             onClick={() => onChange(opt)}
             className={clsx(
               'px-2.5 py-1 rounded-md transition font-medium',
-              active
-                ? 'bg-primary/20 text-primary'
-                : 'text-muted-foreground hover:text-foreground',
+              active ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground',
             )}
           >
             {opt === 'unread' ? 'Unread' : 'All'}
@@ -263,9 +249,7 @@ function describeInboxEvent(event: InboxEvent): {
       };
     case 'task_edited': {
       const changed = (event.payload as Record<string, unknown>)['changedFields'];
-      const fieldList = Array.isArray(changed)
-        ? (changed as string[]).join(', ')
-        : '';
+      const fieldList = Array.isArray(changed) ? (changed as string[]).join(', ') : '';
       return {
         description: fieldList
           ? `updated ${fieldList} on a task assigned to you:`

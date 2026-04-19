@@ -3,6 +3,7 @@
 Execution tracker for the overhaul described in `docs/FRONTEND-REVISION-BRIEF.md`. Each task is sized for roughly one session. Mark the checkbox when the session ends with the task's "Done when" satisfied.
 
 **Rules of engagement:**
+
 - One task per session. Do not start the next until the operator gives the go-ahead.
 - Every task ships with the app in a working state — no multi-task half-land.
 - Never mix old (`m-*`) and new (shadcn token) styles on the same surface.
@@ -106,6 +107,7 @@ Execution tracker for the overhaul described in `docs/FRONTEND-REVISION-BRIEF.md
 ## Phase 3 — Primary surfaces
 
 Executed as a two-move combo:
+
 1. **Bulk token migration** across every surface (`m-*` → shadcn tokens, legacy `bg-accent` brand-green → `bg-primary`, variants preserved via opacity suffixes). Satisfies the "no mixed styles on same surface" rule at the token level.
 2. **Today view deepening**: context commands + purposeful empty states with keycap hints.
 3. **Legacy cleanup (3.6)**: deleted the `@layer utilities` `m-*` block, `colors.m.*`, and every `--m-*` variable. Renamed `--m-kbd-*`/`--m-glow-*` to `--kbd-*`/`--glow-*`.

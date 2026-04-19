@@ -20,7 +20,9 @@ const { mockDb, mockRecordInboxEvent } = vi.hoisted(() => {
         }
         return (..._args: unknown[]) => chain;
       },
-      apply() { return chain; },
+      apply() {
+        return chain;
+      },
     });
     return chain;
   }
@@ -30,8 +32,12 @@ const { mockDb, mockRecordInboxEvent } = vi.hoisted(() => {
     update: vi.fn((..._args: unknown[]) => createChain()),
     delete: vi.fn((..._args: unknown[]) => createChain()),
     _results: results,
-    _pushResult(value: unknown) { results.push(value); },
-    _pushResults(...values: unknown[]) { results.push(...values); },
+    _pushResult(value: unknown) {
+      results.push(value);
+    },
+    _pushResults(...values: unknown[]) {
+      results.push(...values);
+    },
   };
   const mockRecordInboxEvent = vi.fn(async (..._args: unknown[]) => undefined);
   return { mockDb, mockRecordInboxEvent };
@@ -162,9 +168,7 @@ describe('tasks routes', () => {
   });
 
   it('POST /tasks round-trips a description field', async () => {
-    mockDb._pushResult([
-      makeTaskRow({ description: '## Definition of done\n- [ ] Shipped' }),
-    ]);
+    mockDb._pushResult([makeTaskRow({ description: '## Definition of done\n- [ ] Shipped' })]);
 
     const res = await app.inject({
       method: 'POST',
@@ -743,7 +747,11 @@ describe('tasks routes', () => {
   it('GET /tasks?assigneeId=ALL is accepted (team-wide)', async () => {
     mockDb._pushResult([
       makeTaskRow({ assigneeId: USER_ID }),
-      makeTaskRow({ id: 'c1234567-1234-1234-1234-123456789012', assigneeId: OTHER_USER, creatorId: OTHER_USER }),
+      makeTaskRow({
+        id: 'c1234567-1234-1234-1234-123456789012',
+        assigneeId: OTHER_USER,
+        creatorId: OTHER_USER,
+      }),
     ]);
 
     const res = await app.inject({

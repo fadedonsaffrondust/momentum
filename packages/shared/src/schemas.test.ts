@@ -226,9 +226,7 @@ describe('createTaskInputSchema', () => {
   });
 
   it('rejects non-uuid assigneeId', () => {
-    expect(() =>
-      createTaskInputSchema.parse({ title: 'x', assigneeId: 'not-a-uuid' }),
-    ).toThrow();
+    expect(() => createTaskInputSchema.parse({ title: 'x', assigneeId: 'not-a-uuid' })).toThrow();
   });
 
   it('accepts an optional description string', () => {
@@ -246,9 +244,7 @@ describe('createTaskInputSchema', () => {
 
   it('rejects a description over 20,000 characters', () => {
     const huge = 'a'.repeat(20_001);
-    expect(() =>
-      createTaskInputSchema.parse({ title: 'x', description: huge }),
-    ).toThrow();
+    expect(() => createTaskInputSchema.parse({ title: 'x', description: huge })).toThrow();
   });
 });
 
@@ -387,9 +383,7 @@ describe('parkingSchema + create/update', () => {
   });
 
   it('rejects non-uuid in involvedIds', () => {
-    expect(() =>
-      parkingSchema.parse({ ...validParking, involvedIds: ['not-a-uuid'] }),
-    ).toThrow();
+    expect(() => parkingSchema.parse({ ...validParking, involvedIds: ['not-a-uuid'] })).toThrow();
   });
 
   it('createParkingInputSchema requires title', () => {
@@ -504,9 +498,7 @@ describe('brandMeetingSchema', () => {
   });
 
   it('attendees is an array of strings', () => {
-    expect(() =>
-      brandMeetingSchema.parse({ ...validMeeting, attendees: 'not-array' }),
-    ).toThrow();
+    expect(() => brandMeetingSchema.parse({ ...validMeeting, attendees: 'not-array' })).toThrow();
   });
 
   it('rawNotes is required', () => {
@@ -980,9 +972,7 @@ describe('inboxEventSchema', () => {
   });
 
   it('rejects unknown eventType', () => {
-    expect(() =>
-      inboxEventSchema.parse({ ...validEvent, eventType: 'made_up_type' }),
-    ).toThrow();
+    expect(() => inboxEventSchema.parse({ ...validEvent, eventType: 'made_up_type' })).toThrow();
   });
 
   it('accepts null entity (entity was deleted after event)', () => {
@@ -1023,9 +1013,7 @@ describe('brandEventSchema', () => {
   });
 
   it('rejects unknown eventType', () => {
-    expect(() =>
-      brandEventSchema.parse({ ...validEvent, eventType: 'unknown' }),
-    ).toThrow();
+    expect(() => brandEventSchema.parse({ ...validEvent, eventType: 'unknown' })).toThrow();
   });
 });
 

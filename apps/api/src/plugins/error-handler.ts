@@ -22,14 +22,10 @@ export const errorHandlerPlugin = fp(async (app) => {
     }
 
     if (error instanceof AppError) {
-      return reply
-        .status(error.statusCode)
-        .send({ error: error.code, message: error.message });
+      return reply.status(error.statusCode).send({ error: error.code, message: error.message });
     }
 
     app.log.error(error);
-    return reply
-      .status(500)
-      .send({ error: 'INTERNAL_ERROR', message: 'Something went wrong' });
+    return reply.status(500).send({ error: 'INTERNAL_ERROR', message: 'Something went wrong' });
   });
 });

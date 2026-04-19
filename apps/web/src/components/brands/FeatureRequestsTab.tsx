@@ -82,9 +82,7 @@ export function FeatureRequestsTab({
     if (search.trim()) {
       const q = search.toLowerCase();
       items = items.filter(
-        (r) =>
-          r.request.toLowerCase().includes(q) ||
-          (r.response ?? '').toLowerCase().includes(q),
+        (r) => r.request.toLowerCase().includes(q) || (r.response ?? '').toLowerCase().includes(q),
       );
     }
 
@@ -115,7 +113,13 @@ export function FeatureRequestsTab({
 
     const handler = (e: KeyboardEvent) => {
       const el = document.activeElement;
-      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || (el as HTMLElement).isContentEditable)) return;
+      if (
+        el &&
+        (el.tagName === 'INPUT' ||
+          el.tagName === 'TEXTAREA' ||
+          (el as HTMLElement).isContentEditable)
+      )
+        return;
 
       if (e.key === 'n' && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
@@ -173,7 +177,11 @@ export function FeatureRequestsTab({
           setDraftResponse('');
         },
         onError: () => {
-          pushToast({ kind: 'error', message: 'Failed to create feature request', durationMs: 4000 });
+          pushToast({
+            kind: 'error',
+            message: 'Failed to create feature request',
+            durationMs: 4000,
+          });
         },
       },
     );
@@ -297,7 +305,10 @@ export function FeatureRequestsTab({
         </div>
 
         <div className="relative flex-1 max-w-xs">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Search
+            size={14}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
           <input
             type="text"
             value={search}

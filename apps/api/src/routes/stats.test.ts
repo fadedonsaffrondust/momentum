@@ -20,7 +20,9 @@ const { mockDb } = vi.hoisted(() => {
         }
         return (..._args: unknown[]) => chain;
       },
-      apply() { return chain; },
+      apply() {
+        return chain;
+      },
     });
     return chain;
   }
@@ -30,8 +32,12 @@ const { mockDb } = vi.hoisted(() => {
     update: vi.fn((..._args: unknown[]) => createChain()),
     delete: vi.fn((..._args: unknown[]) => createChain()),
     _results: results,
-    _pushResult(value: unknown) { results.push(value); },
-    _pushResults(...values: unknown[]) { results.push(...values); },
+    _pushResult(value: unknown) {
+      results.push(value);
+    },
+    _pushResults(...values: unknown[]) {
+      results.push(...values);
+    },
   };
   return { mockDb };
 });
@@ -98,9 +104,30 @@ describe('stats routes', () => {
   it('GET /stats/weekly fills timeline gaps with zeros', async () => {
     // Push daily logs for 3 of 7 days (Apr 9, 11, 15).
     mockDb._pushResult([
-      { date: '2026-04-09', tasksPlanned: 5, tasksCompleted: 3, completionRate: 0.6, totalEstimatedMinutes: 100, totalActualMinutes: 80 },
-      { date: '2026-04-11', tasksPlanned: 4, tasksCompleted: 4, completionRate: 1.0, totalEstimatedMinutes: 60, totalActualMinutes: 55 },
-      { date: '2026-04-15', tasksPlanned: 3, tasksCompleted: 2, completionRate: 0.67, totalEstimatedMinutes: 90, totalActualMinutes: 70 },
+      {
+        date: '2026-04-09',
+        tasksPlanned: 5,
+        tasksCompleted: 3,
+        completionRate: 0.6,
+        totalEstimatedMinutes: 100,
+        totalActualMinutes: 80,
+      },
+      {
+        date: '2026-04-11',
+        tasksPlanned: 4,
+        tasksCompleted: 4,
+        completionRate: 1.0,
+        totalEstimatedMinutes: 60,
+        totalActualMinutes: 55,
+      },
+      {
+        date: '2026-04-15',
+        tasksPlanned: 3,
+        tasksCompleted: 2,
+        completionRate: 0.67,
+        totalEstimatedMinutes: 90,
+        totalActualMinutes: 70,
+      },
     ]);
     // Push role counts.
     mockDb._pushResult([{ roleId: ROLE_ID, cnt: 5 }]);
@@ -128,10 +155,38 @@ describe('stats routes', () => {
   it('GET /stats/weekly computes streak from end of array backwards', async () => {
     // Last 3 days (Apr 13, 14, 15) have >= 0.8 rate; Apr 12 has < 0.8.
     mockDb._pushResult([
-      { date: '2026-04-12', tasksPlanned: 5, tasksCompleted: 2, completionRate: 0.4, totalEstimatedMinutes: 50, totalActualMinutes: 30 },
-      { date: '2026-04-13', tasksPlanned: 4, tasksCompleted: 4, completionRate: 1.0, totalEstimatedMinutes: 60, totalActualMinutes: 55 },
-      { date: '2026-04-14', tasksPlanned: 3, tasksCompleted: 3, completionRate: 1.0, totalEstimatedMinutes: 45, totalActualMinutes: 40 },
-      { date: '2026-04-15', tasksPlanned: 5, tasksCompleted: 4, completionRate: 0.8, totalEstimatedMinutes: 90, totalActualMinutes: 80 },
+      {
+        date: '2026-04-12',
+        tasksPlanned: 5,
+        tasksCompleted: 2,
+        completionRate: 0.4,
+        totalEstimatedMinutes: 50,
+        totalActualMinutes: 30,
+      },
+      {
+        date: '2026-04-13',
+        tasksPlanned: 4,
+        tasksCompleted: 4,
+        completionRate: 1.0,
+        totalEstimatedMinutes: 60,
+        totalActualMinutes: 55,
+      },
+      {
+        date: '2026-04-14',
+        tasksPlanned: 3,
+        tasksCompleted: 3,
+        completionRate: 1.0,
+        totalEstimatedMinutes: 45,
+        totalActualMinutes: 40,
+      },
+      {
+        date: '2026-04-15',
+        tasksPlanned: 5,
+        tasksCompleted: 4,
+        completionRate: 0.8,
+        totalEstimatedMinutes: 90,
+        totalActualMinutes: 80,
+      },
     ]);
     mockDb._pushResult([]); // no role counts
 
@@ -149,8 +204,22 @@ describe('stats routes', () => {
   it('GET /stats/weekly averages only days with tasksPlanned > 0', async () => {
     // 2 days have data, 5 have none.
     mockDb._pushResult([
-      { date: '2026-04-10', tasksPlanned: 4, tasksCompleted: 2, completionRate: 0.5, totalEstimatedMinutes: 60, totalActualMinutes: 40 },
-      { date: '2026-04-12', tasksPlanned: 6, tasksCompleted: 6, completionRate: 1.0, totalEstimatedMinutes: 90, totalActualMinutes: 85 },
+      {
+        date: '2026-04-10',
+        tasksPlanned: 4,
+        tasksCompleted: 2,
+        completionRate: 0.5,
+        totalEstimatedMinutes: 60,
+        totalActualMinutes: 40,
+      },
+      {
+        date: '2026-04-12',
+        tasksPlanned: 6,
+        tasksCompleted: 6,
+        completionRate: 1.0,
+        totalEstimatedMinutes: 90,
+        totalActualMinutes: 85,
+      },
     ]);
     mockDb._pushResult([]);
 
@@ -195,11 +264,32 @@ describe('stats routes', () => {
   it('GET /stats/team-weekly returns one row per active user with computed fields', async () => {
     mockDb._pushResult([
       makeUserRow({ id: USER_ID, displayName: 'Nader' }),
-      makeUserRow({ id: OTHER_USER, email: 'sara@omnirev.ai', displayName: 'Sara', avatarColor: '#F7B24F' }),
+      makeUserRow({
+        id: OTHER_USER,
+        email: 'sara@omnirev.ai',
+        displayName: 'Sara',
+        avatarColor: '#F7B24F',
+      }),
     ]);
     mockDb._pushResult([
-      { userId: USER_ID, date: '2026-04-15', tasksPlanned: 5, tasksCompleted: 4, completionRate: 0.8, totalEstimatedMinutes: 100, totalActualMinutes: 90 },
-      { userId: OTHER_USER, date: '2026-04-15', tasksPlanned: 4, tasksCompleted: 2, completionRate: 0.5, totalEstimatedMinutes: 80, totalActualMinutes: 100 },
+      {
+        userId: USER_ID,
+        date: '2026-04-15',
+        tasksPlanned: 5,
+        tasksCompleted: 4,
+        completionRate: 0.8,
+        totalEstimatedMinutes: 100,
+        totalActualMinutes: 90,
+      },
+      {
+        userId: OTHER_USER,
+        date: '2026-04-15',
+        tasksPlanned: 4,
+        tasksCompleted: 2,
+        completionRate: 0.5,
+        totalEstimatedMinutes: 80,
+        totalActualMinutes: 100,
+      },
     ]);
     mockDb._pushResult([
       { assigneeId: USER_ID, roleId: ROLE_ID, cnt: 3 },

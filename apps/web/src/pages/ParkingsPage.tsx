@@ -83,47 +83,48 @@ export function ParkingsPage() {
         <RoleFilterBar />
 
         <div className="flex-1 min-h-0 overflow-y-auto pr-2">
-        <div className="max-w-3xl space-y-6">
-          {groups.length === 0 && (
-            <div className="flex flex-col items-center gap-1 py-12 text-center">
-              <p className="text-sm text-muted-foreground">Nothing parked.</p>
-              <p className="text-2xs text-muted-foreground/70">
-                Press <kbd className="font-mono">/</kbd> or <kbd className="font-mono">n</kbd> to capture a topic for the next daily.
-              </p>
-            </div>
-          )}
-          {groups.map((group) => (
-            <section key={group.key}>
-              <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
-                {group.label} · {group.items.length}
-              </h2>
-              <ul className="space-y-2">
-                {group.items.map((p) => (
-                  <li key={p.id}>
-                    <ParkingCard
-                      parking={p}
-                      role={p.roleId ? rolesById.get(p.roleId) : undefined}
-                      selected={selectedParkingId === p.id}
-                      expanded={expandedIds.has(p.id)}
-                      onSelect={() => setSelectedParkingId(p.id)}
-                      onToggleExpand={() => {
-                        setExpandedIds((prev) => {
-                          const next = new Set(prev);
-                          if (next.has(p.id)) next.delete(p.id);
-                          else next.add(p.id);
-                          return next;
-                        });
-                      }}
-                      editing={editingParkingId === p.id}
-                      onEditDone={() => setEditingParkingId(null)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+          <div className="max-w-3xl space-y-6">
+            {groups.length === 0 && (
+              <div className="flex flex-col items-center gap-1 py-12 text-center">
+                <p className="text-sm text-muted-foreground">Nothing parked.</p>
+                <p className="text-2xs text-muted-foreground/70">
+                  Press <kbd className="font-mono">/</kbd> or <kbd className="font-mono">n</kbd> to
+                  capture a topic for the next daily.
+                </p>
+              </div>
+            )}
+            {groups.map((group) => (
+              <section key={group.key}>
+                <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
+                  {group.label} · {group.items.length}
+                </h2>
+                <ul className="space-y-2">
+                  {group.items.map((p) => (
+                    <li key={p.id}>
+                      <ParkingCard
+                        parking={p}
+                        role={p.roleId ? rolesById.get(p.roleId) : undefined}
+                        selected={selectedParkingId === p.id}
+                        expanded={expandedIds.has(p.id)}
+                        onSelect={() => setSelectedParkingId(p.id)}
+                        onToggleExpand={() => {
+                          setExpandedIds((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(p.id)) next.delete(p.id);
+                            else next.add(p.id);
+                            return next;
+                          });
+                        }}
+                        editing={editingParkingId === p.id}
+                        onEditDone={() => setEditingParkingId(null)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );

@@ -13,18 +13,16 @@ import { db } from '../db.ts';
 import { mapBrandFeatureRequest } from '../mappers.ts';
 import { notFound, badRequest } from '../errors.ts';
 import { env } from '../env.ts';
-import {
-  GoogleSheetsClient,
-  parseSheetUrl,
-  analyzeColumns,
-} from '../services/google-sheets.ts';
+import { GoogleSheetsClient, parseSheetUrl, analyzeColumns } from '../services/google-sheets.ts';
 
 const brandIdParam = z.object({ brandId: z.string().uuid() });
 const CANONICAL_HEADERS = ['Date', 'Request', 'Response', 'Resolved'];
 
 function getSheetsClient(): GoogleSheetsClient {
   if (!env.GOOGLE_SERVICE_ACCOUNT_KEY) {
-    throw badRequest('Google Sheets integration is not configured. Set GOOGLE_SERVICE_ACCOUNT_KEY.');
+    throw badRequest(
+      'Google Sheets integration is not configured. Set GOOGLE_SERVICE_ACCOUNT_KEY.',
+    );
   }
   return new GoogleSheetsClient(env.GOOGLE_SERVICE_ACCOUNT_KEY);
 }
@@ -98,9 +96,7 @@ export const brandFeatureRequestSyncRoutes: FastifyPluginAsyncZod = async (app) 
           featureRequestsConfig: config,
           updatedAt: new Date(),
         })
-        .where(
-          eq(brands.id, req.params.brandId),
-        )
+        .where(eq(brands.id, req.params.brandId))
         .returning();
       if (!brand) throw notFound('Brand not found');
 

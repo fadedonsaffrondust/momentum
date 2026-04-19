@@ -75,9 +75,7 @@ export function PulseSection({
   };
 
   const itemAge = (createdAt: string) => {
-    const diff = Math.floor(
-      (Date.now() - new Date(createdAt).getTime()) / 86_400_000,
-    );
+    const diff = Math.floor((Date.now() - new Date(createdAt).getTime()) / 86_400_000);
     if (diff === 0) return 'today';
     if (diff === 1) return '1d old';
     return `${diff}d old`;
@@ -117,19 +115,14 @@ export function PulseSection({
         <div className="space-y-2">
           <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
             Open items
-            {openCount > 0 && (
-              <span className="ml-1 text-muted-foreground/70">({openCount})</span>
-            )}
+            {openCount > 0 && <span className="ml-1 text-muted-foreground/70">({openCount})</span>}
           </h3>
           {topOpenItems.length === 0 && (
             <p className="text-xs text-muted-foreground/70">No open action items.</p>
           )}
           <ul className="space-y-1.5">
             {topOpenItems.map((item) => (
-              <li
-                key={item.id}
-                className="flex items-start gap-2 text-xs group"
-              >
+              <li key={item.id} className="flex items-start gap-2 text-xs group">
                 <span className="flex-1 text-foreground leading-snug">{item.text}</span>
                 <span className="shrink-0 text-muted-foreground/70">{itemAge(item.createdAt)}</span>
                 <div className="shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition">

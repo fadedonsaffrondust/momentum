@@ -28,15 +28,11 @@ export function SyncSettingsPanel({ brand, stakeholders, onClose }: Props) {
   const syncConfig = brand.syncConfig as SyncConfig | null;
   const rules = syncConfig?.matchRules;
 
-  const [titleKeywords, setTitleKeywords] = useState(
-    rules?.titleKeywords?.join(', ') ?? '',
-  );
+  const [titleKeywords, setTitleKeywords] = useState(rules?.titleKeywords?.join(', ') ?? '');
   const [meetingType, setMeetingType] = useState<'external' | 'internal' | 'both'>(
     rules?.meetingType ?? 'external',
   );
-  const [syncWindowDays, setSyncWindowDays] = useState(
-    rules?.syncWindowDays ?? 30,
-  );
+  const [syncWindowDays, setSyncWindowDays] = useState(rules?.syncWindowDays ?? 30);
 
   const updateConfig = useUpdateSyncConfig(brand.id);
   const pushToast = useUiStore((s) => s.pushToast);
@@ -85,9 +81,7 @@ export function SyncSettingsPanel({ brand, stakeholders, onClose }: Props) {
       <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} />
       <div className="fixed right-0 top-0 bottom-0 z-50 w-96 bg-background border-l border-border shadow-2xl flex flex-col animate-slideLeft">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <h2 className="text-sm font-semibold text-foreground">
-            Recording Sync Settings
-          </h2>
+          <h2 className="text-sm font-semibold text-foreground">Recording Sync Settings</h2>
           <button
             onClick={onClose}
             className="p-1 text-muted-foreground hover:text-foreground transition"
@@ -118,16 +112,19 @@ export function SyncSettingsPanel({ brand, stakeholders, onClose }: Props) {
                 ))}
               </ul>
             ) : (
-              <p className="text-xs text-muted-foreground/70 italic">No stakeholder emails configured.</p>
+              <p className="text-xs text-muted-foreground/70 italic">
+                No stakeholder emails configured.
+              </p>
             )}
 
             {stakeholdersWithoutEmail.length > 0 && (
               <div className="flex items-start gap-2 mt-2 p-2 rounded bg-amber-500/5 border border-amber-500/20">
                 <AlertTriangle size={12} className="text-amber-500 mt-0.5 shrink-0" />
                 <p className="text-xs text-amber-400/80">
-                  {stakeholdersWithoutEmail.length} stakeholder{stakeholdersWithoutEmail.length > 1 ? 's' : ''} missing
-                  email: {stakeholdersWithoutEmail.map((s) => s.name).join(', ')}.
-                  Add emails in the North Star section for better matching.
+                  {stakeholdersWithoutEmail.length} stakeholder
+                  {stakeholdersWithoutEmail.length > 1 ? 's' : ''} missing email:{' '}
+                  {stakeholdersWithoutEmail.map((s) => s.name).join(', ')}. Add emails in the North
+                  Star section for better matching.
                 </p>
               </div>
             )}
@@ -160,9 +157,7 @@ export function SyncSettingsPanel({ brand, stakeholders, onClose }: Props) {
             </p>
             <select
               value={meetingType}
-              onChange={(e) =>
-                setMeetingType(e.target.value as 'external' | 'internal' | 'both')
-              }
+              onChange={(e) => setMeetingType(e.target.value as 'external' | 'internal' | 'both')}
               className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
             >
               {MEETING_TYPE_OPTIONS.map((opt) => (
@@ -200,7 +195,8 @@ export function SyncSettingsPanel({ brand, stakeholders, onClose }: Props) {
               Last synced: {new Date(syncConfig.lastSyncedAt).toLocaleString()}
               {syncConfig.syncedMeetingIds.length > 0 && (
                 <span className="ml-1">
-                  ({syncConfig.syncedMeetingIds.length} recording{syncConfig.syncedMeetingIds.length !== 1 ? 's' : ''} synced)
+                  ({syncConfig.syncedMeetingIds.length} recording
+                  {syncConfig.syncedMeetingIds.length !== 1 ? 's' : ''} synced)
                 </span>
               )}
             </div>

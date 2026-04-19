@@ -27,6 +27,7 @@ Most todo apps are task graveyards — infinite lists that grow faster than they
 A persistent input bar at the top of the screen — always focused, always ready. Think Spotlight/Alfred, not a form.
 
 **Quick-add syntax (parse inline):**
+
 - `Buy domain for landing page` → creates a basic task
 - `Buy domain for landing page ~30m` → adds 30-minute time estimate
 - `Buy domain for landing page ~30m #product` → assigns to "product" role
@@ -52,12 +53,14 @@ Users define roles during first use (stored in localStorage). Examples: "Product
 The default and primary view. Shows only tasks scheduled for today.
 
 **Layout:**
+
 - Three swim lanes displayed as columns on desktop, stacked on mobile:
   - **Up Next** — unstarted tasks, ordered by priority then manual drag order
   - **In Progress** — tasks you've actively started (max 2 enforced — if you try to start a 3rd, the app asks which to pause)
   - **Done** — completed tasks with completion timestamps
 
 **Each task card shows:**
+
 - Task title
 - Role badge (colored pill)
 - Time estimate (e.g., "30m")
@@ -65,6 +68,7 @@ The default and primary view. Shows only tasks scheduled for today.
 - Created timestamp (subtle, small)
 
 **Task interactions:**
+
 - `Enter` on a selected task → starts it (moves to In Progress), starts a subtle timer
 - `Space` on a selected task → completes it (moves to Done), records actual time
 - `e` on a selected task → inline edit mode
@@ -76,6 +80,7 @@ The default and primary view. Shows only tasks scheduled for today.
 
 **The Time Budget Bar:**
 At the top of the Today view, show a horizontal progress bar:
+
 - Total estimated time for today's tasks vs. available hours (default 8h, user-configurable)
 - Color-coded: green if under capacity, amber if 80-100%, red if over
 - When overloaded, show the overage: "You're 2h 15m over capacity. Consider deferring tasks."
@@ -111,6 +116,7 @@ A focused modal workflow:
 Triggered manually via `Cmd/Ctrl + R` or via a subtle prompt after 5pm.
 
 Shows:
+
 - **Completed tasks** with actual time vs. estimated time
 - **Completion rate** (tasks done / tasks planned, as a percentage)
 - **Incomplete tasks** with defer/delete options
@@ -122,6 +128,7 @@ Shows:
 Accessed via `Cmd/Ctrl + W`.
 
 A simple dashboard showing the last 7 days:
+
 - Tasks completed per day (bar chart, keep it minimal — use pure CSS or simple canvas)
 - Average completion rate
 - Most active role
@@ -133,6 +140,7 @@ A simple dashboard showing the last 7 days:
 `Cmd/Ctrl + K` opens a command palette (like VS Code).
 
 Available commands:
+
 - "Plan My Day"
 - "End of Day Review"
 - "Weekly Stats"
@@ -151,12 +159,14 @@ Fuzzy-match filtering as you type.
 This is critical. Since all data lives in localStorage (browser-local), the user needs a robust way to move their data between browsers, machines, or iterations of the app. This should feel like a first-class feature, not an afterthought.
 
 **Full Export (`Cmd/Ctrl + E`):**
+
 - Exports ALL app data as a single `.json` file: settings (roles, capacity, theme, username), all tasks (every status — todo, in progress, done), and all daily logs/journal entries
 - The file is timestamped automatically: `momentum-backup-2026-04-13.json`
 - Triggers a browser download immediately — no extra clicks
 - Show a toast confirmation: "Exported 47 tasks and 12 daily logs"
 
 **Full Import (`Cmd/Ctrl + I`):**
+
 - Opens a file picker for `.json` files
 - Before applying, show a confirmation dialog with a summary of what's about to be imported: "This file contains 47 tasks, 3 roles, and 12 daily logs. Import will REPLACE all current data. Continue?"
 - On confirm, wipe current localStorage and load the imported data
@@ -165,10 +175,12 @@ This is critical. Since all data lives in localStorage (browser-local), the user
 - If the file is malformed or missing required fields, show a clear error: "Invalid file. Expected a Momentum export file." Do not partially import.
 
 **Auto-Backup Reminder:**
+
 - If the user hasn't exported in 7+ days, show a subtle, dismissible banner at the bottom of the Today view: "It's been a while since your last backup. Export your data?" with an "Export Now" button and an "X" to dismiss.
 - Track `lastExportDate` in localStorage.
 
 **Export Format (document this in a comment in the code so future iterations can parse it):**
+
 ```javascript
 {
   version: "1.0", // schema version for forward compatibility
@@ -186,6 +198,7 @@ The `version` field is important — if the data model evolves in a future itera
 ## Design Direction
 
 ### Visual Style
+
 - **Dark mode default** with a clean light mode toggle
 - Monospace font for task titles (gives it a "command center" feel — use `JetBrains Mono` from Google Fonts, fallback to system monospace)
 - Minimal chrome. No borders for the sake of borders. Use spacing and subtle background shifts to create hierarchy.
@@ -193,11 +206,13 @@ The `version` field is important — if the data model evolves in a future itera
 - The overall feel should be: Notion's cleanliness meets a terminal's efficiency
 
 ### Responsive
+
 - Desktop: three-column kanban layout for today view
 - Tablet: two-column (Up Next + In Progress combined, Done separate)
 - Mobile: single column with tab switching between lanes
 
 ### Animations
+
 - Tasteful but fast. Tasks should animate when moving between lanes (150ms ease-out).
 - No loading spinners needed (everything is local).
 - Subtle fade on task completion — a brief green flash on the left border before moving to Done.
@@ -277,6 +292,7 @@ On first load (no data in localStorage):
 ## What "Done" Looks Like
 
 When you're finished, I should be able to:
+
 1. Open `index.html` in a browser
 2. Go through the first-run setup
 3. Add tasks using the quick-add syntax

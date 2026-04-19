@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { TldvSentence, TldvHighlight } from './tldv.ts';
-import { buildExtractionPrompt, buildDeduplicationPrompt, deduplicateActionItems } from './meeting-extraction.ts';
+import {
+  buildExtractionPrompt,
+  buildDeduplicationPrompt,
+  deduplicateActionItems,
+} from './meeting-extraction.ts';
 
 describe('buildExtractionPrompt', () => {
   const stakeholders = [
@@ -28,7 +32,13 @@ describe('buildExtractionPrompt', () => {
   ];
 
   it('includes brand name', () => {
-    const prompt = buildExtractionPrompt('Acme Corp', stakeholders, invitees, sentences, highlights);
+    const prompt = buildExtractionPrompt(
+      'Acme Corp',
+      stakeholders,
+      invitees,
+      sentences,
+      highlights,
+    );
     expect(prompt).toContain('Brand: Acme Corp');
   });
 
@@ -126,10 +136,7 @@ describe('buildDeduplicationPrompt', () => {
       text: `Item ${i}`,
       owner: null,
     }));
-    const prompt = buildDeduplicationPrompt(
-      [{ text: 'New', owner: 'A' }],
-      existing,
-    );
+    const prompt = buildDeduplicationPrompt([{ text: 'New', owner: 'A' }], existing);
     expect(prompt).toContain('id-99:');
     expect(prompt).not.toContain('id-100:');
   });
@@ -153,16 +160,24 @@ describe('deduplicateActionItems', () => {
   }
 
   it('short-circuits with empty extracted items', async () => {
-    const result = await deduplicateActionItems('key', [], [{ id: 'id-1', text: 'Existing', owner: null }]);
+    const result = await deduplicateActionItems(
+      'key',
+      [],
+      [{ id: 'id-1', text: 'Existing', owner: null }],
+    );
     expect(result).toEqual({ toCreate: [], toUpdate: [], toSkip: [] });
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it('short-circuits with empty existing items — all to create', async () => {
-    const result = await deduplicateActionItems('key', [
-      { text: 'Do X', owner: 'Alice' },
-      { text: 'Do Y', owner: 'unassigned' },
-    ], []);
+    const result = await deduplicateActionItems(
+      'key',
+      [
+        { text: 'Do X', owner: 'Alice' },
+        { text: 'Do Y', owner: 'unassigned' },
+      ],
+      [],
+    );
     expect(result.toCreate).toEqual([
       { text: 'Do X', owner: 'Alice' },
       { text: 'Do Y', owner: null },
@@ -175,9 +190,27 @@ describe('deduplicateActionItems', () => {
   it('parses a mixed create/skip/update response', async () => {
     mockFetchResponse({
       results: [
-        { extractedIndex: 0, action: 'create', existingId: null, mergedText: null, mergedOwner: null },
-        { extractedIndex: 1, action: 'skip', existingId: 'id-1', mergedText: null, mergedOwner: null },
-        { extractedIndex: 2, action: 'update', existingId: 'id-2', mergedText: 'Improved task', mergedOwner: 'Bob' },
+        {
+          extractedIndex: 0,
+          action: 'create',
+          existingId: null,
+          mergedText: null,
+          mergedOwner: null,
+        },
+        {
+          extractedIndex: 1,
+          action: 'skip',
+          existingId: 'id-1',
+          mergedText: null,
+          mergedOwner: null,
+        },
+        {
+          extractedIndex: 2,
+          action: 'update',
+          existingId: 'id-2',
+          mergedText: 'Improved task',
+          mergedOwner: 'Bob',
+        },
       ],
     });
 
@@ -202,7 +235,13 @@ describe('deduplicateActionItems', () => {
   it('defaults missing entries to create', async () => {
     mockFetchResponse({
       results: [
-        { extractedIndex: 0, action: 'skip', existingId: 'id-1', mergedText: null, mergedOwner: null },
+        {
+          extractedIndex: 0,
+          action: 'skip',
+          existingId: 'id-1',
+          mergedText: null,
+          mergedOwner: null,
+        },
       ],
     });
 
@@ -222,7 +261,13 @@ describe('deduplicateActionItems', () => {
   it('defaults entries with invalid extractedIndex to be ignored and items default to create', async () => {
     mockFetchResponse({
       results: [
-        { extractedIndex: 99, action: 'skip', existingId: 'id-1', mergedText: null, mergedOwner: null },
+        {
+          extractedIndex: 99,
+          action: 'skip',
+          existingId: 'id-1',
+          mergedText: null,
+          mergedOwner: null,
+        },
       ],
     });
 
@@ -238,7 +283,13 @@ describe('deduplicateActionItems', () => {
   it('defaults skip with unknown existingId to create', async () => {
     mockFetchResponse({
       results: [
-        { extractedIndex: 0, action: 'skip', existingId: 'nonexistent', mergedText: null, mergedOwner: null },
+        {
+          extractedIndex: 0,
+          action: 'skip',
+          existingId: 'nonexistent',
+          mergedText: null,
+          mergedOwner: null,
+        },
       ],
     });
 
@@ -255,7 +306,13 @@ describe('deduplicateActionItems', () => {
   it('defaults update with missing mergedText to create', async () => {
     mockFetchResponse({
       results: [
-        { extractedIndex: 0, action: 'update', existingId: 'id-1', mergedText: null, mergedOwner: null },
+        {
+          extractedIndex: 0,
+          action: 'update',
+          existingId: 'id-1',
+          mergedText: null,
+          mergedOwner: null,
+        },
       ],
     });
 
@@ -277,7 +334,11 @@ describe('deduplicateActionItems', () => {
     });
 
     await expect(
-      deduplicateActionItems('key', [{ text: 'X', owner: 'A' }], [{ id: 'id-1', text: 'Y', owner: null }]),
+      deduplicateActionItems(
+        'key',
+        [{ text: 'X', owner: 'A' }],
+        [{ id: 'id-1', text: 'Y', owner: null }],
+      ),
     ).rejects.toThrow('OpenAI API error (500)');
   });
 
@@ -288,7 +349,11 @@ describe('deduplicateActionItems', () => {
     });
 
     await expect(
-      deduplicateActionItems('key', [{ text: 'X', owner: 'A' }], [{ id: 'id-1', text: 'Y', owner: null }]),
+      deduplicateActionItems(
+        'key',
+        [{ text: 'X', owner: 'A' }],
+        [{ id: 'id-1', text: 'Y', owner: null }],
+      ),
     ).rejects.toThrow('Empty response from OpenAI');
   });
 });

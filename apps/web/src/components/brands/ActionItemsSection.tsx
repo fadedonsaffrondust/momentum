@@ -18,11 +18,17 @@ interface Props {
 
 export function ActionItemsSection({ brandId, actionItems }: Props) {
   const openItems = useMemo(
-    () => actionItems.filter((a) => a.status === 'open').sort((a, b) => (b.meetingDate ?? b.createdAt).localeCompare(a.meetingDate ?? a.createdAt)),
+    () =>
+      actionItems
+        .filter((a) => a.status === 'open')
+        .sort((a, b) => (b.meetingDate ?? b.createdAt).localeCompare(a.meetingDate ?? a.createdAt)),
     [actionItems],
   );
   const doneItems = useMemo(
-    () => actionItems.filter((a) => a.status === 'done').sort((a, b) => (b.completedAt ?? b.createdAt).localeCompare(a.completedAt ?? a.createdAt)),
+    () =>
+      actionItems
+        .filter((a) => a.status === 'done')
+        .sort((a, b) => (b.completedAt ?? b.createdAt).localeCompare(a.completedAt ?? a.createdAt)),
     [actionItems],
   );
 
@@ -85,7 +91,9 @@ export function ActionItemsSection({ brandId, actionItems }: Props) {
             onClick={() => setActiveTab(tab)}
             className={clsx(
               'relative pb-2 text-sm transition',
-              activeTab === tab ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground',
+              activeTab === tab
+                ? 'text-foreground font-medium'
+                : 'text-muted-foreground hover:text-foreground',
             )}
           >
             {tab === 'open' ? `Open (${openItems.length})` : `Done (${doneItems.length})`}

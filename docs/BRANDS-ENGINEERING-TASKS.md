@@ -11,6 +11,7 @@ Reference: [`MOMENTUM-BRANDS-FEATURE-SPEC.md`](./MOMENTUM-BRANDS-FEATURE-SPEC.md
 **Status:** `[x] Complete`
 
 **Scope:**
+
 - `packages/shared/src/schemas.ts` — add Zod schemas: `brandSchema`, `brandStakeholderSchema`, `brandMeetingSchema`, `brandActionItemSchema`, `brandActionStatusSchema`, plus create/update input schemas for each
 - `packages/db/src/schema.ts` — add tables: `brands`, `brand_stakeholders`, `brand_meetings`, `brand_action_items`, plus `brandActionStatusEnum`
 - Generate and apply Drizzle migration (`pnpm db:generate && pnpm db:migrate`)
@@ -33,6 +34,7 @@ Reference: [`MOMENTUM-BRANDS-FEATURE-SPEC.md`](./MOMENTUM-BRANDS-FEATURE-SPEC.md
 **Status:** `[x] Complete`
 
 **Scope:**
+
 - `apps/web/src/layout/Sidebar.tsx` — add Brands icon (building/briefcase icon)
 - `apps/web/src/App.tsx` — add `/brands` and `/brands/:id` routes
 - `apps/web/src/pages/BrandsPage.tsx` — two-column layout (left rail + detail outlet)
@@ -52,6 +54,7 @@ Reference: [`MOMENTUM-BRANDS-FEATURE-SPEC.md`](./MOMENTUM-BRANDS-FEATURE-SPEC.md
 **Status:** `[x] Complete`
 
 **Scope:**
+
 - `apps/web/src/components/brands/BrandDetailView.tsx` — orchestrates all sections for a selected brand
 - `apps/web/src/components/brands/BrandDetailHeader.tsx` — sticky header: editable brand name (double-click), health pill, "+ New Meeting Note" button, "⋯" menu (Edit, Delete, Export)
 - `apps/web/src/components/brands/PulseSection.tsx` — three horizontal sub-panels:
@@ -69,6 +72,7 @@ Reference: [`MOMENTUM-BRANDS-FEATURE-SPEC.md`](./MOMENTUM-BRANDS-FEATURE-SPEC.md
 **Status:** `[x] Complete`
 
 **Scope:**
+
 - `apps/web/src/components/brands/NorthStarSection.tsx` — collapsible section with:
   - Goals (multiline, inline-editable, auto-save on blur with checkmark)
   - Key Stakeholders list (add/edit/remove, "+" button)
@@ -89,6 +93,7 @@ Reference: [`MOMENTUM-BRANDS-FEATURE-SPEC.md`](./MOMENTUM-BRANDS-FEATURE-SPEC.md
 **Status:** `[x] Complete`
 
 **Scope:**
+
 - `apps/web/src/components/brands/MeetingsSection.tsx` — collapsible, default collapsed, reverse-chron:
   - Each entry: date, title, attendees (initials), 1-line summary
   - Click expands inline: full notes, decisions, "Extract action items" button
@@ -108,6 +113,7 @@ Reference: [`MOMENTUM-BRANDS-FEATURE-SPEC.md`](./MOMENTUM-BRANDS-FEATURE-SPEC.md
 **Status:** `[x] Complete`
 
 **Scope:**
+
 - **Server:**
   - Add `OPENAI_API_KEY` to `.env.example` and `apps/api/src/env.ts` schema
   - `pnpm --filter @momentum/api add openai`
@@ -138,6 +144,7 @@ Reference: [`MOMENTUM-BRANDS-FEATURE-SPEC.md`](./MOMENTUM-BRANDS-FEATURE-SPEC.md
 **Status:** `[x] Complete`
 
 **Scope:**
+
 - **Bidirectional sync:**
   - "Send to Today" on action item → `POST /brands/:brandId/action-items/:id/send-to-today` creates task with `linkedActionItemId` reference, brand badge on task card
   - Complete task in Today → API marks linked action item as done

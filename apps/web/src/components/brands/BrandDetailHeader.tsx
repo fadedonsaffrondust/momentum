@@ -17,7 +17,14 @@ interface Props {
   onSyncSettings: () => void;
 }
 
-export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting, onSyncRecordings, onSyncSettings }: Props) {
+export function BrandDetailHeader({
+  brand,
+  meetings,
+  actionItems,
+  onNewMeeting,
+  onSyncRecordings,
+  onSyncSettings,
+}: Props) {
   const health = computeBrandHealth(meetings, actionItems);
   const updateBrand = useUpdateBrand();
   const deleteBrand = useDeleteBrand();
@@ -135,10 +142,7 @@ export function BrandDetailHeader({ brand, meetings, actionItems, onNewMeeting, 
           </button>
           {menuOpen && (
             <>
-              <div
-                className="fixed inset-0 z-20"
-                onClick={() => setMenuOpen(false)}
-              />
+              <div className="fixed inset-0 z-20" onClick={() => setMenuOpen(false)} />
               <div className="absolute right-0 top-10 z-30 w-40 rounded-lg border border-border bg-background shadow-xl py-1 animate-scaleIn">
                 <button
                   onClick={() => {

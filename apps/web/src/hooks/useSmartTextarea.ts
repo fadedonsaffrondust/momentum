@@ -176,7 +176,12 @@ export function handleSpaceKey(
 
   const todoStart = cursorPos - 5;
   const charBefore = todoStart > 0 ? text[todoStart - 1] : undefined;
-  if (charBefore !== undefined && charBefore !== '\n' && charBefore !== ' ' && charBefore !== '\t') {
+  if (
+    charBefore !== undefined &&
+    charBefore !== '\n' &&
+    charBefore !== ' ' &&
+    charBefore !== '\t'
+  ) {
     return null;
   }
 

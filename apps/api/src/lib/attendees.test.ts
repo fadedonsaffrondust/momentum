@@ -36,9 +36,7 @@ describe('matchAttendeeUserIds', () => {
 
   it('is case-insensitive on the team-user side', () => {
     expect(
-      matchAttendeeUserIds(['nader@omnirev.ai'], [
-        { id: UUID_NADER, email: 'Nader@OMNIREV.ai' },
-      ]),
+      matchAttendeeUserIds(['nader@omnirev.ai'], [{ id: UUID_NADER, email: 'Nader@OMNIREV.ai' }]),
     ).toEqual([UUID_NADER]);
   });
 
@@ -52,10 +50,7 @@ describe('matchAttendeeUserIds', () => {
 
   it('deduplicates', () => {
     expect(
-      matchAttendeeUserIds(
-        ['nader@omnirev.ai', 'Nader@omnirev.ai', 'nader@omnirev.ai'],
-        team,
-      ),
+      matchAttendeeUserIds(['nader@omnirev.ai', 'Nader@omnirev.ai', 'nader@omnirev.ai'], team),
     ).toEqual([UUID_NADER]);
   });
 

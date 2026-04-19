@@ -41,9 +41,7 @@ export function Avatar({ user, size = 'sm', showTooltip = true, onClick, classNa
   const baseClasses = clsx(
     'inline-flex items-center justify-center rounded-full font-mono font-semibold select-none shrink-0',
     SIZE_CLASSES[size],
-    deactivated
-      ? 'bg-secondary text-muted-foreground opacity-60'
-      : '',
+    deactivated ? 'bg-secondary text-muted-foreground opacity-60' : '',
     onClick ? 'cursor-pointer hover:ring-2 hover:ring-primary/40 transition' : '',
     className,
   );

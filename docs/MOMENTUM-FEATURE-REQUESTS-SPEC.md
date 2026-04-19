@@ -16,12 +16,12 @@ Each brand currently has its own Google Sheet with slightly different column nam
 
 Four columns, fixed order, fixed names:
 
-| Column | Header Name | Type | Description |
-|--------|-------------|------|-------------|
-| A | Date | Date string (YYYY/MM/DD) | When the request was submitted |
-| B | Request | Text | The feature request description |
-| C | Response | Text | Omnirev's response/comment |
-| D | Resolved | Boolean (TRUE/FALSE) | Whether the request has been addressed |
+| Column | Header Name | Type                     | Description                            |
+| ------ | ----------- | ------------------------ | -------------------------------------- |
+| A      | Date        | Date string (YYYY/MM/DD) | When the request was submitted         |
+| B      | Request     | Text                     | The feature request description        |
+| C      | Response    | Text                     | Omnirev's response/comment             |
+| D      | Resolved    | Boolean (TRUE/FALSE)     | Whether the request has been addressed |
 
 These column names are deliberately client-friendly — this sheet is shared with the brand's stakeholders.
 
@@ -65,7 +65,7 @@ A simple horizontal filter below the header:
 Display feature requests as a clean table (not cards — tabular data should look tabular).
 
 | Date | Request | Response | Resolved | Actions |
-|------|---------|----------|----------|---------|
+| ---- | ------- | -------- | -------- | ------- |
 
 **Column behavior:**
 
@@ -114,12 +114,12 @@ Each brand has a **Google Sheet connection** configured in the brand's settings 
 
 When analyzing an existing sheet, use these heuristics to map columns:
 
-| If header contains... | Maps to |
-|----------------------|---------|
-| "date", "requested", "date requested" | Date |
-| "request", "question", "feature", "ask" | Request |
+| If header contains...                               | Maps to  |
+| --------------------------------------------------- | -------- |
+| "date", "requested", "date requested"               | Date     |
+| "request", "question", "feature", "ask"             | Request  |
 | "response", "comment", "reply", "answer", "omnirev" | Response |
-| "resolved", "done", "complete", "status" | Resolved |
+| "resolved", "done", "complete", "status"            | Resolved |
 
 Case-insensitive matching. If a column can't be matched, show it in the preview as "Unknown — will be ignored" and let the user manually assign it.
 
@@ -136,6 +136,7 @@ After mapping, rewrite the header row and reorder columns to match the canonical
 This is NOT real-time sync. It's event-driven:
 
 **Pull (Sheet → Momentum):**
+
 - When the user opens the Feature Requests tab, Momentum reads the full sheet via Google Drive MCP
 - Parse the sheet data, compare with Momentum's localStorage copy
 - Update Momentum's local data with any changes from the sheet
@@ -143,6 +144,7 @@ This is NOT real-time sync. It's event-driven:
 - Also triggered by clicking the "Sync" button manually
 
 **Push (Momentum → Sheet):**
+
 - When the user edits a cell, adds a row, deletes a row, or toggles Resolved in Momentum, immediately write the change back to Google Sheets via the MCP
 - Changes are written row-by-row — not by rewriting the entire sheet
 
@@ -169,6 +171,7 @@ This is deliberately simple. For V1, true conflict resolution (merge, diff, user
 ## Data Model
 
 ### Brand — New Fields
+
 ```javascript
 {
   // ...existing brand fields...
@@ -189,6 +192,7 @@ This is deliberately simple. For V1, true conflict resolution (merge, diff, user
 ```
 
 ### Feature Request Item
+
 ```javascript
 {
   id: "uuid",                          // Momentum's internal ID
@@ -215,12 +219,14 @@ Use the connected Google Drive MCP tools for all sheet operations. The available
 - `create_file` — creates new files (not needed for existing sheets)
 
 **Important limitation:** The Google Drive MCP `read_file_content` returns sheet data as formatted text (markdown table or CSV-like). Parsing this into structured rows is necessary. Write a robust parser that handles:
+
 - Empty cells (represented as empty strings between delimiters)
 - Cells with commas in content (quoted strings)
 - Mixed date formats (normalize to YYYY/MM/DD on import)
 - TRUE/FALSE as strings → convert to boolean
 
 **For writing back to sheets:** Use the MCP's file update capabilities. If the MCP doesn't support cell-level writes, the fallback approach is:
+
 1. Read the full sheet
 2. Modify the in-memory representation
 3. Write the full sheet back
@@ -233,14 +239,14 @@ Document this limitation in the code — if cell-level writes become available i
 
 ### Keyboard Shortcuts (within Feature Requests tab)
 
-| Key | Action |
-|-----|--------|
-| `n` | Add new feature request |
-| `j/k` or `↓/↑` | Navigate between rows |
-| `Enter` | Edit selected row |
-| `Space` | Toggle Resolved on selected row |
-| `r` | Trigger manual sync |
-| `Escape` | Exit edit mode / deselect |
+| Key            | Action                          |
+| -------------- | ------------------------------- |
+| `n`            | Add new feature request         |
+| `j/k` or `↓/↑` | Navigate between rows           |
+| `Enter`        | Edit selected row               |
+| `Space`        | Toggle Resolved on selected row |
+| `r`            | Trigger manual sync             |
+| `Escape`       | Exit edit mode / deselect       |
 
 ### Visual Design
 
@@ -254,6 +260,7 @@ Document this limitation in the code — if cell-level writes become available i
 ### Resolved Requests — Visual Treatment
 
 When a request is marked Resolved:
+
 - The row text becomes muted (opacity ~0.5)
 - Request text gets a subtle strikethrough
 - The row drops to the bottom of the list (below open requests) when sorted by status
@@ -268,6 +275,7 @@ When a request is marked Resolved:
 When viewing a feature request, a user should be able to convert it to an action item with one click. Add a small "→ Create Action Item" option in the row's action menu (hover).
 
 On click:
+
 1. Creates an Action Item on the brand with the request text as the item text
 2. Links back to the feature request (store `featureRequestId` on the action item)
 3. When the action item is completed, prompt: "Also mark the feature request as Resolved?"
@@ -277,6 +285,7 @@ This bridges the gap between "client asked for X" and "we need to do X."
 ### Summary Stats in Pulse
 
 Add to the brand's Pulse section (Activity Snapshot area):
+
 - "Feature Requests: X open, Y resolved" — one line, links to the Feature Requests tab
 
 ---

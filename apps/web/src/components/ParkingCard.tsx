@@ -115,9 +115,7 @@ export function ParkingCard({
       )}
     >
       <div className="flex items-start gap-2">
-        {creator && (
-          <Avatar user={creator} size="xs" className="mt-0.5 shrink-0" />
-        )}
+        {creator && <Avatar user={creator} size="xs" className="mt-0.5 shrink-0" />}
         <div className="flex-1 min-w-0 flex items-start gap-2">
           {editing ? (
             <input
@@ -149,21 +147,13 @@ export function ParkingCard({
               )}
             >
               {isPrivate && (
-                <LockIcon
-                  className="shrink-0 text-muted-foreground"
-                  aria-label="Private to you"
-                />
+                <LockIcon className="shrink-0 text-muted-foreground" aria-label="Private to you" />
               )}
               <span className="min-w-0">{parking.title}</span>
             </div>
           )}
           {involved.length > 0 && !editing && (
-            <AvatarStack
-              users={involved}
-              max={3}
-              size="xs"
-              className="shrink-0 mt-0.5"
-            />
+            <AvatarStack users={involved} max={3} size="xs" className="shrink-0 mt-0.5" />
           )}
         </div>
         <button
@@ -188,9 +178,7 @@ export function ParkingCard({
           </span>
         )}
         {isDiscussed && <span className="text-emerald-500">discussed</span>}
-        {parking.notes && !expanded && (
-          <span className="text-muted-foreground/70">• notes</span>
-        )}
+        {parking.notes && !expanded && <span className="text-muted-foreground/70">• notes</span>}
         <span className="ml-auto text-muted-foreground/70">{formatTimeAgo(parking.createdAt)}</span>
       </div>
 

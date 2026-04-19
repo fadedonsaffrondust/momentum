@@ -81,10 +81,7 @@ export function useTeamKeyboardController(ctx: Context) {
       };
 
       const moveSection = (delta: number) => {
-        const nextIdx = Math.max(
-          0,
-          Math.min(ctx.sections.length - 1, focusedSectionIdx + delta),
-        );
+        const nextIdx = Math.max(0, Math.min(ctx.sections.length - 1, focusedSectionIdx + delta));
         const nextSec = ctx.sections[nextIdx];
         if (!nextSec) return;
         const firstTask = nextSec.tasks[0];

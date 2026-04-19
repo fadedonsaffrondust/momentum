@@ -12,9 +12,7 @@ const GROUP_ORDER = ['Overdue', 'Tomorrow', 'This Week', 'Later', 'Someday'] as 
 
 export function BacklogPage() {
   const assigneeFilter = useUiStore((s) => s.taskAssigneeFilter);
-  const tasksQ = useTasks(
-    assigneeFilter === 'everyone' ? { assigneeId: 'ALL' as const } : {},
-  );
+  const tasksQ = useTasks(assigneeFilter === 'everyone' ? { assigneeId: 'ALL' as const } : {});
   const rolesQ = useRoles();
   const usersQ = useUsers();
   const meQ = useMe();
@@ -64,10 +62,7 @@ export function BacklogPage() {
 
   // Flat ordered task list for j/k navigation — follows the render order
   // of GROUP_ORDER so keyboard motion matches what the user sees.
-  const flatTasks = useMemo(
-    () => GROUP_ORDER.flatMap((g) => groups[g]),
-    [groups],
-  );
+  const flatTasks = useMemo(() => GROUP_ORDER.flatMap((g) => groups[g]), [groups]);
 
   useBacklogKeyboardController({ tasks: flatTasks });
 
@@ -111,14 +106,10 @@ export function BacklogPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="text-foreground truncate">{t.title}</span>
-                          {assignee && (
-                            <Avatar user={assignee} size="xs" className="shrink-0" />
-                          )}
+                          {assignee && <Avatar user={assignee} size="xs" className="shrink-0" />}
                         </div>
                         <div className="text-xs text-muted-foreground flex gap-2 mt-1">
-                          {role && (
-                            <span style={{ color: role.color }}>{role.name}</span>
-                          )}
+                          {role && <span style={{ color: role.color }}>{role.name}</span>}
                           {t.estimateMinutes != null && (
                             <span>{formatMinutes(t.estimateMinutes)}</span>
                           )}
@@ -145,7 +136,8 @@ export function BacklogPage() {
           <div className="flex flex-col items-center gap-1 py-12 text-center">
             <p className="text-sm text-muted-foreground">Backlog is empty.</p>
             <p className="text-2xs text-muted-foreground/70">
-              Press <kbd className="font-mono">/</kbd> or <kbd className="font-mono">n</kbd> to schedule something for later.
+              Press <kbd className="font-mono">/</kbd> or <kbd className="font-mono">n</kbd> to
+              schedule something for later.
             </p>
           </div>
         )}

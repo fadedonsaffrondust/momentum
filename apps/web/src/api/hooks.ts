@@ -180,8 +180,7 @@ export function useDeleteRole() {
   const token = useToken();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
-      apiFetch<{ ok: true }>(`/roles/${id}`, { method: 'DELETE', token }),
+    mutationFn: (id: string) => apiFetch<{ ok: true }>(`/roles/${id}`, { method: 'DELETE', token }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['roles'] }),
   });
 }
@@ -256,8 +255,7 @@ export function useDeleteTask() {
   const token = useToken();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
-      apiFetch<{ ok: true }>(`/tasks/${id}`, { method: 'DELETE', token }),
+    mutationFn: (id: string) => apiFetch<{ ok: true }>(`/tasks/${id}`, { method: 'DELETE', token }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
   });
 }
@@ -266,8 +264,7 @@ function useTaskAction(action: 'start' | 'pause' | 'complete' | 'defer' | 'reope
   const token = useToken();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
-      apiFetch<Task>(`/tasks/${id}/${action}`, { method: 'POST', token }),
+    mutationFn: (id: string) => apiFetch<Task>(`/tasks/${id}/${action}`, { method: 'POST', token }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
   });
 }
@@ -910,10 +907,7 @@ export interface BrandEventsQueryParams {
   cursor?: string;
 }
 
-export function useBrandEvents(
-  brandId: string | undefined,
-  params: BrandEventsQueryParams = {},
-) {
+export function useBrandEvents(brandId: string | undefined, params: BrandEventsQueryParams = {}) {
   const token = useToken();
   return useQuery({
     queryKey: ['brands', brandId, 'events', params],
@@ -977,8 +971,7 @@ export function useMarkAllInboxRead() {
   const token = useToken();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () =>
-      apiFetch<{ updated: number }>('/inbox/read-all', { method: 'POST', token }),
+    mutationFn: () => apiFetch<{ updated: number }>('/inbox/read-all', { method: 'POST', token }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['inbox'] }),
   });
 }

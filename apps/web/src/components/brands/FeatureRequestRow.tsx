@@ -7,7 +7,12 @@ interface Props {
   fr: BrandFeatureRequest;
   rowIndex: number;
   isFocused: boolean;
-  onUpdate: (fields: { date?: string; request?: string; response?: string | null; resolved?: boolean }) => void;
+  onUpdate: (fields: {
+    date?: string;
+    request?: string;
+    response?: string | null;
+    resolved?: boolean;
+  }) => void;
   onDelete: () => void;
   onConvert: () => void;
   isPending: boolean;
@@ -23,7 +28,15 @@ function formatDate(raw: string): string {
 
 type EditingField = 'date' | 'request' | 'response' | null;
 
-export function FeatureRequestRow({ fr, rowIndex, isFocused, onUpdate, onDelete, onConvert, isPending }: Props) {
+export function FeatureRequestRow({
+  fr,
+  rowIndex,
+  isFocused,
+  onUpdate,
+  onDelete,
+  onConvert,
+  isPending,
+}: Props) {
   const [editing, setEditing] = useState<EditingField>(null);
   const [editValue, setEditValue] = useState('');
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
@@ -101,10 +114,7 @@ export function FeatureRequestRow({ fr, rowIndex, isFocused, onUpdate, onDelete,
       </div>
 
       {/* Request */}
-      <div
-        className="min-w-0 cursor-pointer"
-        onDoubleClick={() => startEdit('request')}
-      >
+      <div className="min-w-0 cursor-pointer" onDoubleClick={() => startEdit('request')}>
         {editing === 'request' ? (
           <input
             ref={inputRef as React.RefObject<HTMLInputElement>}
@@ -116,20 +126,19 @@ export function FeatureRequestRow({ fr, rowIndex, isFocused, onUpdate, onDelete,
             className="w-full bg-background border border-primary/50 rounded px-2 py-0.5 text-xs focus:outline-none"
           />
         ) : (
-          <p className={clsx(
-            'text-xs leading-relaxed text-foreground',
-            fr.resolved && 'line-through',
-          )}>
+          <p
+            className={clsx(
+              'text-xs leading-relaxed text-foreground',
+              fr.resolved && 'line-through',
+            )}
+          >
             {fr.request}
           </p>
         )}
       </div>
 
       {/* Response */}
-      <div
-        className="min-w-0 cursor-pointer"
-        onDoubleClick={() => startEdit('response')}
-      >
+      <div className="min-w-0 cursor-pointer" onDoubleClick={() => startEdit('response')}>
         {editing === 'response' ? (
           <textarea
             ref={inputRef as React.RefObject<HTMLTextAreaElement>}
@@ -168,7 +177,9 @@ export function FeatureRequestRow({ fr, rowIndex, isFocused, onUpdate, onDelete,
         {isPending ? (
           <Loader2 size={12} className="animate-spin text-muted-foreground" />
         ) : fr.syncStatus === 'error' ? (
-          <span title="Sync failed"><AlertTriangle size={12} className="text-amber-400" /></span>
+          <span title="Sync failed">
+            <AlertTriangle size={12} className="text-amber-400" />
+          </span>
         ) : (
           <>
             {!fr.resolved && (

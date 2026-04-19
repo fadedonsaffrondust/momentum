@@ -29,8 +29,7 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
     [users, item.creatorId],
   );
   const assignee = useMemo<UserSummary | undefined>(
-    () =>
-      item.assigneeId ? users.find((u) => u.id === item.assigneeId) : undefined,
+    () => (item.assigneeId ? users.find((u) => u.id === item.assigneeId) : undefined),
     [users, item.assigneeId],
   );
 
@@ -78,9 +77,7 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
         {isDone && <span className="text-[10px]">✓</span>}
       </button>
 
-      {showCreatorAvatar && creator && (
-        <Avatar user={creator} size="xs" className="mt-0.5" />
-      )}
+      {showCreatorAvatar && creator && <Avatar user={creator} size="xs" className="mt-0.5" />}
 
       <div className="flex-1 min-w-0">
         {editing ? (
@@ -113,14 +110,14 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
         <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
           {item.owner && <span>{item.owner}</span>}
           {item.dueDate && (
-            <span className={item.dueDate < new Date().toISOString().slice(0, 10) ? 'text-red-400' : ''}>
+            <span
+              className={item.dueDate < new Date().toISOString().slice(0, 10) ? 'text-red-400' : ''}
+            >
               due {item.dueDate}
             </span>
           )}
           <span>{dateLabel}</span>
-          {item.linkedTaskId && (
-            <span className="text-primary">In Today</span>
-          )}
+          {item.linkedTaskId && <span className="text-primary">In Today</span>}
         </div>
       </div>
 
@@ -132,9 +129,7 @@ export function ActionItemRow({ item, onToggleDone, onSendToToday, onEdit, onDel
         onClick={openPicker}
         className="shrink-0 mt-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40"
         title={
-          assignee
-            ? `Assigned to ${assignee.displayName || assignee.email}`
-            : 'Assign a teammate'
+          assignee ? `Assigned to ${assignee.displayName || assignee.email}` : 'Assign a teammate'
         }
         aria-label={assignee ? 'Reassign' : 'Assign'}
       >

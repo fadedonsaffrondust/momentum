@@ -159,25 +159,19 @@ export function TodayPage() {
         priority: 100,
         when: (p: string) => p === '/' || p === '/backlog',
         run: () => {
-          const target = document.querySelector<HTMLInputElement>(
-            '[data-task-input="true"]',
-          );
+          const target = document.querySelector<HTMLInputElement>('[data-task-input="true"]');
           target?.focus();
         },
       },
       {
         id: 'today:toggle-assignee',
-        label:
-          assigneeFilter === 'mine'
-            ? "Show everyone's tasks"
-            : 'Show only my tasks',
+        label: assigneeFilter === 'mine' ? "Show everyone's tasks" : 'Show only my tasks',
         description: 'Flip the Mine / Everyone filter',
         icon: UserSquare,
         section: 'Today',
         priority: 80,
         when: (p: string) => p === '/' || p === '/backlog',
-        run: () =>
-          setAssigneeFilter(assigneeFilter === 'mine' ? 'everyone' : 'mine'),
+        run: () => setAssigneeFilter(assigneeFilter === 'mine' ? 'everyone' : 'mine'),
       },
     ],
     [assigneeFilter, setAssigneeFilter],
@@ -246,13 +240,7 @@ export function TodayPage() {
                 style={{ flexBasis: 0 }}
                 className="min-w-0 flex overflow-hidden"
               >
-                <KanbanColumn
-                  column="done"
-                  title="Done"
-                  tasks={columns.done}
-                  roles={roles}
-                  dnd
-                />
+                <KanbanColumn column="done" title="Done" tasks={columns.done} roles={roles} dnd />
               </motion.div>
             )}
           </AnimatePresence>

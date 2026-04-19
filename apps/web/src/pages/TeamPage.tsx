@@ -116,9 +116,7 @@ export function TeamPage() {
         <RoleFilterBar />
       </div>
 
-      {tasksQ.isLoading && (
-        <p className="text-sm text-muted-foreground px-6 py-4">Loading team…</p>
-      )}
+      {tasksQ.isLoading && <p className="text-sm text-muted-foreground px-6 py-4">Loading team…</p>}
       {!tasksQ.isLoading && sections.length === 0 && (
         <p className="text-sm text-muted-foreground px-6 py-4">No active teammates yet.</p>
       )}
@@ -150,10 +148,19 @@ function TeammateColumn({
   rolesById,
   scope,
 }: {
-  user: { id: string; displayName: string; email: string; avatarColor: string; deactivatedAt: string | null };
+  user: {
+    id: string;
+    displayName: string;
+    email: string;
+    avatarColor: string;
+    deactivatedAt: string | null;
+  };
   tasks: Task[];
   isMe: boolean;
-  rolesById: Map<string, ReturnType<typeof useRoles>['data'] extends (infer U)[] | undefined ? U : never>;
+  rolesById: Map<
+    string,
+    ReturnType<typeof useRoles>['data'] extends (infer U)[] | undefined ? U : never
+  >;
   scope: DateScope;
 }) {
   const selectedTaskId = useUiStore((s) => s.selectedTaskId);
@@ -188,9 +195,7 @@ function TeammateColumn({
               {user.displayName || user.email}
             </span>
             {isMe && (
-              <span className="text-[10px] uppercase tracking-widest text-primary">
-                You
-              </span>
+              <span className="text-[10px] uppercase tracking-widest text-primary">You</span>
             )}
           </div>
           <div className="text-2xs text-muted-foreground">
@@ -202,9 +207,7 @@ function TeammateColumn({
       <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
         {tasks.length === 0 && (
           <p className="text-xs text-muted-foreground/70 text-center py-8">
-            {scope === 'today'
-              ? 'Nothing scheduled for today.'
-              : 'No tasks in this scope.'}
+            {scope === 'today' ? 'Nothing scheduled for today.' : 'No tasks in this scope.'}
           </p>
         )}
         {tasks.map((t) => (
@@ -222,7 +225,13 @@ function TeammateColumn({
   );
 }
 
-function DateScopeChip({ value, onChange }: { value: DateScope; onChange: (v: DateScope) => void }) {
+function DateScopeChip({
+  value,
+  onChange,
+}: {
+  value: DateScope;
+  onChange: (v: DateScope) => void;
+}) {
   return (
     <div
       role="radiogroup"
@@ -240,9 +249,7 @@ function DateScopeChip({ value, onChange }: { value: DateScope; onChange: (v: Da
             onClick={() => onChange(opt)}
             className={clsx(
               'px-2.5 py-1 rounded-md transition-colors duration-150 font-medium',
-              active
-                ? 'bg-primary/20 text-primary'
-                : 'text-muted-foreground hover:text-foreground',
+              active ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground',
             )}
           >
             {SCOPE_LABELS[opt]}

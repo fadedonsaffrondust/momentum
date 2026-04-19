@@ -21,16 +21,16 @@ Momentum is a single-user, keyboard-first daily execution + relationship-managem
 
 ### Feature surfaces currently shipped
 
-| Surface | What it does |
-|---|---|
-| **Tasks** | Today / Backlog / Done kanban with roles, priorities, estimates. Up-next, In-progress (max 2), Done columns. Plan My Day + End of Day Review modals. Weekly Stats. |
-| **Parkings** | Capture topics for your next daily standup. Grouped by day (Today / Tomorrow / Future / Unscheduled). Each has title, prep notes, outcome, target_date, role, priority. |
-| **Brands** | Client/account management. Each brand has a North Star (goals + stakeholders + success definition), Pulse (health signal, open action items), Archive (meeting notes). Tabbed detail: Overview / Work / Feature Requests. |
-| **Meeting recording sync (tldv)** | Per-brand: pull meeting recordings from tldv, score against stakeholder emails + title keywords, extract summary + action items + decisions via OpenAI, dedupe action items via LLM, merge same-day notes. |
-| **Feature Requests** | Per-brand: connect a Google Sheet, two-way sync (pull + push), inline edit, filter/search, convert to action items. |
-| **AI-assisted brand import** | Upload `.md`/`.txt` client notes; OpenAI extracts name/goals/stakeholders/meetings/action items into Momentum's schema. Async (brand row appears with `status: 'importing'`). |
-| **Data export/import** | JSON dump/restore of the user's entire dataset. Versioned file format (currently `1.3`). Replace or merge. |
-| **What's new modal** | Auto-opens once per new release. Source: `apps/web/src/lib/releaseNotes.ts`. |
+| Surface                           | What it does                                                                                                                                                                                                              |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tasks**                         | Today / Backlog / Done kanban with roles, priorities, estimates. Up-next, In-progress (max 2), Done columns. Plan My Day + End of Day Review modals. Weekly Stats.                                                        |
+| **Parkings**                      | Capture topics for your next daily standup. Grouped by day (Today / Tomorrow / Future / Unscheduled). Each has title, prep notes, outcome, target_date, role, priority.                                                   |
+| **Brands**                        | Client/account management. Each brand has a North Star (goals + stakeholders + success definition), Pulse (health signal, open action items), Archive (meeting notes). Tabbed detail: Overview / Work / Feature Requests. |
+| **Meeting recording sync (tldv)** | Per-brand: pull meeting recordings from tldv, score against stakeholder emails + title keywords, extract summary + action items + decisions via OpenAI, dedupe action items via LLM, merge same-day notes.                |
+| **Feature Requests**              | Per-brand: connect a Google Sheet, two-way sync (pull + push), inline edit, filter/search, convert to action items.                                                                                                       |
+| **AI-assisted brand import**      | Upload `.md`/`.txt` client notes; OpenAI extracts name/goals/stakeholders/meetings/action items into Momentum's schema. Async (brand row appears with `status: 'importing'`).                                             |
+| **Data export/import**            | JSON dump/restore of the user's entire dataset. Versioned file format (currently `1.3`). Replace or merge.                                                                                                                |
+| **What's new modal**              | Auto-opens once per new release. Source: `apps/web/src/lib/releaseNotes.ts`.                                                                                                                                              |
 
 ### Non-goals (explicit)
 
@@ -142,43 +142,50 @@ Source: `packages/db/src/schema.ts`. All tables live in the default `public` sch
 
 ### Enums
 
-| Enum | Values |
-|---|---|
-| `priority` | `high`, `medium`, `low` |
-| `task_status` | `todo`, `in_progress`, `done` |
-| `task_column` | `up_next`, `in_progress`, `done` |
-| `theme` | `dark`, `light` |
-| `parking_status` | `open`, `discussed`, `archived` |
-| `brand_status` | `active`, `importing`, `import_failed` |
-| `brand_action_status` | `open`, `done` |
-| `meeting_source` | `manual`, `recording_sync` |
-| `feature_request_sync_status` | `synced`, `pending`, `error` |
+| Enum                          | Values                                 |
+| ----------------------------- | -------------------------------------- |
+| `priority`                    | `high`, `medium`, `low`                |
+| `task_status`                 | `todo`, `in_progress`, `done`          |
+| `task_column`                 | `up_next`, `in_progress`, `done`       |
+| `theme`                       | `dark`, `light`                        |
+| `parking_status`              | `open`, `discussed`, `archived`        |
+| `brand_status`                | `active`, `importing`, `import_failed` |
+| `brand_action_status`         | `open`, `done`                         |
+| `meeting_source`              | `manual`, `recording_sync`             |
+| `feature_request_sync_status` | `synced`, `pending`, `error`           |
 
 ### Tables
 
 #### `users`
+
 `id uuid pk`, `email text unique`, `password_hash text`, `created_at timestamptz`.
 
 #### `user_settings` (1:1 with users)
+
 `user_id uuid pk fk→users`, `daily_capacity_minutes int = 480`, `theme theme = dark`, `user_name text`, `last_export_date timestamptz null`, `onboarded bool = false`.
 
 #### `roles`
+
 `id uuid pk`, `user_id fk→users`, `name text`, `color text = '#4F8EF7'` (hex), `position int = 0`, `created_at`.
 Indexed on `user_id`. Role palette in `ROLE_COLOR_PALETTE` (shared).
 
 #### `tasks`
+
 `id`, `user_id`, `title text`, `role_id uuid null fk→roles ON DELETE SET NULL`, `priority priority = medium`, `estimate_minutes int null`, `actual_minutes int null`, `status task_status = todo`, `column task_column = up_next`, `scheduled_date date null`, `created_at`, `started_at timestamptz null`, `completed_at timestamptz null`.
 Indexed on `(user_id)`, `(user_id, scheduled_date)`, `(user_id, status)`.
 **Invariant:** an in-progress task has at most 2 per user (enforced by API, see § 5.4). `actual_minutes` is computed on `/complete` as `max(1, round((now - started_at) / 60s))` if `started_at` is set.
 
 #### `daily_logs`
+
 Unique `(user_id, date)`. Stores per-day summary: `tasks_planned`, `tasks_completed`, `total_estimated_minutes`, `total_actual_minutes`, `journal_entry text(4000) null`, `completion_rate real 0..1`.
 
 #### `parkings`
+
 `id`, `user_id`, `title`, `notes text(10_000) null`, `outcome text(10_000) null`, `target_date date null`, `role_id null fk→roles`, `priority priority = medium`, `status parking_status = open`, `created_at`, `discussed_at timestamptz null`.
 Indexed on `(user_id)`, `(user_id, target_date)`, `(user_id, status)`.
 
 #### `brands`
+
 `id`, `user_id`, `name`, `goals text(10_000) null`, `success_definition text(10_000) null`, `custom_fields jsonb = '{}'`, `sync_config jsonb null`, `status brand_status = active`, `import_error text null`, `imported_from text null`, `raw_import_content text null`, `feature_requests_config jsonb null`, `created_at`, `updated_at`.
 
 - `sync_config` shape: `{ matchRules: { stakeholderEmails[], titleKeywords[], meetingType: 'external'|'internal'|'both', syncWindowDays: number }, syncedMeetingIds: string[], lastSyncedAt: iso|null, lastSyncedMeetingDate: string|null }`.
@@ -186,18 +193,22 @@ Indexed on `(user_id)`, `(user_id, target_date)`, `(user_id, status)`.
 - `custom_fields` is an explicit extension point for v2 metadata (revenue, deal stage, renewal dates) without a schema change.
 
 #### `brand_stakeholders`
+
 `id`, `brand_id fk→brands ON DELETE CASCADE`, `user_id`, `name`, `email text null`, `role text null`, `notes text null`.
 
 #### `brand_meetings`
+
 `id`, `brand_id cascade`, `user_id`, `date`, `title`, `attendees text[]`, `summary text(10_000) null`, `raw_notes text(100_000)`, `decisions text[]`, `source meeting_source = manual`, `external_meeting_id text null`, `recording_url text null`.
 Indexed on `(brand_id)`, `(brand_id, date)`.
 **Merge rule:** on recording sync, if a manual meeting already exists for the same `(brand_id, date)`, the sync merges into it (concat rawNotes with `\n\n---\n\n### {title} (from recording)\n\n`, dedupe attendees, concat decisions, keep existing `recording_url` if present else use tldv url, concat `external_meeting_id` as comma-separated list).
 
 #### `brand_action_items`
+
 `id`, `brand_id cascade`, `meeting_id null fk→brand_meetings SET NULL`, `user_id`, `text text(2000)`, `status brand_action_status = open`, `owner text null`, `due_date date null`, `linked_task_id uuid null fk→tasks SET NULL`, `created_at`, `completed_at timestamptz null`.
 **Bidirectional sync:** completing `tasks.id === X` cascades `brand_action_items.status = 'done'` where `linked_task_id = X`. Completing a brand action item does NOT currently cascade to tasks (asymmetric — see § 10.1).
 
 #### `brand_feature_requests`
+
 `id`, `brand_id cascade`, `user_id`, `sheet_row_index int null`, `date text` (not a date column — flexible string), `request text(10_000)`, `response text(10_000) null`, `resolved bool = false`, `sync_status feature_request_sync_status = pending`, `created_at`, `updated_at`.
 `sheet_row_index` is the 0-indexed row in the source sheet; becomes `null` when the row is deleted upstream or the sheet is disconnected.
 
@@ -231,6 +242,7 @@ users 1──* brands
 Registered in `apps/api/src/index.ts`. All routes below require a valid JWT (`preHandler: app.authenticate`) unless noted. All request/response schemas are defined in `packages/shared/src/schemas.ts` and referenced here by name.
 
 ### 5.1 Auth — `routes/auth.ts`
+
 - `POST /auth/register` — `registerInputSchema` → `authResponseSchema`. Unauthenticated.
 - `POST /auth/login` — `loginInputSchema` → `authResponseSchema`. Unauthenticated.
 - `GET /auth/me` — → `authUserSchema`. JWT required.
@@ -239,15 +251,18 @@ Registered in `apps/api/src/index.ts`. All routes below require a valid JWT (`pr
 JWT: signed with `env.JWT_SECRET` (min 16 chars), `expiresIn = env.JWT_EXPIRES_IN` (default `7d`), payload `{ sub: userId }`. Decoded in `plugins/auth.ts` and exposed as `req.userId`.
 
 ### 5.2 Settings — `routes/settings.ts`
+
 - `GET /settings` — returns `userSettingsSchema`. Lazily bootstraps a settings row if missing.
 - `PUT /settings` — `updateSettingsInputSchema` (partial: `dailyCapacityMinutes`, `theme`, `userName`, `onboarded`).
 
 ### 5.3 Roles — `routes/roles.ts`
+
 - `GET /roles` — ordered by `position`.
 - `POST /roles` — `createRoleInputSchema`. Auto-assigns next `position`.
 - `DELETE /roles/:id` — cascades tasks/parkings' `role_id` to null (`ON DELETE SET NULL`).
 
 ### 5.4 Tasks — `routes/tasks.ts`
+
 - `GET /tasks?date=&roleId=&status=` — filtered, ordered by `created_at DESC`.
 - `POST /tasks` — defaults `scheduledDate` to today (local ISO).
 - `PATCH /tasks/:id` — any of `title/roleId/priority/estimateMinutes/status/column/scheduledDate/actualMinutes`.
@@ -258,6 +273,7 @@ JWT: signed with `env.JWT_SECRET` (min 16 chars), `expiresIn = env.JWT_EXPIRES_I
 - `POST /tasks/:id/defer` — optional `{ scheduledDate }` body; defaults to tomorrow.
 
 ### 5.5 Parkings — `routes/parkings.ts`
+
 - `GET /parkings?status=&targetDate=&roleId=`
 - `POST /parkings` (`createParkingInputSchema`)
 - `PATCH /parkings/:id` (`updateParkingInputSchema`)
@@ -266,11 +282,13 @@ JWT: signed with `env.JWT_SECRET` (min 16 chars), `expiresIn = env.JWT_EXPIRES_I
 - `POST /parkings/:id/reopen` — back to `open`.
 
 ### 5.6 Daily logs + stats — `routes/daily-logs.ts`, `routes/stats.ts`
+
 - `GET /daily-logs?limit=` (default 30).
 - `POST /daily-logs` — upsert by `(user_id, date)`; body supports `journalEntry`. Triggers recompute of `tasksPlanned`, `tasksCompleted`, `totalEstimatedMinutes`, `totalActualMinutes`, `completionRate` from tasks on that date.
 - `GET /stats/weekly` — `weeklyStatsSchema`: last 7 days + completion rate per day, `mostActiveRoleId`, `estimationAccuracy` (ratio), `streak` (consecutive days with ≥1 completed task).
 
 ### 5.7 Brands — `routes/brands.ts`, `routes/brand-import.ts`
+
 - `GET /brands` — list (active + importing + import_failed).
 - `GET /brands/:id` — detail. **Web hook polls every 3s while `status='importing'`.**
 - `POST /brands` (`createBrandInputSchema`) — creates active brand.
@@ -279,17 +297,20 @@ JWT: signed with `env.JWT_SECRET` (min 16 chars), `expiresIn = env.JWT_EXPIRES_I
 - `POST /brands/import` (`brandImportInputSchema` = `{ fileName, fileContent }`) — returns stub brand with `status='importing'`; kicks off `processImportAsync` in the background. Truncates content to last 50k chars; uses `gpt-4o-mini` with `response_format: json_object`, `temperature: 0.2`. Populates `name/goals/successDefinition/brandStakeholders/brandMeetings/brandActionItems`. On failure sets `status='import_failed'` with `importError`.
 
 ### 5.8 Brand stakeholders — `routes/brand-stakeholders.ts`
+
 - `GET /brands/:brandId/stakeholders`
 - `POST /brands/:brandId/stakeholders`
 - `PATCH /brands/:brandId/stakeholders/:id`
 - `DELETE /brands/:brandId/stakeholders/:id`
 
 ### 5.9 Brand meetings — `routes/brand-meetings.ts`
+
 - `GET /brands/:brandId/meetings`
 - `POST /brands/:brandId/meetings` — creates with `source='manual'`. Lines starting with `→` in `rawNotes` are auto-extracted as `brand_action_items` (by `apps/web/src/lib/extractActionItems.ts`, but the extraction is done client-side before POST).
 - `PATCH`, `DELETE` — straightforward.
 
 ### 5.10 Brand action items — `routes/brand-action-items.ts`
+
 - `GET /brands/:brandId/action-items?status=`
 - `POST` (`createBrandActionItemInputSchema`)
 - `PATCH` (`updateBrandActionItemInputSchema`)
@@ -311,6 +332,7 @@ JWT: signed with `env.JWT_SECRET` (min 16 chars), `expiresIn = env.JWT_EXPIRES_I
 **Required env for sync operations:** `GOOGLE_SERVICE_ACCOUNT_KEY` (JSON string; sheet must be shared with the service account's `client_email`).
 
 CRUD:
+
 - `GET /brands/:brandId/feature-requests?resolved=&search=` — `resolved` is `'true'|'false'` string, `search` is substring match over `request + response`.
 - `POST /brands/:brandId/feature-requests` (`createBrandFeatureRequestInputSchema`). Sets `syncStatus='pending'`.
 - `PATCH /brands/:brandId/feature-requests/:id` (`updateBrandFeatureRequestInputSchema`). Sets `syncStatus='pending'` on change. **On PATCH, if a sheet is connected, the route auto-pushes the change immediately (best-effort; marks `error` on failure).**
@@ -318,16 +340,19 @@ CRUD:
 - `POST /brands/:brandId/feature-requests/:id/convert-to-action` — creates a `brand_action_items` row with text copied from the request, sets `resolved=true` on the feature request.
 
 Sheet sync:
+
 - `POST /brands/:brandId/feature-requests/connect-sheet` — `{ sheetUrl, sheetGid?, standardize: bool=true }`. Parses URL, reads sheet, analyzes columns via regex heuristics in `services/google-sheets.ts` (`COLUMN_PATTERNS` for Date/Request/Response/Resolved). If `standardize`: rewrites headers to canonical `['Date','Request','Response','Resolved']`, writes all parsed rows back into columns 0–3, applies formatting (column widths, wrap, checkbox validation — catches failure for table-typed sheets). Imports all rows. Response: `{ config, imported, headers: { original, mapped } }`.
 - `POST /brands/:brandId/feature-requests/sync/pull` — read sheet → diff by `sheetRowIndex` against DB. Creates / updates / marks deleted (sets `sheet_row_index=null, syncStatus=pending`). Returns counts.
 - `POST /brands/:brandId/feature-requests/sync/push` — pushes all `syncStatus='pending'` rows; upserts by `sheetRowIndex` or appends. Marks `synced` or `error` per row.
 - `POST /brands/:brandId/feature-requests/disconnect-sheet` — clears config, nulls all `sheet_row_index`, marks all rows `pending`.
 
 ### 5.13 Data export/import — `routes/data.ts`
+
 - `GET /export` — returns `exportFileSchema` (current version `'1.3'`). Includes users' settings, roles, tasks, daily_logs, parkings, brands (+ stakeholders, meetings, action items, feature requests). Updates `user_settings.last_export_date`.
 - `POST /import` — body `{ mode: 'replace'|'merge', file: ExportFile }`. Replace wipes user's data. Merge inserts new rows only. Older export file versions (`1.0`–`1.2`) are backward-compatible.
 
 ### 5.14 Error handling — `plugins/error-handler.ts`
+
 - Zod validation errors → `400` with flattened field errors.
 - `badRequest(msg)` / `notFound(msg)` helpers in `errors.ts` throw tagged errors rendered as `{ statusCode, message }`.
 - `preSerialization` strips internal fields.
@@ -353,10 +378,12 @@ Sheet sync:
 ### 6.2 State management
 
 **Zustand (`store/`)**
+
 - `auth.ts` — `{ token, user, setAuth, clearAuth }` persisted to `localStorage`.
 - `ui.ts` — `{ activeModal, roleFilter, selectedTaskId, focusedColumn, selectedParkingId, toasts, pendingImport }`. Modals are identified by a `ModalKind` enum: `null | 'command-palette' | 'plan-my-day' | 'end-of-day' | 'weekly-stats' | 'shortcuts' | 'import-confirm' | 'role-picker' | 'release-notes'`.
 
 **TanStack Query**
+
 - Query client in `lib/queryClient.ts`.
 - All hooks in `api/hooks.ts` (single file — intentional).
 - Standard pattern: one `useX` read hook per resource, one mutation per action, `onSuccess` invalidates the matching query key.
@@ -392,6 +419,7 @@ Sheet sync:
 ```
 
 Other components:
+
 - `SyncReviewModal` + `SyncCandidateRow` — recording sync review.
 - `SyncSettingsPanel` — matching rules.
 - `ImportBrandModal` — file upload, kicks off `POST /brands/import`.
@@ -400,16 +428,16 @@ Other components:
 
 `<ModalRoot>` renders exactly one modal at a time based on `useUiStore().activeModal`.
 
-| Modal | Opens via | Purpose |
-|---|---|---|
-| `CommandPaletteModal` | ⌘K | cmdk palette — navigation + actions |
-| `PlanMyDayModal` | ⌘P | Select unscheduled tasks for today, sets `scheduled_date` |
-| `EndOfDayModal` | ⌘R | Journal entry + auto-computes `daily_logs` for today |
-| `WeeklyStatsModal` | ⌘W | Renders `weeklyStatsSchema` |
-| `ShortcutsModal` | ? | Full keyboard shortcut reference (LOAD-BEARING — see CLAUDE.md) |
-| `ReleaseNotesModal` | auto + Cmd+K → Help | "What's new" — source is `lib/releaseNotes.ts` |
-| `RolePickerModal` | `r` on selected task/parking | Pick role |
-| `ImportConfirmModal` | after file pick in ⌘I flow | Confirm replace/merge |
+| Modal                 | Opens via                    | Purpose                                                         |
+| --------------------- | ---------------------------- | --------------------------------------------------------------- |
+| `CommandPaletteModal` | ⌘K                           | cmdk palette — navigation + actions                             |
+| `PlanMyDayModal`      | ⌘P                           | Select unscheduled tasks for today, sets `scheduled_date`       |
+| `EndOfDayModal`       | ⌘R                           | Journal entry + auto-computes `daily_logs` for today            |
+| `WeeklyStatsModal`    | ⌘W                           | Renders `weeklyStatsSchema`                                     |
+| `ShortcutsModal`      | ?                            | Full keyboard shortcut reference (LOAD-BEARING — see CLAUDE.md) |
+| `ReleaseNotesModal`   | auto + Cmd+K → Help          | "What's new" — source is `lib/releaseNotes.ts`                  |
+| `RolePickerModal`     | `r` on selected task/parking | Pick role                                                       |
+| `ImportConfirmModal`  | after file pick in ⌘I flow   | Confirm replace/merge                                           |
 
 All modals are portal-rendered (`createPortal(..., document.body)`) when they live inside page components — a feedback memory entry documents why.
 
@@ -472,6 +500,7 @@ This is one of the defining parts of the product and a common source of regressi
 ### 7.3 Modal-internal shortcuts
 
 Each modal registers its own `keydown` listener when mounted:
+
 - `CommandPaletteModal` — cmdk default + ⌘Enter to run.
 - `SyncReviewModal` — `j/k` navigate, `Enter` toggle, `⌘Enter` confirm, `Esc` close.
 - `RolePickerModal` — number keys 1–9, Enter, Esc.
@@ -505,6 +534,7 @@ Source: `apps/web/src/index.css`.
 File: `packages/shared/src/parser.ts` (pure, both client and server usable).
 
 Grammar (order-agnostic):
+
 - `~30m` / `~2h` → `estimateMinutes`.
 - `#product` → `roleTag` (resolves to `role_id` by case-insensitive name match, client-side).
 - `!h` / `!m` / `!l` → `priority: high|medium|low`.
@@ -547,6 +577,7 @@ Client-side: `apps/web/src/lib/extractActionItems.ts`. Scans `rawNotes` line-by-
 ### 9.5 Feature Requests — Google Sheets two-way sync
 
 **Connection:**
+
 1. User pastes sheet URL. Server parses `/spreadsheets/d/:id` and `gid=` parameter.
 2. Reads sheet, runs `analyzeColumns` with heuristic regexes (`/\b(date|requested|submitted)\b/i` etc.) over the header row. If all four columns (Date, Request, Response, Resolved) matched → mapping saved. Else 400.
 3. If `standardize=true`: rewrites headers to canonical `['Date','Request','Response','Resolved']`, writes all parsed rows into columns 0–3, applies formatting (column widths 100/400/400/80 px, wrap strategy, checkbox validation). Dates pushed as native Sheets serial-date values with `pattern: 'yyyy/mm/dd'`. Resolved pushed as native booleans.
@@ -561,6 +592,7 @@ Client-side: `apps/web/src/lib/extractActionItems.ts`. Scans `rawNotes` line-by-
 **Convert to action:** creates a `brand_action_items` with `text = feature_request.request`, sets `resolved=true`. The sheet is updated on next push.
 
 **Gotchas documented in memory:**
+
 - Dates in Sheets need native date values with `numberFormat: DATE, pattern: yyyy/mm/dd`, NOT strings with leading apostrophes.
 - Must use `batchUpdate.updateCells` (not `values.update`) to set native booleans + date serials simultaneously.
 - Table-typed sheets reject `setDataValidation` for the Resolved column → wrap in try/catch and skip gracefully.
@@ -568,6 +600,7 @@ Client-side: `apps/web/src/lib/extractActionItems.ts`. Scans `rawNotes` line-by-
 ### 9.6 Release notes sync
 
 `apps/web/src/lib/releaseNotes.ts` is the single source of truth. Every user-visible change appends a new entry:
+
 - `version` (semver: minor for new feature, patch for bugfix/polish).
 - `date` (YYYY-MM-DD).
 - `headline`, `summary`, `items[]` with `title`, `description`, optional `shortcuts: string[]`, optional `howTo`.
@@ -633,18 +666,18 @@ Per `CLAUDE.md`, TODO.md is updated alongside the release notes entry.
 
 From `apps/api/src/env.ts` (validated at startup via Zod):
 
-| Var | Required | Default | Purpose |
-|---|---|---|---|
-| `NODE_ENV` | no | `development` | |
-| `API_PORT` | no | `3001` | |
-| `API_HOST` | no | `0.0.0.0` | |
-| `DATABASE_URL` | **yes** | — | postgres connection string |
-| `JWT_SECRET` | **yes (≥16 chars)** | — | |
-| `JWT_EXPIRES_IN` | no | `7d` | |
-| `CORS_ORIGIN` | no | `http://localhost:5173` | |
-| `OPENAI_API_KEY` | no | — | brand import, meeting extraction, action-item dedup |
-| `TLDV_API_KEY` | no | — | recording sync |
-| `GOOGLE_SERVICE_ACCOUNT_KEY` | no | — | feature-request sheet sync |
+| Var                          | Required            | Default                 | Purpose                                             |
+| ---------------------------- | ------------------- | ----------------------- | --------------------------------------------------- |
+| `NODE_ENV`                   | no                  | `development`           |                                                     |
+| `API_PORT`                   | no                  | `3001`                  |                                                     |
+| `API_HOST`                   | no                  | `0.0.0.0`               |                                                     |
+| `DATABASE_URL`               | **yes**             | —                       | postgres connection string                          |
+| `JWT_SECRET`                 | **yes (≥16 chars)** | —                       |                                                     |
+| `JWT_EXPIRES_IN`             | no                  | `7d`                    |                                                     |
+| `CORS_ORIGIN`                | no                  | `http://localhost:5173` |                                                     |
+| `OPENAI_API_KEY`             | no                  | —                       | brand import, meeting extraction, action-item dedup |
+| `TLDV_API_KEY`               | no                  | —                       | recording sync                                      |
+| `GOOGLE_SERVICE_ACCOUNT_KEY` | no                  | —                       | feature-request sheet sync                          |
 
 Web-only: `VITE_API_URL` (default `http://localhost:3001`).
 
@@ -719,21 +752,21 @@ Rules that apply to every change:
 
 ## 15. Release history (abridged)
 
-| Version | Date | Headline |
-|---|---|---|
-| 0.6.2 | 2026-04-17 | Keyboard nav for meeting form suggestions |
-| 0.6.1 | 2026-04-17 | Parkings priority stripes restored |
-| 0.6.0 | 2026-04-16 | Feature Requests — Google Sheets two-way sync |
-| 0.5.0 | 2026-04-16 | Brand detail view redesigned with tabbed layout |
-| 0.4.1 | 2026-04-16 | Action-item deduplication on recording sync |
-| 0.4.0 | 2026-04-15 | Meeting recording sync (tldv) |
-| 0.3.0 | 2026-04-15 | Brands — client management meets daily execution |
-| 0.2.5 | 2026-04-15 | Global shortcuts work from every view |
-| 0.2.4 | 2026-04-15 | View navigation no longer broken by auto-focused inputs |
-| 0.2.3 | 2026-04-15 | Tab restored to browser; `g`-prefix + bracket cycling introduced |
-| 0.2.2 | 2026-04-15 | Shortcuts help made accurate |
-| 0.2.1 | 2026-04-15 | Slim icon sidebar, Today/Backlog as tabs under Tasks |
-| 0.2.0 | 2026-04-15 | Sidebar, Parkings, "What's new" modal |
+| Version | Date       | Headline                                                         |
+| ------- | ---------- | ---------------------------------------------------------------- |
+| 0.6.2   | 2026-04-17 | Keyboard nav for meeting form suggestions                        |
+| 0.6.1   | 2026-04-17 | Parkings priority stripes restored                               |
+| 0.6.0   | 2026-04-16 | Feature Requests — Google Sheets two-way sync                    |
+| 0.5.0   | 2026-04-16 | Brand detail view redesigned with tabbed layout                  |
+| 0.4.1   | 2026-04-16 | Action-item deduplication on recording sync                      |
+| 0.4.0   | 2026-04-15 | Meeting recording sync (tldv)                                    |
+| 0.3.0   | 2026-04-15 | Brands — client management meets daily execution                 |
+| 0.2.5   | 2026-04-15 | Global shortcuts work from every view                            |
+| 0.2.4   | 2026-04-15 | View navigation no longer broken by auto-focused inputs          |
+| 0.2.3   | 2026-04-15 | Tab restored to browser; `g`-prefix + bracket cycling introduced |
+| 0.2.2   | 2026-04-15 | Shortcuts help made accurate                                     |
+| 0.2.1   | 2026-04-15 | Slim icon sidebar, Today/Backlog as tabs under Tasks             |
+| 0.2.0   | 2026-04-15 | Sidebar, Parkings, "What's new" modal                            |
 
 Full changelog: `apps/web/src/lib/releaseNotes.ts`.
 

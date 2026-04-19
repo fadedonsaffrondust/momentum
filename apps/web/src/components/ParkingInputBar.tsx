@@ -75,17 +75,13 @@ export const ParkingInputBar = forwardRef<HTMLInputElement>((_props, ref) => {
         />
         <button
           type="button"
-          onClick={() =>
-            setVisibility((v) => (v === 'team' ? 'private' : 'team'))
-          }
+          onClick={() => setVisibility((v) => (v === 'team' ? 'private' : 'team'))}
           title={
             visibility === 'private'
               ? 'Private — only you see this parking'
               : 'Team — everyone sees this parking'
           }
-          aria-label={
-            visibility === 'private' ? 'Make team-visible' : 'Make private'
-          }
+          aria-label={visibility === 'private' ? 'Make team-visible' : 'Make private'}
           className="shrink-0 px-3 rounded-lg border border-border bg-card/60 text-muted-foreground hover:text-foreground hover:border-border transition flex items-center gap-1.5 text-xs"
         >
           {visibility === 'private' ? <LockIcon /> : <TeamIcon />}

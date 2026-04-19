@@ -39,9 +39,7 @@ export const TaskInputBar = forwardRef<HTMLInputElement>((_props, ref) => {
     // sees their literal input preserved. Matched tokens are already
     // stripped by the parser.
     const finalTitle =
-      p.assigneeToken && !assigneeId
-        ? `${p.title} @${p.assigneeToken}`.trim()
-        : p.title;
+      p.assigneeToken && !assigneeId ? `${p.title} @${p.assigneeToken}`.trim() : p.title;
     if (!finalTitle) return;
 
     const roles = rolesQ.data ?? [];
@@ -50,9 +48,7 @@ export const TaskInputBar = forwardRef<HTMLInputElement>((_props, ref) => {
       : null;
     const roleId = roleIdFromTag ?? roleFilter ?? null;
 
-    const scheduledDate = p.dateToken
-      ? (resolveDateToken(p.dateToken) ?? todayIso())
-      : todayIso();
+    const scheduledDate = p.dateToken ? (resolveDateToken(p.dateToken) ?? todayIso()) : todayIso();
 
     try {
       await createTask.mutateAsync({

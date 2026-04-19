@@ -130,8 +130,7 @@ export const brandActionItemsRoutes: FastifyPluginAsyncZod = async (app) => {
       const body = req.body;
       const isReassignment =
         body.assigneeId !== undefined && body.assigneeId !== existing.assigneeId;
-      const isStatusChange =
-        body.status !== undefined && body.status !== existing.status;
+      const isStatusChange = body.status !== undefined && body.status !== existing.status;
 
       const updates: Record<string, unknown> = { ...body };
       if (isStatusChange && body.status === 'done') {

@@ -49,15 +49,11 @@ export function InvolvedUsersPickerModal({
   const allUsers: readonly UserSummary[] = usersQ.data ?? [];
 
   const filtered = useMemo(() => {
-    const base = excludeId
-      ? allUsers.filter((u) => u.id !== excludeId)
-      : [...allUsers];
+    const base = excludeId ? allUsers.filter((u) => u.id !== excludeId) : [...allUsers];
     if (!query.trim()) return base;
     const q = query.toLowerCase().trim();
     return base.filter(
-      (u) =>
-        u.displayName.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q),
+      (u) => u.displayName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q),
     );
   }, [allUsers, query, excludeId]);
 
@@ -142,9 +138,7 @@ export function InvolvedUsersPickerModal({
     >
       <div className="w-full max-w-sm rounded-xl border border-border bg-background shadow-2xl p-4 animate-scaleIn">
         <div className="mb-3">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            {title}
-          </div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{title}</div>
           <input
             data-involved-search="true"
             type="text"
@@ -157,9 +151,7 @@ export function InvolvedUsersPickerModal({
             }}
             className="mt-2 w-full bg-transparent text-sm px-0 py-1 border-b border-border/60 focus:outline-none focus:border-primary"
           />
-          <div className="mt-2 text-[10px] text-muted-foreground/70">
-            {selected.size} selected
-          </div>
+          <div className="mt-2 text-[10px] text-muted-foreground/70">{selected.size} selected</div>
         </div>
 
         {usersQ.isLoading ? (
@@ -179,7 +171,9 @@ export function InvolvedUsersPickerModal({
                   onClick={() => toggle(u.id)}
                   className={clsx(
                     'flex items-center justify-between gap-3 rounded-md px-2 py-1.5 text-sm cursor-pointer transition',
-                    cursor === i ? 'bg-card text-foreground' : 'text-muted-foreground hover:bg-card/60',
+                    cursor === i
+                      ? 'bg-card text-foreground'
+                      : 'text-muted-foreground hover:bg-card/60',
                   )}
                 >
                   <span className="flex items-center gap-2 min-w-0">
@@ -218,9 +212,7 @@ function Checkbox({ checked }: { checked: boolean }) {
       aria-hidden="true"
       className={clsx(
         'inline-flex items-center justify-center w-3.5 h-3.5 rounded border',
-        checked
-          ? 'bg-primary border-primary text-white'
-          : 'border-border',
+        checked ? 'bg-primary border-primary text-white' : 'border-border',
       )}
     >
       {checked && <span className="text-[8px] leading-none">✓</span>}

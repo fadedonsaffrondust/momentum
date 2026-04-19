@@ -51,9 +51,7 @@ describe('AssigneePickerModal', () => {
   });
 
   it('renders all active users with their names', () => {
-    render(
-      <AssigneePickerModal open onClose={() => {}} onSelect={() => {}} />,
-    );
+    render(<AssigneePickerModal open onClose={() => {}} onSelect={() => {}} />);
     expect(screen.getByText('Nader Samadyan')).toBeInTheDocument();
     expect(screen.getByText('Sara Pourmir')).toBeInTheDocument();
     expect(screen.getByText('Ryan Ghaffari')).toBeInTheDocument();
@@ -61,25 +59,19 @@ describe('AssigneePickerModal', () => {
 
   it('shows loading state while users load', () => {
     mockUseUsers.mockReturnValue({ data: undefined, isLoading: true });
-    render(
-      <AssigneePickerModal open onClose={() => {}} onSelect={() => {}} />,
-    );
+    render(<AssigneePickerModal open onClose={() => {}} onSelect={() => {}} />);
     expect(screen.getByText('Loading team…')).toBeInTheDocument();
   });
 
   it('shows empty state when no users exist', () => {
     mockUseUsers.mockReturnValue({ data: [], isLoading: false });
-    render(
-      <AssigneePickerModal open onClose={() => {}} onSelect={() => {}} />,
-    );
+    render(<AssigneePickerModal open onClose={() => {}} onSelect={() => {}} />);
     expect(screen.getByText('No active team members.')).toBeInTheDocument();
   });
 
   it('filters users via the search input', async () => {
     const user = userEvent.setup();
-    render(
-      <AssigneePickerModal open onClose={() => {}} onSelect={() => {}} />,
-    );
+    render(<AssigneePickerModal open onClose={() => {}} onSelect={() => {}} />);
     const input = screen.getByPlaceholderText('Search team…');
     await user.type(input, 'sara');
     expect(screen.getByText('Sara Pourmir')).toBeInTheDocument();
@@ -89,9 +81,7 @@ describe('AssigneePickerModal', () => {
 
   it('filters by email as well as displayName', async () => {
     const user = userEvent.setup();
-    render(
-      <AssigneePickerModal open onClose={() => {}} onSelect={() => {}} />,
-    );
+    render(<AssigneePickerModal open onClose={() => {}} onSelect={() => {}} />);
     const input = screen.getByPlaceholderText('Search team…');
     await user.type(input, 'ryan@omnirev');
     expect(screen.getByText('Ryan Ghaffari')).toBeInTheDocument();
@@ -131,27 +121,13 @@ describe('AssigneePickerModal', () => {
   });
 
   it('renders "No assignee" option when allowClear is true', () => {
-    render(
-      <AssigneePickerModal
-        open
-        onSelect={() => {}}
-        onClose={() => {}}
-        allowClear
-      />,
-    );
+    render(<AssigneePickerModal open onSelect={() => {}} onClose={() => {}} allowClear />);
     expect(screen.getByText('No assignee')).toBeInTheDocument();
   });
 
   it('clicking the clear option passes null', () => {
     const onSelect = vi.fn();
-    render(
-      <AssigneePickerModal
-        open
-        onSelect={onSelect}
-        onClose={() => {}}
-        allowClear
-      />,
-    );
+    render(<AssigneePickerModal open onSelect={onSelect} onClose={() => {}} allowClear />);
     fireEvent.click(screen.getByText('No assignee'));
     expect(onSelect).toHaveBeenCalledWith(null);
   });

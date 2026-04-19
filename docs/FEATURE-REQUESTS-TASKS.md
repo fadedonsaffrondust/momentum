@@ -5,6 +5,7 @@ Each task is one session. Complete in order (dependencies listed). Mark `[x]` wh
 ---
 
 ## Task 1: Database Schema + Shared Types
+
 **Dependencies:** None
 
 - [x] Add `featureRequestSyncStatusEnum` pgEnum (`synced`, `pending`, `error`) to `packages/db/src/schema.ts`
@@ -20,6 +21,7 @@ Each task is one session. Complete in order (dependencies listed). Mark `[x]` wh
 ---
 
 ## Task 2: API CRUD Routes + Mapper
+
 **Dependencies:** Task 1
 
 - [x] Add `mapBrandFeatureRequest()` to `apps/api/src/mappers.ts`
@@ -36,6 +38,7 @@ Each task is one session. Complete in order (dependencies listed). Mark `[x]` wh
 ---
 
 ## Task 3: Google Sheets Service Client
+
 **Dependencies:** None (can parallel with Task 2)
 
 - [x] Add `googleapis` dependency to `apps/api/package.json`
@@ -55,6 +58,7 @@ Each task is one session. Complete in order (dependencies listed). Mark `[x]` wh
 ---
 
 ## Task 4: Sync API Routes (Connect, Pull, Push, Disconnect)
+
 **Dependencies:** Tasks 1, 2, 3
 
 - [x] Add sync-related Zod schemas to `packages/shared/src/schemas.ts`: `connectSheetInputSchema`, `connectSheetResponseSchema`, `sheetSyncPullResponseSchema`, `sheetSyncPushResponseSchema`
@@ -70,6 +74,7 @@ Each task is one session. Complete in order (dependencies listed). Mark `[x]` wh
 ---
 
 ## Task 5: Frontend API Hooks
+
 **Dependencies:** Tasks 2, 4
 
 - [x] Add to `apps/web/src/api/hooks.ts`:
@@ -86,6 +91,7 @@ Each task is one session. Complete in order (dependencies listed). Mark `[x]` wh
 ---
 
 ## Task 6: Feature Requests Tab UI — Table + Tab Bar
+
 **Dependencies:** Task 5
 
 - [x] Extend `BrandTab` type in `BrandTabBar.tsx` to include `'feature-requests'`
@@ -103,6 +109,7 @@ Each task is one session. Complete in order (dependencies listed). Mark `[x]` wh
 ---
 
 ## Task 7: Inline Editing + Create/Delete
+
 **Dependencies:** Task 6
 
 - [x] Create `apps/web/src/components/brands/FeatureRequestRow.tsx`:
@@ -122,6 +129,7 @@ Each task is one session. Complete in order (dependencies listed). Mark `[x]` wh
 ---
 
 ## Task 8: Sheet Connection Modal + Sync UI
+
 **Dependencies:** Tasks 6, 7
 
 - [x] Create `apps/web/src/components/brands/ConnectSheetModal.tsx`:
@@ -143,6 +151,7 @@ Each task is one session. Complete in order (dependencies listed). Mark `[x]` wh
 ---
 
 ## Task 9: Convert Feature Request to Action Item
+
 **Dependencies:** Tasks 2, 7
 
 - [x] Add `POST /brands/:brandId/feature-requests/:id/convert-to-action` endpoint in `brand-feature-requests.ts`:
@@ -159,6 +168,7 @@ Each task is one session. Complete in order (dependencies listed). Mark `[x]` wh
 ---
 
 ## Task 10: Pulse Stats + Keyboard Shortcuts
+
 **Dependencies:** Tasks 6, 7, 8
 
 - [x] Add feature request summary card in `OverviewTab.tsx` health section (3-column grid):
@@ -177,6 +187,7 @@ Each task is one session. Complete in order (dependencies listed). Mark `[x]` wh
 ---
 
 ## Task 11: Export/Import + Tests + Release Notes + Docs
+
 **Dependencies:** All previous tasks
 
 - [x] Update `exportFileSchema` version enum to include `'1.3'` in shared schemas

@@ -83,12 +83,7 @@ describe('InvolvedUsersPickerModal', () => {
 
   it('clicking a user toggles selection and updates the counter', () => {
     render(
-      <InvolvedUsersPickerModal
-        open
-        onClose={() => {}}
-        onConfirm={() => {}}
-        initialIds={[]}
-      />,
+      <InvolvedUsersPickerModal open onClose={() => {}} onConfirm={() => {}} initialIds={[]} />,
     );
     expect(screen.getByText('0 selected')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Sara Pourmir'));
@@ -102,12 +97,7 @@ describe('InvolvedUsersPickerModal', () => {
 
   it('pressing 1 toggles the first user', () => {
     render(
-      <InvolvedUsersPickerModal
-        open
-        onClose={() => {}}
-        onConfirm={() => {}}
-        initialIds={[]}
-      />,
+      <InvolvedUsersPickerModal open onClose={() => {}} onConfirm={() => {}} initialIds={[]} />,
     );
     fireEvent.keyDown(window, { key: '1' });
     expect(screen.getByText('1 selected')).toBeInTheDocument();
@@ -137,12 +127,7 @@ describe('InvolvedUsersPickerModal', () => {
     const onConfirm = vi.fn();
     const onClose = vi.fn();
     render(
-      <InvolvedUsersPickerModal
-        open
-        onClose={onClose}
-        onConfirm={onConfirm}
-        initialIds={[]}
-      />,
+      <InvolvedUsersPickerModal open onClose={onClose} onConfirm={onConfirm} initialIds={[]} />,
     );
     fireEvent.keyDown(window, { key: '1' });
     fireEvent.keyDown(window, { key: 'Escape' });
@@ -153,12 +138,7 @@ describe('InvolvedUsersPickerModal', () => {
   it('confirms an empty array when nothing is selected', () => {
     const onConfirm = vi.fn();
     render(
-      <InvolvedUsersPickerModal
-        open
-        onClose={() => {}}
-        onConfirm={onConfirm}
-        initialIds={[]}
-      />,
+      <InvolvedUsersPickerModal open onClose={() => {}} onConfirm={onConfirm} initialIds={[]} />,
     );
     fireEvent.keyDown(window, { key: 'Enter' });
     expect(onConfirm).toHaveBeenCalledWith([]);

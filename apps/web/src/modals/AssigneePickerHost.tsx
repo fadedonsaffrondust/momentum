@@ -1,9 +1,5 @@
 import { useUiStore } from '../store/ui';
-import {
-  useSendActionItemToToday,
-  useUpdateBrandActionItem,
-  useUpdateTask,
-} from '../api/hooks';
+import { useSendActionItemToToday, useUpdateBrandActionItem, useUpdateTask } from '../api/hooks';
 import { AssigneePickerModal } from './AssigneePickerModal';
 
 /**
@@ -108,9 +104,7 @@ export function AssigneePickerHost() {
       onSelect={handleSelect}
       title={title}
       allowClear={target.kind === 'action-item'}
-      {...(currentAssigneeId !== undefined
-        ? { currentAssigneeId }
-        : {})}
+      {...(currentAssigneeId !== undefined ? { currentAssigneeId } : {})}
     />
   );
 }

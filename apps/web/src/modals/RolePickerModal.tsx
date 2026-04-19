@@ -2,13 +2,7 @@ import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { useLocation } from 'react-router-dom';
 import { useUiStore } from '../store/ui';
-import {
-  useParkings,
-  useRoles,
-  useTasks,
-  useUpdateParking,
-  useUpdateTask,
-} from '../api/hooks';
+import { useParkings, useRoles, useTasks, useUpdateParking, useUpdateTask } from '../api/hooks';
 import { todayIso } from '../lib/date';
 
 export function RolePickerModal() {
@@ -179,13 +173,7 @@ export function RolePickerModal() {
   );
 }
 
-function Overlay({
-  children,
-  onClose,
-}: {
-  children: React.ReactNode;
-  onClose: () => void;
-}) {
+function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div
       className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"

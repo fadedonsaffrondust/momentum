@@ -2,4 +2,12 @@ node_modules
 dist
 build
 .turbo
+coverage
 pnpm-lock.yaml
+
+# Drizzle auto-generated artifacts
+packages/db/drizzle/meta
+packages/db/drizzle/*.sql
+
+# Plan / scratch
+.claude

@@ -39,11 +39,7 @@ export function useGlobalShortcuts(): void {
       const el = document.activeElement;
       if (!el) return false;
       const tag = el.tagName;
-      return (
-        tag === 'INPUT' ||
-        tag === 'TEXTAREA' ||
-        (el as HTMLElement).isContentEditable
-      );
+      return tag === 'INPUT' || tag === 'TEXTAREA' || (el as HTMLElement).isContentEditable;
     };
 
     /**
@@ -65,9 +61,7 @@ export function useGlobalShortcuts(): void {
       // typing into another input (matches Slack/Linear behavior).
       if (e.key === '/' && !mod && !activeModal) {
         if (!typing) {
-          const target = document.querySelector<HTMLInputElement>(
-            '[data-task-input="true"]',
-          );
+          const target = document.querySelector<HTMLInputElement>('[data-task-input="true"]');
           if (target) {
             consume(e);
             target.focus();
@@ -154,9 +148,7 @@ export function useGlobalShortcuts(): void {
       //    page-level bubble-phase handlers that bind directly to `n`
       //    continue to work.
       if (e.key === 'n' && !e.shiftKey) {
-        const target = document.querySelector<HTMLInputElement>(
-          '[data-task-input="true"]',
-        );
+        const target = document.querySelector<HTMLInputElement>('[data-task-input="true"]');
         if (target) {
           consume(e);
           target.focus();
@@ -271,13 +263,5 @@ export function useGlobalShortcuts(): void {
       window.removeEventListener('keydown', handler, { capture: true });
       clearGPending();
     };
-  }, [
-    activeModal,
-    openModal,
-    closeModal,
-    setRoleFilter,
-    navigate,
-    location.pathname,
-    rolesQ.data,
-  ]);
+  }, [activeModal, openModal, closeModal, setRoleFilter, navigate, location.pathname, rolesQ.data]);
 }

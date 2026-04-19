@@ -17,6 +17,7 @@ Add a tl;dv integration to Momentum's Brands section. This allows users to pull 
 ### Endpoints We Use
 
 **1. List Meetings**
+
 ```
 GET /meetings
 Query params:
@@ -31,12 +32,14 @@ Response: { page, pages, total, pageSize, results: Meeting[] }
 ```
 
 **2. Get Meeting**
+
 ```
 GET /meetings/{meetingId}
 Response: Meeting
 ```
 
 **3. Get Transcript**
+
 ```
 GET /meetings/{meetingId}/transcript
 Response: { id, meetingId, data: Sentence[] }
@@ -44,6 +47,7 @@ Response: { id, meetingId, data: Sentence[] }
 ```
 
 **4. Get Highlights**
+
 ```
 GET /meetings/{meetingId}/highlights
 Response: { meetingId, data: Highlight[] }
@@ -51,6 +55,7 @@ Response: { meetingId, data: Highlight[] }
 ```
 
 **Meeting shape:**
+
 ```typescript
 {
   id: string,
@@ -115,6 +120,7 @@ When the user triggers a sync (manual, not automatic), Momentum:
 This is the critical UX step. The user sees a **Sync Review Modal** showing all candidates:
 
 **Layout:**
+
 - Header: "Sync tl;dv meetings for [Brand Name]"
 - Subheader: "Found X meetings since [last sync date]"
 - Two sections:
@@ -122,6 +128,7 @@ This is the critical UX step. The user sees a **Sync Review Modal** showing all 
   - **"Possible matches" (amber)** — unchecked, user can review and check
 
 **Each candidate row shows:**
+
 - Checkbox (checked/unchecked based on confidence)
 - Meeting name
 - Date
@@ -130,12 +137,14 @@ This is the critical UX step. The user sees a **Sync Review Modal** showing all 
 - Confidence pill (green/amber)
 
 **Actions:**
+
 - "Sync Selected" — imports the checked meetings
 - "Skip All" — closes without syncing
 - Individual rows can be checked/unchecked
 
 **After confirming:**
 For each selected meeting, Momentum:
+
 1. Fetches the transcript via `GET /meetings/{id}/transcript`
 2. Fetches the highlights via `GET /meetings/{id}/highlights`
 3. Sends transcript + highlights to OpenAI to extract:
@@ -263,6 +272,7 @@ In the command palette (Cmd/Ctrl + K → "Settings" or "Connect Meeting Recorder
 ## Data Model Additions
 
 ### Brand — New Fields
+
 ```javascript
 {
   // ...existing brand fields...
@@ -282,6 +292,7 @@ In the command palette (Cmd/Ctrl + K → "Settings" or "Connect Meeting Recorder
 ```
 
 ### Meeting Note — New Fields
+
 ```javascript
 {
   // ...existing meeting note fields...
@@ -298,6 +309,7 @@ In the command palette (Cmd/Ctrl + K → "Settings" or "Connect Meeting Recorder
 ```
 
 ### Settings — New Fields
+
 ```javascript
 {
   // ...existing settings...
@@ -330,13 +342,13 @@ In the command palette (Cmd/Ctrl + K → "Settings" or "Connect Meeting Recorder
    b. `GET /meetings/{id}/highlights` → get highlights
    c. Send transcript + highlights + brand context to OpenAI → get structured extraction
    d. **Merge-or-Create Meeting Note:**
-      - Check if a Meeting Note already exists for this brand on the same date (`meeting.happenedAt` date matches an existing note's `date`)
-      - **If a note exists for that day:** MERGE into it — append the new content below the existing `rawNotes` with a separator line (`---`) and a subheading showing the synced meeting's title (e.g., `### One on One with Danna (from recording)`). Merge action items and decisions into the existing note's lists (deduplicate by text similarity). Add the recording URL to the existing note. Update the summary by combining both. Add the new attendees to the existing attendee list (deduplicate by name).
-      - **If no note exists for that day:** CREATE a new Meeting Note as normal.
-      - This is critical because the user often takes manual notes before or during a call, then syncs the recording afterward. The result should be one unified note per day, not duplicates.
-   e. Create Action Items from extraction
-   f. Add synced meeting ID to brand's `syncedMeetingIds`
-   g. Update progress indicator: "Processing 2 of 5..."
+   - Check if a Meeting Note already exists for this brand on the same date (`meeting.happenedAt` date matches an existing note's `date`)
+   - **If a note exists for that day:** MERGE into it — append the new content below the existing `rawNotes` with a separator line (`---`) and a subheading showing the synced meeting's title (e.g., `### One on One with Danna (from recording)`). Merge action items and decisions into the existing note's lists (deduplicate by text similarity). Add the recording URL to the existing note. Update the summary by combining both. Add the new attendees to the existing attendee list (deduplicate by name).
+   - **If no note exists for that day:** CREATE a new Meeting Note as normal.
+   - This is critical because the user often takes manual notes before or during a call, then syncs the recording afterward. The result should be one unified note per day, not duplicates.
+     e. Create Action Items from extraction
+     f. Add synced meeting ID to brand's `syncedMeetingIds`
+     g. Update progress indicator: "Processing 2 of 5..."
 9. Update `lastSyncedAt` and `lastSyncedMeetingDate` on the brand
 10. Close modal → show toast → refresh brand detail view
 
@@ -345,44 +357,53 @@ In the command palette (Cmd/Ctrl + K → "Settings" or "Connect Meeting Recorder
 ## Edge Cases and Error Handling
 
 **API key invalid or expired:**
+
 - The health check catches this on configuration
 - If a sync call returns 401: show "Your meeting recorder API key is invalid or expired. Update it in Settings."
 - Do NOT retry on 401
 
 **Transcript not yet available:**
+
 - tl;dv returns empty transcript if processing isn't done
 - If transcript data array is empty: create the Meeting Note anyway with summary = "Transcript still processing — re-sync later to extract content" and flag it with a "pending" badge
 - Show a toast: "1 meeting is still processing. Re-sync later to get the transcript."
 
 **Rate limiting (429):**
+
 - Use exponential backoff: 1s, 2s, 4s, max 3 retries
 - If still rate limited after retries: pause sync, show message: "Rate limit reached. X of Y meetings synced. Try again in a few minutes for the rest."
 - Save partial progress — don't rollback successfully synced meetings
 
 **OpenAI API error during extraction:**
+
 - If OpenAI fails: still create the Meeting Note with the raw transcript and highlights text, but skip structured extraction
 - Mark the meeting note with a "needs processing" flag
 - Allow manual re-processing later (button: "Re-extract with AI")
 
 **No matching meetings found:**
+
 - Show a friendly empty state in the Sync Review Modal: "No new meetings found matching your rules for [Brand Name]."
 - Suggest: "Try adjusting your matching rules or sync window."
 
 **Duplicate prevention:**
+
 - Check `syncedMeetingIds` array on the brand before showing candidates
 - Meetings already synced get score = -1000 and are hidden
 - This works even if the same meeting would match multiple brands (each brand has its own synced IDs list)
 
 **Very long transcripts (>80k characters):**
+
 - Truncate for OpenAI: keep first 30 min + last 15 min of content (based on startTime)
 - Store the full transcript in `tldvTranscriptRaw` regardless
 - Note in the extraction prompt that the transcript was truncated
 
 **Multiple recordings on the same day with an existing note:**
+
 - If there are already manual notes for April 15 AND two recordings from April 15 are approved in the same sync, merge them sequentially: first recording merges into the existing note, second recording merges into the now-updated note. Each gets its own `---` separator and subheading. The note accumulates all recordings.
 - The `recordingUrl` field becomes an array if multiple recordings exist for one note: `recordingUrls: [{ title, url }]`. The UI shows multiple "▶ Recording" links, each labeled with the meeting title to disambiguate (e.g., "▶ Weekly with Danna", "▶ Onboarding Follow-up").
 
 **Brand has no stakeholder emails:**
+
 - Stakeholder email matching won't work — warn the user: "Add email addresses to your stakeholders for better matching accuracy"
 - Fall back to title keyword matching only
 
@@ -390,13 +411,13 @@ In the command palette (Cmd/Ctrl + K → "Settings" or "Connect Meeting Recorder
 
 ## Keyboard Shortcuts
 
-| Key | Context | Action |
-|-----|---------|--------|
-| `s` | Brand detail view | Open Sync Review Modal |
-| `Enter` | Sync Review Modal, meeting selected | Toggle checkbox |
-| `Cmd/Ctrl + Enter` | Sync Review Modal | Confirm and sync selected |
-| `Escape` | Sync Review Modal | Close without syncing |
-| `j/k` | Sync Review Modal | Navigate between meeting candidates |
+| Key                | Context                             | Action                              |
+| ------------------ | ----------------------------------- | ----------------------------------- |
+| `s`                | Brand detail view                   | Open Sync Review Modal              |
+| `Enter`            | Sync Review Modal, meeting selected | Toggle checkbox                     |
+| `Cmd/Ctrl + Enter` | Sync Review Modal                   | Confirm and sync selected           |
+| `Escape`           | Sync Review Modal                   | Close without syncing               |
+| `j/k`              | Sync Review Modal                   | Navigate between meeting candidates |
 
 ---
 

@@ -15,18 +15,30 @@
     "db:migrate": "pnpm --filter @momentum/db migrate",
     "db:migrate:team-space-backfill": "pnpm --filter @momentum/db migrate:team-space-backfill",
     "db:studio": "pnpm --filter @momentum/db studio",
-    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
+    "prepare": "lefthook install || true"
   },
   "devDependencies": {
+    "@eslint/js": "^9.16.0",
     "@types/node": "^22.9.0",
+    "eslint": "^9.16.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "lefthook": "^1.8.4",
     "prettier": "^3.3.3",
     "turbo": "^2.3.0",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.18.0"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20",
+    "pnpm": ">=10.33.0"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "bcrypt"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "bcrypt",
+      "lefthook"
+    ]
   }
 }

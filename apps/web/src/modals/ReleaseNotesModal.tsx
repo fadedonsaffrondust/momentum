@@ -56,14 +56,16 @@ export function ReleaseNotesModal() {
         <div
           aria-hidden
           className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full blur-3xl opacity-20"
-          style={{ background: 'radial-gradient(circle, var(--glow-secondary) 0%, transparent 70%)' }}
+          style={{
+            background: 'radial-gradient(circle, var(--glow-secondary) 0%, transparent 70%)',
+          }}
         />
 
         <header className="relative flex items-start justify-between px-6 pt-6 pb-5 border-b border-border/60">
           <div>
             <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full border border-primary/40 text-[10px] uppercase tracking-widest text-primary mb-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              v{note.version} · {note.date}
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />v{note.version}{' '}
+              · {note.date}
             </div>
             <h2 className="text-xl font-semibold text-foreground">{note.headline}</h2>
             <p className="text-xs text-muted-foreground mt-1 max-w-lg">{note.summary}</p>
@@ -95,7 +97,9 @@ export function ReleaseNotesModal() {
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{item.description}</p>
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                  {item.description}
+                </p>
                 {item.howTo && (
                   <div className="mt-3 pt-3 border-t border-border/60 flex items-start gap-2">
                     <span className="text-[10px] uppercase tracking-widest text-primary font-semibold shrink-0">
@@ -127,13 +131,7 @@ export function ReleaseNotesModal() {
   );
 }
 
-function Overlay({
-  children,
-  onClose,
-}: {
-  children: React.ReactNode;
-  onClose: () => void;
-}) {
+function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div
       className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn"

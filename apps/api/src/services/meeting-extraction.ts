@@ -68,9 +68,7 @@ function formatTranscript(sentences: TldvSentence[]): string {
 function formatHighlights(highlights: TldvHighlight[]): string {
   if (highlights.length === 0) return '(No highlights available)';
 
-  return highlights
-    .map((h) => `[${h.topic.title}] ${h.text}`)
-    .join('\n');
+  return highlights.map((h) => `[${h.topic.title}] ${h.text}`).join('\n');
 }
 
 export function buildExtractionPrompt(
@@ -288,7 +286,12 @@ export async function deduplicateActionItems(
 
     if (entry.action === 'skip' && entry.existingId && existingIdSet.has(entry.existingId)) {
       toSkip.push(extracted.text);
-    } else if (entry.action === 'update' && entry.existingId && existingIdSet.has(entry.existingId) && entry.mergedText) {
+    } else if (
+      entry.action === 'update' &&
+      entry.existingId &&
+      existingIdSet.has(entry.existingId) &&
+      entry.mergedText
+    ) {
       toUpdate.push({
         existingId: entry.existingId,
         text: entry.mergedText,

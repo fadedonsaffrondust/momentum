@@ -99,9 +99,7 @@ export function TaskCard({
       // Animate layout (position changes when siblings enter/leave the
       // column) unless this card IS the drag overlay clone, where Framer
       // would fight dnd-kit over the transform.
-      {...(isOverlay
-        ? {}
-        : { layout: true, transition: { duration: 0.15, ease: 'easeOut' } })}
+      {...(isOverlay ? {} : { layout: true, transition: { duration: 0.15, ease: 'easeOut' } })}
       style={{ borderLeftColor: priorityColor[task.priority] }}
       className={clsx(
         'group rounded-lg border-l-4 border border-border bg-card/60 p-3 cursor-pointer',
@@ -127,9 +125,7 @@ export function TaskCard({
         >
           {task.title}
         </div>
-        {assignee && (
-          <Avatar user={assignee} size="xs" className="mt-0.5 shrink-0" />
-        )}
+        {assignee && <Avatar user={assignee} size="xs" className="mt-0.5 shrink-0" />}
       </div>
 
       <div className="mt-2 flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
@@ -155,9 +151,7 @@ export function TaskCard({
           <span className="text-muted-foreground">{formatMinutes(task.estimateMinutes)}</span>
         )}
         {task.status === 'done' && task.actualMinutes != null && (
-          <span className="text-emerald-500">
-            actual {formatMinutes(task.actualMinutes)}
-          </span>
+          <span className="text-emerald-500">actual {formatMinutes(task.actualMinutes)}</span>
         )}
         <span className="ml-auto text-muted-foreground/70">{formatTimeAgo(task.createdAt)}</span>
       </div>

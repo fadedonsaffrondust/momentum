@@ -16,9 +16,7 @@ const LABELS: Record<Filter, string> = {
  * choice in the UI store so switching views feels stable. Spec §9.3 /
  * §9.4 default is "Mine".
  */
-export function TaskAssigneeFilter({
-  options = ['mine', 'everyone'] as const,
-}: Props) {
+export function TaskAssigneeFilter({ options = ['mine', 'everyone'] as const }: Props) {
   const current = useUiStore((s) => s.taskAssigneeFilter);
   const set = useUiStore((s) => s.setTaskAssigneeFilter);
 
@@ -40,9 +38,7 @@ export function TaskAssigneeFilter({
             onClick={() => set(opt)}
             className={clsx(
               'px-2.5 py-1 rounded-md transition font-medium',
-              active
-                ? 'bg-primary/20 text-primary'
-                : 'text-muted-foreground hover:text-foreground',
+              active ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground',
             )}
           >
             {LABELS[opt]}

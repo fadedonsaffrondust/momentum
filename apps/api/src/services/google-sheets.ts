@@ -36,7 +36,10 @@ export function analyzeColumns(headerRow: string[]): ColumnMapping | null {
   const mapping: Partial<ColumnMapping> = {};
   const used = new Set<number>();
 
-  for (const [field, pattern] of Object.entries(COLUMN_PATTERNS) as [keyof ColumnMapping, RegExp][]) {
+  for (const [field, pattern] of Object.entries(COLUMN_PATTERNS) as [
+    keyof ColumnMapping,
+    RegExp,
+  ][]) {
     for (let i = 0; i < headerRow.length; i++) {
       if (used.has(i)) continue;
       if (pattern.test(headerRow[i]!.trim())) {
@@ -85,7 +88,9 @@ export function normalizeDate(raw: string, defaultYear?: number): string {
   // Handle M/D or M/D/YYYY (e.g. "4/1", "3/27/2026")
   const slashMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?$/);
   if (slashMatch) {
-    const year = slashMatch[3] ? parseInt(slashMatch[3]) : (defaultYear ?? new Date().getFullYear());
+    const year = slashMatch[3]
+      ? parseInt(slashMatch[3])
+      : (defaultYear ?? new Date().getFullYear());
     const m = String(parseInt(slashMatch[1]!)).padStart(2, '0');
     const day = String(parseInt(slashMatch[2]!)).padStart(2, '0');
     return `${year}/${m}/${day}`;
@@ -188,19 +193,21 @@ export class GoogleSheetsClient {
     await this.sheets.spreadsheets.batchUpdate({
       spreadsheetId,
       requestBody: {
-        requests: [{
-          updateCells: {
-            range: {
-              sheetId: gidNum,
-              startRowIndex: rowIndex,
-              endRowIndex: rowIndex + 1,
-              startColumnIndex: 0,
-              endColumnIndex: values.length,
+        requests: [
+          {
+            updateCells: {
+              range: {
+                sheetId: gidNum,
+                startRowIndex: rowIndex,
+                endRowIndex: rowIndex + 1,
+                startColumnIndex: 0,
+                endColumnIndex: values.length,
+              },
+              rows: [{ values: cells }],
+              fields: 'userEnteredValue,userEnteredFormat.numberFormat',
             },
-            rows: [{ values: cells }],
-            fields: 'userEnteredValue,userEnteredFormat.numberFormat',
           },
-        }],
+        ],
       },
     });
   }
@@ -243,19 +250,21 @@ export class GoogleSheetsClient {
     await this.sheets.spreadsheets.batchUpdate({
       spreadsheetId,
       requestBody: {
-        requests: [{
-          updateCells: {
-            range: {
-              sheetId: gidNum,
-              startRowIndex: minRow,
-              endRowIndex: maxRow + 1,
-              startColumnIndex: 0,
-              endColumnIndex: maxCols,
+        requests: [
+          {
+            updateCells: {
+              range: {
+                sheetId: gidNum,
+                startRowIndex: minRow,
+                endRowIndex: maxRow + 1,
+                startColumnIndex: 0,
+                endColumnIndex: maxCols,
+              },
+              rows: grid,
+              fields: 'userEnteredValue,userEnteredFormat.numberFormat',
             },
-            rows: grid,
-            fields: 'userEnteredValue,userEnteredFormat.numberFormat',
           },
-        }],
+        ],
       },
     });
   }
@@ -303,11 +312,7 @@ export class GoogleSheetsClient {
     });
   }
 
-  async rewriteHeaders(
-    spreadsheetId: string,
-    gid: string,
-    headers: string[],
-  ): Promise<void> {
+  async rewriteHeaders(spreadsheetId: string, gid: string, headers: string[]): Promise<void> {
     const sheetName = await this.getSheetName(spreadsheetId, gid);
     await this.sheets.spreadsheets.values.update({
       spreadsheetId,
@@ -317,16 +322,44 @@ export class GoogleSheetsClient {
     });
   }
 
-  async standardizeSheetFormatting(spreadsheetId: string, gid: string, dataRowCount: number): Promise<void> {
+  async standardizeSheetFormatting(
+    spreadsheetId: string,
+    gid: string,
+    dataRowCount: number,
+  ): Promise<void> {
     const gidNum = parseInt(gid, 10);
     await this.sheets.spreadsheets.batchUpdate({
       spreadsheetId,
       requestBody: {
         requests: [
-          { updateDimensionProperties: { range: { sheetId: gidNum, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 }, properties: { pixelSize: 100 }, fields: 'pixelSize' } },
-          { updateDimensionProperties: { range: { sheetId: gidNum, dimension: 'COLUMNS', startIndex: 1, endIndex: 2 }, properties: { pixelSize: 400 }, fields: 'pixelSize' } },
-          { updateDimensionProperties: { range: { sheetId: gidNum, dimension: 'COLUMNS', startIndex: 2, endIndex: 3 }, properties: { pixelSize: 400 }, fields: 'pixelSize' } },
-          { updateDimensionProperties: { range: { sheetId: gidNum, dimension: 'COLUMNS', startIndex: 3, endIndex: 4 }, properties: { pixelSize: 80 }, fields: 'pixelSize' } },
+          {
+            updateDimensionProperties: {
+              range: { sheetId: gidNum, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 },
+              properties: { pixelSize: 100 },
+              fields: 'pixelSize',
+            },
+          },
+          {
+            updateDimensionProperties: {
+              range: { sheetId: gidNum, dimension: 'COLUMNS', startIndex: 1, endIndex: 2 },
+              properties: { pixelSize: 400 },
+              fields: 'pixelSize',
+            },
+          },
+          {
+            updateDimensionProperties: {
+              range: { sheetId: gidNum, dimension: 'COLUMNS', startIndex: 2, endIndex: 3 },
+              properties: { pixelSize: 400 },
+              fields: 'pixelSize',
+            },
+          },
+          {
+            updateDimensionProperties: {
+              range: { sheetId: gidNum, dimension: 'COLUMNS', startIndex: 3, endIndex: 4 },
+              properties: { pixelSize: 80 },
+              fields: 'pixelSize',
+            },
+          },
           {
             repeatCell: {
               range: { sheetId: gidNum, startColumnIndex: 1, endColumnIndex: 3 },
@@ -342,12 +375,20 @@ export class GoogleSheetsClient {
       await this.sheets.spreadsheets.batchUpdate({
         spreadsheetId,
         requestBody: {
-          requests: [{
-            setDataValidation: {
-              range: { sheetId: gidNum, startRowIndex: 1, endRowIndex: dataRowCount + 1, startColumnIndex: 3, endColumnIndex: 4 },
-              rule: { condition: { type: 'BOOLEAN' }, strict: false, showCustomUi: true },
+          requests: [
+            {
+              setDataValidation: {
+                range: {
+                  sheetId: gidNum,
+                  startRowIndex: 1,
+                  endRowIndex: dataRowCount + 1,
+                  startColumnIndex: 3,
+                  endColumnIndex: 4,
+                },
+                rule: { condition: { type: 'BOOLEAN' }, strict: false, showCustomUi: true },
+              },
             },
-          }],
+          ],
         },
       });
     } catch {

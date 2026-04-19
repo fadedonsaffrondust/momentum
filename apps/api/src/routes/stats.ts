@@ -101,41 +101,37 @@ function computeWeeklyStats(
 export const statsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.addHook('preHandler', app.authenticate);
 
-  app.get(
-    '/stats/weekly',
-    { schema: { response: { 200: weeklyStatsSchema } } },
-    async (req) => {
-      const today = new Date();
-      const sevenDaysAgo = new Date(today);
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-      const sevenDaysAgoIso = toLocalIsoDate(sevenDaysAgo);
+  app.get('/stats/weekly', { schema: { response: { 200: weeklyStatsSchema } } }, async (req) => {
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    const sevenDaysAgoIso = toLocalIsoDate(sevenDaysAgo);
 
-      const logs = (await db
-        .select()
-        .from(dailyLogs)
-        .where(
-          and(eq(dailyLogs.userId, req.userId), gte(dailyLogs.date, sevenDaysAgoIso)),
-        )) as WeeklyLogRow[];
+    const logs = (await db
+      .select()
+      .from(dailyLogs)
+      .where(
+        and(eq(dailyLogs.userId, req.userId), gte(dailyLogs.date, sevenDaysAgoIso)),
+      )) as WeeklyLogRow[];
 
-      const roleCounts = (await db
-        .select({
-          roleId: tasks.roleId,
-          cnt: sql<number>`count(*)::int`,
-        })
-        .from(tasks)
-        .where(
-          and(
-            eq(tasks.assigneeId, req.userId),
-            eq(tasks.status, 'done'),
-            gte(tasks.scheduledDate, sevenDaysAgoIso),
-          ),
-        )
-        .groupBy(tasks.roleId)) as RoleCountRow[];
+    const roleCounts = (await db
+      .select({
+        roleId: tasks.roleId,
+        cnt: sql<number>`count(*)::int`,
+      })
+      .from(tasks)
+      .where(
+        and(
+          eq(tasks.assigneeId, req.userId),
+          eq(tasks.status, 'done'),
+          gte(tasks.scheduledDate, sevenDaysAgoIso),
+        ),
+      )
+      .groupBy(tasks.roleId)) as RoleCountRow[];
 
-      const stats = computeWeeklyStats(logs, roleCounts, sevenDaysAgo);
-      return stats;
-    },
-  );
+    const stats = computeWeeklyStats(logs, roleCounts, sevenDaysAgo);
+    return stats;
+  });
 
   /**
    * Per-user team-weekly summary. One row per active user. Deactivated
@@ -150,10 +146,7 @@ export const statsRoutes: FastifyPluginAsyncZod = async (app) => {
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
       const sevenDaysAgoIso = toLocalIsoDate(sevenDaysAgo);
 
-      const activeUsers = await db
-        .select()
-        .from(users)
-        .where(isNull(users.deactivatedAt));
+      const activeUsers = await db.select().from(users).where(isNull(users.deactivatedAt));
 
       if (activeUsers.length === 0) return { users: [] };
 
@@ -254,12 +247,7 @@ export const statsRoutes: FastifyPluginAsyncZod = async (app) => {
       const todayTasks = await db
         .select({ status: tasks.status })
         .from(tasks)
-        .where(
-          and(
-            inArray(tasks.assigneeId, userIds),
-            eq(tasks.scheduledDate, todayIso),
-          ),
-        );
+        .where(and(inArray(tasks.assigneeId, userIds), eq(tasks.scheduledDate, todayIso)));
 
       const total = todayTasks.length;
       const done = todayTasks.filter((t) => t.status === 'done').length;
@@ -271,15 +259,8 @@ export const statsRoutes: FastifyPluginAsyncZod = async (app) => {
       const inProgressRows = await db
         .select({ assigneeId: tasks.assigneeId })
         .from(tasks)
-        .where(
-          and(
-            inArray(tasks.assigneeId, userIds),
-            eq(tasks.status, 'in_progress'),
-          ),
-        );
-      const usersWithInProgressCount = new Set(
-        inProgressRows.map((r) => r.assigneeId),
-      ).size;
+        .where(and(inArray(tasks.assigneeId, userIds), eq(tasks.status, 'in_progress')));
+      const usersWithInProgressCount = new Set(inProgressRows.map((r) => r.assigneeId)).size;
 
       return { teamCompletionRate, usersWithInProgressCount };
     },

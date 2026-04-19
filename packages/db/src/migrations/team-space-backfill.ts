@@ -68,9 +68,7 @@ export function isSameIdSet(a: string[], b: string[]): boolean {
 export async function backfillAttendeeUserIds(
   db: PostgresJsDatabase<Record<string, unknown>>,
 ): Promise<BackfillResult> {
-  const allUsers = await db
-    .select({ id: users.id, email: users.email })
-    .from(users);
+  const allUsers = await db.select({ id: users.id, email: users.email }).from(users);
 
   const meetings = await db
     .select({
@@ -123,7 +121,8 @@ async function main() {
   await client.end();
 }
 
-const invokedDirectly = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+const invokedDirectly =
+  process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
 if (invokedDirectly) {
   main().catch((err) => {
     console.error('[team-space-backfill] failed:', err);

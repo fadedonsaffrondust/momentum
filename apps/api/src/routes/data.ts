@@ -47,87 +47,77 @@ export const dataRoutes: FastifyPluginAsyncZod = async (app) => {
    * — they're NOT re-imported, but having them in the file preserves
    * history for downstream consumers (auditors, analytics).
    */
-  app.get(
-    '/export',
-    { schema: { response: { 200: exportFileSchema } } },
-    async (req) => {
-      const [settingsRow] = await db
-        .select()
-        .from(userSettings)
-        .where(eq(userSettings.userId, req.userId))
-        .limit(1);
-      if (!settingsRow) throw notFound('Settings not found');
+  app.get('/export', { schema: { response: { 200: exportFileSchema } } }, async (req) => {
+    const [settingsRow] = await db
+      .select()
+      .from(userSettings)
+      .where(eq(userSettings.userId, req.userId))
+      .limit(1);
+    if (!settingsRow) throw notFound('Settings not found');
 
-      const roleRows = await db.select().from(roles);
-      const taskRows = await db.select().from(tasks);
-      const logRows = await db
-        .select()
-        .from(dailyLogs)
-        .where(eq(dailyLogs.userId, req.userId));
-      const parkingRows = await db.select().from(parkings);
-      const brandRows = await db.select().from(brands);
-      const stakeholderRows = await db.select().from(brandStakeholders);
-      const meetingRows = await db.select().from(brandMeetings);
-      const actionItemRows = await db.select().from(brandActionItems);
-      const featureRequestRows = await db.select().from(brandFeatureRequests);
+    const roleRows = await db.select().from(roles);
+    const taskRows = await db.select().from(tasks);
+    const logRows = await db.select().from(dailyLogs).where(eq(dailyLogs.userId, req.userId));
+    const parkingRows = await db.select().from(parkings);
+    const brandRows = await db.select().from(brands);
+    const stakeholderRows = await db.select().from(brandStakeholders);
+    const meetingRows = await db.select().from(brandMeetings);
+    const actionItemRows = await db.select().from(brandActionItems);
+    const featureRequestRows = await db.select().from(brandFeatureRequests);
 
-      // Active team roster for the v1.4 `users` collection (spec §5.10).
-      const activeUserRows = await db
-        .select()
-        .from(users)
-        .where(isNull(users.deactivatedAt));
+    // Active team roster for the v1.4 `users` collection (spec §5.10).
+    const activeUserRows = await db.select().from(users).where(isNull(users.deactivatedAt));
 
-      // Events: loaded without their hydrated actor (that's a display
-      // concern). Each event row carries actor_id, and the export's
-      // `users` collection lets consumers look up the UserSummary.
-      const brandEventRows = await db.select().from(brandEvents);
-      const inboxEventRows = await db
-        .select()
-        .from(inboxEvents)
-        .where(eq(inboxEvents.userId, req.userId));
+    // Events: loaded without their hydrated actor (that's a display
+    // concern). Each event row carries actor_id, and the export's
+    // `users` collection lets consumers look up the UserSummary.
+    const brandEventRows = await db.select().from(brandEvents);
+    const inboxEventRows = await db
+      .select()
+      .from(inboxEvents)
+      .where(eq(inboxEvents.userId, req.userId));
 
-      const { userId: _ignoredUserId, ...settingsNoUser } = mapSettings(settingsRow);
+    const { userId: _ignoredUserId, ...settingsNoUser } = mapSettings(settingsRow);
 
-      // Mark last export date.
-      await db
-        .update(userSettings)
-        .set({ lastExportDate: new Date() })
-        .where(eq(userSettings.userId, req.userId));
+    // Mark last export date.
+    await db
+      .update(userSettings)
+      .set({ lastExportDate: new Date() })
+      .where(eq(userSettings.userId, req.userId));
 
-      // Build an actor lookup so event mapping can hydrate without a
-      // second round-trip. If an event references a deactivated user we
-      // still include them — historical events shouldn't vanish.
-      const allUserRows = await db.select().from(users);
-      const userById = new Map(allUserRows.map((u) => [u.id, u]));
+    // Build an actor lookup so event mapping can hydrate without a
+    // second round-trip. If an event references a deactivated user we
+    // still include them — historical events shouldn't vanish.
+    const allUserRows = await db.select().from(users);
+    const userById = new Map(allUserRows.map((u) => [u.id, u]));
 
-      return {
-        version: '1.4' as const,
-        exportedAt: new Date().toISOString(),
-        settings: settingsNoUser,
-        roles: roleRows.map(mapRole),
-        tasks: taskRows.map(mapTask),
-        dailyLogs: logRows.map((l) => {
-          const { userId: _u, ...rest } = mapDailyLog(l);
-          return rest;
-        }),
-        parkings: parkingRows.map(mapParking),
-        brands: brandRows.map(mapBrand),
-        brandStakeholders: stakeholderRows.map(mapBrandStakeholder),
-        brandMeetings: meetingRows.map(mapBrandMeeting),
-        brandActionItems: actionItemRows.map(mapBrandActionItem),
-        brandFeatureRequests: featureRequestRows.map(mapBrandFeatureRequest),
-        users: activeUserRows.map(mapUserSummary),
-        brandEvents: brandEventRows.flatMap((row) => {
-          const actor = userById.get(row.actorId);
-          return actor ? [mapBrandEvent(row, actor)] : [];
-        }),
-        inboxEvents: inboxEventRows.flatMap((row) => {
-          const actor = userById.get(row.actorId);
-          return actor ? [mapInboxEvent(row, actor)] : [];
-        }),
-      };
-    },
-  );
+    return {
+      version: '1.4' as const,
+      exportedAt: new Date().toISOString(),
+      settings: settingsNoUser,
+      roles: roleRows.map(mapRole),
+      tasks: taskRows.map(mapTask),
+      dailyLogs: logRows.map((l) => {
+        const { userId: _u, ...rest } = mapDailyLog(l);
+        return rest;
+      }),
+      parkings: parkingRows.map(mapParking),
+      brands: brandRows.map(mapBrand),
+      brandStakeholders: stakeholderRows.map(mapBrandStakeholder),
+      brandMeetings: meetingRows.map(mapBrandMeeting),
+      brandActionItems: actionItemRows.map(mapBrandActionItem),
+      brandFeatureRequests: featureRequestRows.map(mapBrandFeatureRequest),
+      users: activeUserRows.map(mapUserSummary),
+      brandEvents: brandEventRows.flatMap((row) => {
+        const actor = userById.get(row.actorId);
+        return actor ? [mapBrandEvent(row, actor)] : [];
+      }),
+      inboxEvents: inboxEventRows.flatMap((row) => {
+        const actor = userById.get(row.actorId);
+        return actor ? [mapInboxEvent(row, actor)] : [];
+      }),
+    };
+  });
 
   app.post(
     '/import',

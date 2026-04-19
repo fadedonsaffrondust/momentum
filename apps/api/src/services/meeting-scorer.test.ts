@@ -132,7 +132,10 @@ describe('scoreMeeting', () => {
 describe('categorizeCandidates', () => {
   it('puts stakeholder matches in likely', () => {
     const meetings = [
-      makeMeeting({ id: 'match', invitees: [{ name: 'Stakeholder', email: 'stakeholder@test.com' }] }),
+      makeMeeting({
+        id: 'match',
+        invitees: [{ name: 'Stakeholder', email: 'stakeholder@test.com' }],
+      }),
     ];
     const rules: SyncMatchRules = {
       ...baseRules,
@@ -150,8 +153,16 @@ describe('categorizeCandidates', () => {
   it('shows keyword-only matches as possible even when emails are configured', () => {
     const meetings = [
       makeMeeting({ id: 'email-match', invitees: [{ name: 'S', email: 's@test.com' }] }),
-      makeMeeting({ id: 'keyword-match', name: 'Acme Review', invitees: [{ name: 'Other', email: 'other@test.com' }] }),
-      makeMeeting({ id: 'no-match', name: 'Random Call', invitees: [{ name: 'Other', email: 'other@test.com' }] }),
+      makeMeeting({
+        id: 'keyword-match',
+        name: 'Acme Review',
+        invitees: [{ name: 'Other', email: 'other@test.com' }],
+      }),
+      makeMeeting({
+        id: 'no-match',
+        name: 'Random Call',
+        invitees: [{ name: 'Other', email: 'other@test.com' }],
+      }),
     ];
     const rules: SyncMatchRules = {
       ...baseRules,

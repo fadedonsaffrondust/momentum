@@ -36,12 +36,21 @@ async function pushRowToSheet(row: DbFeatureRequest, brandId: string): Promise<v
       await client.writeRow(config.sheetId, config.sheetGid, row.sheetRowIndex, values);
     } else {
       const newIndex = await client.appendRow(config.sheetId, config.sheetGid, values);
-      await db.update(brandFeatureRequests).set({ sheetRowIndex: newIndex }).where(eq(brandFeatureRequests.id, row.id));
+      await db
+        .update(brandFeatureRequests)
+        .set({ sheetRowIndex: newIndex })
+        .where(eq(brandFeatureRequests.id, row.id));
     }
 
-    await db.update(brandFeatureRequests).set({ syncStatus: 'synced' }).where(eq(brandFeatureRequests.id, row.id));
+    await db
+      .update(brandFeatureRequests)
+      .set({ syncStatus: 'synced' })
+      .where(eq(brandFeatureRequests.id, row.id));
   } catch {
-    await db.update(brandFeatureRequests).set({ syncStatus: 'error' }).where(eq(brandFeatureRequests.id, row.id));
+    await db
+      .update(brandFeatureRequests)
+      .set({ syncStatus: 'error' })
+      .where(eq(brandFeatureRequests.id, row.id));
   }
 }
 
@@ -222,9 +231,7 @@ export const brandFeatureRequestsRoutes: FastifyPluginAsyncZod = async (app) => 
         payload: { request: existing.request },
       });
 
-      await db
-        .delete(brandFeatureRequests)
-        .where(eq(brandFeatureRequests.id, existing.id));
+      await db.delete(brandFeatureRequests).where(eq(brandFeatureRequests.id, existing.id));
 
       if (existing.sheetRowIndex !== null) {
         deleteRowFromSheet(existing.sheetRowIndex, req.params.brandId).catch(() => {});

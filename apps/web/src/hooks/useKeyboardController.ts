@@ -202,8 +202,7 @@ export function useKeyboardController(ctx: KeyboardContext) {
               onError: (err) => {
                 pushToast({
                   kind: 'error',
-                  message:
-                    err instanceof Error ? err.message : 'Failed to change visibility',
+                  message: err instanceof Error ? err.message : 'Failed to change visibility',
                   durationMs: 4000,
                 });
               },

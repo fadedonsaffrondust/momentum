@@ -181,16 +181,11 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => {
-      const [existing] = await db
-        .select()
-        .from(tasks)
-        .where(eq(tasks.id, req.params.id))
-        .limit(1);
+      const [existing] = await db.select().from(tasks).where(eq(tasks.id, req.params.id)).limit(1);
       if (!existing) throw notFound('Task not found');
 
       const { assigneeId: newAssigneeId, ...rest } = req.body;
-      const isReassignment =
-        newAssigneeId !== undefined && newAssigneeId !== existing.assigneeId;
+      const isReassignment = newAssigneeId !== undefined && newAssigneeId !== existing.assigneeId;
 
       const updateSet: Record<string, unknown> = { ...rest };
       if (newAssigneeId !== undefined) updateSet.assigneeId = newAssigneeId;
@@ -204,9 +199,9 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
         const [countRow] = (await db
           .select({ inProgressCount: count() })
           .from(tasks)
-          .where(
-            and(eq(tasks.assigneeId, newAssigneeId!), eq(tasks.status, 'in_progress')),
-          )) as [{ inProgressCount: number }];
+          .where(and(eq(tasks.assigneeId, newAssigneeId!), eq(tasks.status, 'in_progress')))) as [
+          { inProgressCount: number },
+        ];
         if ((countRow?.inProgressCount ?? 0) >= MAX_IN_PROGRESS) {
           updateSet.status = 'todo';
           updateSet.column = 'up_next';
@@ -302,9 +297,9 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
       const [countRow] = (await db
         .select({ inProgressCount: count() })
         .from(tasks)
-        .where(
-          and(eq(tasks.assigneeId, req.userId), eq(tasks.status, 'in_progress')),
-        )) as [{ inProgressCount: number }];
+        .where(and(eq(tasks.assigneeId, req.userId), eq(tasks.status, 'in_progress')))) as [
+        { inProgressCount: number },
+      ];
 
       if ((countRow?.inProgressCount ?? 0) >= MAX_IN_PROGRESS) {
         throw badRequest(
@@ -409,12 +404,7 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
       await db
         .update(brandActionItems)
         .set({ status: 'done', completedAt: new Date() })
-        .where(
-          and(
-            eq(brandActionItems.linkedTaskId, row.id),
-            eq(brandActionItems.status, 'open'),
-          ),
-        );
+        .where(and(eq(brandActionItems.linkedTaskId, row.id), eq(brandActionItems.status, 'open')));
 
       return mapTask(row);
     },
@@ -453,12 +443,7 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
       await db
         .update(brandActionItems)
         .set({ status: 'open', completedAt: null })
-        .where(
-          and(
-            eq(brandActionItems.linkedTaskId, row.id),
-            eq(brandActionItems.status, 'done'),
-          ),
-        );
+        .where(and(eq(brandActionItems.linkedTaskId, row.id), eq(brandActionItems.status, 'done')));
 
       return mapTask(row);
     },
@@ -475,8 +460,7 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req) => {
       const target =
-        req.body?.scheduledDate ??
-        toLocalIsoDate(new Date(Date.now() + 24 * 60 * 60 * 1000));
+        req.body?.scheduledDate ?? toLocalIsoDate(new Date(Date.now() + 24 * 60 * 60 * 1000));
 
       const [row] = await db
         .update(tasks)

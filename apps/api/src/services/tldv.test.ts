@@ -91,9 +91,7 @@ describe('TldvClient', () => {
     it('preserves already-ISO happenedAt', async () => {
       const isoResponse = {
         ...mockResponse,
-        results: [
-          { ...mockResponse.results[0]!, happenedAt: '2026-04-15T15:00:00.000Z' },
-        ],
+        results: [{ ...mockResponse.results[0]!, happenedAt: '2026-04-15T15:00:00.000Z' }],
       };
       fetchMock.mockResolvedValueOnce(jsonResponse(isoResponse));
 
@@ -177,7 +175,9 @@ describe('TldvClient', () => {
     it('retries on 500 and succeeds', async () => {
       fetchMock
         .mockResolvedValueOnce(textResponse('server error', 500))
-        .mockResolvedValueOnce(jsonResponse({ page: 1, pageSize: 50, pages: 1, total: 0, results: [] }));
+        .mockResolvedValueOnce(
+          jsonResponse({ page: 1, pageSize: 50, pages: 1, total: 0, results: [] }),
+        );
 
       const result = await client.listMeetings();
 
@@ -188,7 +188,9 @@ describe('TldvClient', () => {
     it('retries on 429 and succeeds', async () => {
       fetchMock
         .mockResolvedValueOnce(textResponse('rate limited', 429))
-        .mockResolvedValueOnce(jsonResponse({ page: 1, pageSize: 50, pages: 1, total: 0, results: [] }));
+        .mockResolvedValueOnce(
+          jsonResponse({ page: 1, pageSize: 50, pages: 1, total: 0, results: [] }),
+        );
 
       const result = await client.listMeetings();
 

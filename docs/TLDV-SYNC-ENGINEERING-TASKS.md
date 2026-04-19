@@ -5,12 +5,15 @@ Track progress by marking tasks complete (`[x]`) at the end of each session.
 ---
 
 ## Task 1: Data Model & Schema Updates
+
 - [x] **Complete**
 
 ### Goal
+
 Extend the DB schema, Zod schemas, and mappers to support meeting recording sync.
 
 ### Changes
+
 1. **`packages/db/src/schema.ts`**
    - Add `email` (text, nullable) to `brandStakeholders`
    - Add new enum `meetingSourceEnum`: `'manual'` | `'recording_sync'`
@@ -36,6 +39,7 @@ Extend the DB schema, Zod schemas, and mappers to support meeting recording sync
 7. **Tests** — schema validation tests for new fields, mapper tests
 
 ### Verification
+
 - `pnpm db:generate` produces a clean migration
 - `pnpm db:migrate` applies without errors
 - `pnpm typecheck` passes
@@ -44,12 +48,15 @@ Extend the DB schema, Zod schemas, and mappers to support meeting recording sync
 ---
 
 ## Task 2: tldv API Client
+
 - [x] **Complete**
 
 ### Goal
+
 Create a typed HTTP client for the tldv API with retry logic.
 
 ### Changes
+
 1. **`apps/api/src/services/tldv.ts`** (new)
    - `TldvClient` class, constructed with `apiKey: string`
    - Base URL: `https://pasta.tldv.io/v1alpha1`
@@ -67,18 +74,22 @@ Create a typed HTTP client for the tldv API with retry logic.
    - Test successful calls, retry on 5xx, retry on 429, fail on 401 (no retry), pagination
 
 ### Verification
+
 - `pnpm test` passes
 - `pnpm typecheck` passes
 
 ---
 
 ## Task 3: Matching Engine & Sync Backend Routes
+
 - [x] **Complete**
 
 ### Goal
+
 Build the scoring engine, sync endpoints, and OpenAI extraction pipeline.
 
 ### Changes
+
 1. **`apps/api/src/services/meeting-scorer.ts`** (new)
    - Pure function: `scoreMeeting(meeting, matchRules, stakeholders, syncedIds)` → `{ score, reasons[] }`
    - Scoring: stakeholder email match +50, title keyword +30, meeting type match +10, already synced -1000
@@ -113,18 +124,22 @@ Build the scoring engine, sync endpoints, and OpenAI extraction pipeline.
 6. **Tests** — scoring engine (unit), extraction (mocked OpenAI), route handlers (mocked DB + tldv)
 
 ### Verification
+
 - Scoring engine produces correct scores for various meeting/rule combos
 - `pnpm typecheck` and `pnpm test` pass
 
 ---
 
 ## Task 4: Sync Settings UI (Per-Brand Config)
+
 - [x] **Complete**
 
 ### Goal
+
 Build the UI for configuring matching rules per brand and displaying stakeholder emails.
 
 ### Changes
+
 1. **`apps/web/src/components/brands/SyncSettingsPanel.tsx`** (new)
    - Collapsible/slideover panel toggled by gear icon in brand header
    - Sections:
@@ -146,6 +161,7 @@ Build the UI for configuring matching rules per brand and displaying stakeholder
 6. **Tests** — component render tests, hook tests
 
 ### Verification
+
 - Can open sync settings panel from brand detail
 - Can configure matching rules and save
 - Can add/edit emails on stakeholders
@@ -154,12 +170,15 @@ Build the UI for configuring matching rules per brand and displaying stakeholder
 ---
 
 ## Task 5: Sync Review Modal
+
 - [x] **Complete**
 
 ### Goal
+
 Build the candidate review and confirmation modal — the core UX for the sync flow.
 
 ### Changes
+
 1. **`apps/web/src/components/brands/SyncReviewModal.tsx`** (new)
    - Header: "Sync Recordings for [Brand Name]"
    - Subheader: "Found X meetings since [date]"
@@ -184,6 +203,7 @@ Build the candidate review and confirmation modal — the core UX for the sync f
 7. **Tests** — modal rendering, candidate selection, keyboard navigation
 
 ### Verification
+
 - Can trigger sync from brand detail
 - Modal shows scored candidates with correct categorization
 - Can select/deselect and confirm
@@ -193,12 +213,15 @@ Build the candidate review and confirmation modal — the core UX for the sync f
 ---
 
 ## Task 6: Recording Links, Shortcuts, Polish & Release Notes
+
 - [x] **Complete**
 
 ### Goal
+
 Add recording links to meeting notes, register keyboard shortcuts, and ship the release notes entry.
 
 ### Changes
+
 1. **`apps/web/src/components/brands/MeetingsSection.tsx`**
    - On meeting notes with `recordingUrl`: show "Recording" link (small play icon) that opens in new tab
    - Only visible when `recordingUrl` is truthy
@@ -223,6 +246,7 @@ Add recording links to meeting notes, register keyboard shortcuts, and ship the 
 7. **Tests** — recording link rendering, shortcut registration
 
 ### Verification
+
 - Recording links appear on synced meeting notes and open correctly
 - `s` shortcut triggers sync from brand detail
 - Modal keyboard shortcuts work
