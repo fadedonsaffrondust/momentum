@@ -34,6 +34,17 @@ function deriveKind(mimeType: string): 'image' | 'file' {
   return mimeType.startsWith('image/') ? 'image' : 'file';
 }
 
+// Node's http module rejects non-Latin-1 characters in header values, which
+// blows up the whole response mid-stream if the original filename contains
+// e.g. em dashes or smart quotes (→ Chrome reports ERR_INVALID_RESPONSE).
+// RFC 6266: emit an ASCII-safe `filename=` plus a percent-encoded
+// `filename*=UTF-8''…` for clients that support it.
+function buildContentDisposition(disposition: 'inline' | 'attachment', name: string): string {
+  const asciiFallback = name.replace(/[^\x20-\x7E]/g, '_').replace(/"/g, '');
+  const encoded = encodeURIComponent(name);
+  return `${disposition}; filename="${asciiFallback}"; filename*=UTF-8''${encoded}`;
+}
+
 const attachmentIdParam = z.object({ id: z.string().uuid() });
 const taskIdParam = z.object({ taskId: z.string().uuid() });
 
@@ -79,13 +90,16 @@ export const taskAttachmentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // No full buffer in memory. If the part exceeds the multipart limit
       // (10 MB, configured globally), the stream errors mid-pipeline and
       // we clean up the partial blob below.
-      let writtenBytes = 0;
-      part.file.on('data', (chunk: Buffer) => {
-        writtenBytes += chunk.length;
-      });
-
+      //
+      // CRITICAL: do NOT attach a 'data' listener to part.file before
+      // calling storage.put() — that switches the stream into flowing
+      // mode and drains bytes into the listener before pipeline attaches
+      // its writeStream consumer. The result is silently truncated /
+      // empty files. The size comes back from storage via fs.stat after
+      // the write commits.
+      let putResult;
       try {
-        await storage.put(storageKey, part.file, mimeType, 0);
+        putResult = await storage.put(storageKey, part.file, mimeType, 0);
       } catch (err) {
         // Best-effort cleanup of any partial blob. The original error is
         // re-thrown so the global error handler maps it to the right
@@ -114,7 +128,7 @@ export const taskAttachmentsRoutes: FastifyPluginAsyncZod = async (app) => {
           kind,
           originalName,
           mimeType,
-          sizeBytes: writtenBytes,
+          sizeBytes: putResult.sizeBytes,
           storageKey,
         })
         .returning();
@@ -169,11 +183,10 @@ export const taskAttachmentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
       const { stream } = await storage.getStream(row.storageKey);
       const disposition = row.kind === 'image' ? 'inline' : 'attachment';
-      const safeName = row.originalName.replace(/"/g, '');
       void reply
         .header('Content-Type', row.mimeType)
         .header('Content-Length', row.sizeBytes.toString())
-        .header('Content-Disposition', `${disposition}; filename="${safeName}"`);
+        .header('Content-Disposition', buildContentDisposition(disposition, row.originalName));
       return reply.send(stream);
     },
   );

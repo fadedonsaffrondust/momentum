@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef } from 'react';
+import { createContext, useContext, useEffect, useRef } from 'react';
 import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { Image as ImageIcon, Trash2, Upload } from 'lucide-react';
@@ -31,6 +31,14 @@ export type AttachmentPlaceholderKind = 'image' | 'file';
 
 interface PlaceholderAttrs {
   kind: AttachmentPlaceholderKind;
+  /**
+   * Ephemeral runtime flag — when true, the NodeView programmatically
+   * clicks its hidden file input on first mount so the slash command can
+   * "insert + open picker" in one gesture. Set by the slash command;
+   * cleared by the NodeView after firing. Never persisted (rendered: false
+   * keeps it out of the saved HTML).
+   */
+  autoOpen: boolean;
 }
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -48,6 +56,36 @@ function PlaceholderView({ node, editor, getPos, deleteNode }: NodeViewProps) {
   const Icon = attrs.kind === 'image' ? ImageIcon : Upload;
 
   const editable = editor.isEditable;
+
+  // Auto-fire the OS file picker on first mount when the slash command
+  // sets autoOpen=true. The browser treats this as part of the slash-
+  // command Enter keypress gesture, so the picker is allowed to open.
+  //
+  // The `autoOpenFiredRef` guard is critical: React 18 StrictMode in dev
+  // simulates an unmount/remount cycle, which causes a naive useEffect
+  // with empty deps to run TWICE — and so the file picker would pop a
+  // second time the moment the user cancelled the first one. The ref
+  // survives the synthetic remount; the attr-clear is a belt-and-braces
+  // for the production single-mount case.
+  const autoOpenFiredRef = useRef(false);
+  useEffect(() => {
+    if (!attrs.autoOpen || !editable) return;
+    if (autoOpenFiredRef.current) return;
+    autoOpenFiredRef.current = true;
+    inputRef.current?.click();
+    const pos = getPos();
+    if (typeof pos !== 'number') return;
+    editor
+      .chain()
+      .command(({ tr }) => {
+        tr.setNodeAttribute(pos, 'autoOpen', false);
+        return true;
+      })
+      .run();
+    // Mount-only — re-renders shouldn't re-fire even if autoOpen briefly
+    // re-flips somehow.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleFile = async (file: File) => {
     if (!upload) {
@@ -157,6 +195,13 @@ export const AttachmentPlaceholderNode = Node.create({
   addAttributes() {
     return {
       kind: { default: 'file' as AttachmentPlaceholderKind },
+      autoOpen: {
+        default: false,
+        // Runtime-only — never written to HTML, never parsed back. Ensures
+        // a saved+reopened placeholder doesn't auto-pop the picker.
+        rendered: false,
+        parseHTML: () => false,
+      },
     };
   },
 

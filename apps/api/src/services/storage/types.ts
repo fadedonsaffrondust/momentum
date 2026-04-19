@@ -14,6 +14,11 @@ import type { Readable } from 'node:stream';
  */
 export interface PutResult {
   key: string;
+  /** Actual bytes persisted, measured after the write completes. The
+   *  caller uses this to populate `task_attachments.size_bytes` rather
+   *  than trusting the multipart Content-Length (which is unreliable
+   *  for streaming uploads). */
+  sizeBytes: number;
 }
 
 export interface GetStreamResult {

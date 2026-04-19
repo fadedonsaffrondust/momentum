@@ -21,9 +21,14 @@ export class LocalDiskStorage implements StorageAdapter {
     const target = this.resolve(key);
     await mkdir(path.dirname(target), { recursive: true });
     await pipeline(stream, createWriteStream(target));
-    // mimeType + size are recorded in the DB row, not in the file itself.
+    // mimeType is recorded in the DB row; size we read back from disk so
+    // the caller doesn't have to count bytes mid-stream (which is fragile
+    // — attaching a 'data' listener to count bytes BEFORE handing the
+    // stream to pipeline switches it into flowing mode and silently
+    // drains data the writeStream never sees).
     void mimeType;
-    return { key };
+    const info = await stat(target);
+    return { key, sizeBytes: info.size };
   }
 
   async getStream(key: string): Promise<GetStreamResult> {

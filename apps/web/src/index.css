@@ -193,8 +193,39 @@
   border: 1px solid hsl(var(--border) / 0.6);
 }
 
+/* inline-block so the wrapper hugs the image for the selection ring +
+   resize-handle placement. Keep max-width so a stored pixel width still
+   clamps to the editor column if the editor is narrower than the image. */
 .task-description-editor .ProseMirror .task-attachment-image-wrap {
   margin: 0.5em 0;
+  display: inline-block;
+  position: relative;
+  max-width: 100%;
+}
+
+.task-description-editor .ProseMirror .task-attachment-image-wrap[data-selected='true'] .task-attachment-image,
+.task-description-editor .ProseMirror .task-attachment-image-wrap[data-selected='true'] img {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 1px;
+}
+
+.task-description-editor .ProseMirror .task-attachment-image-resize-handle {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  background: hsl(var(--primary));
+  border: 2px solid hsl(var(--background));
+  border-radius: 2px;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.task-description-editor .ProseMirror .task-attachment-image-resize-handle:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
 }
 
 /* Bullet + numbered lists (created by typing `- ` or `1. `). */

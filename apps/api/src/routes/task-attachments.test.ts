@@ -189,6 +189,42 @@ describe('task-attachments routes', () => {
     expect(res.headers['content-disposition']).toContain('inline; filename="shot.png"');
   });
 
+  it('encodes non-ASCII filenames (em dash, smart quotes) via RFC 6266 filename*', async () => {
+    mockDb._pushResult([
+      {
+        id: ATTACHMENT_ID,
+        taskId: TASK_ID,
+        uploaderId: USER_ID,
+        kind: 'file',
+        originalName: 'Report — Q1 “final”.csv',
+        mimeType: 'text/csv',
+        sizeBytes: 10,
+        storageKey: `${TASK_ID}/${ATTACHMENT_ID}`,
+        createdAt: new Date(),
+      },
+    ]);
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/attachments/${ATTACHMENT_ID}/download`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const cd = res.headers['content-disposition'] as string;
+    // ASCII fallback: em dash and smart quotes replaced with underscores so
+    // the header is Latin-1 safe (Node's http module rejects the original).
+    expect(cd).toContain('filename="Report _ Q1 _final_.csv"');
+    // filename* carries the real UTF-8 name, percent-encoded per RFC 5987.
+    expect(cd).toContain("filename*=UTF-8''");
+    expect(cd).toContain(encodeURIComponent('—'));
+    expect(cd).toContain(encodeURIComponent('“'));
+    // The whole header must be Latin-1 safe so Node's http module accepts it.
+    for (let i = 0; i < cd.length; i++) {
+      expect(cd.charCodeAt(i)).toBeLessThanOrEqual(0xff);
+    }
+  });
+
   it('returns 404 when the attachment row is missing', async () => {
     mockDb._pushResult([]);
 

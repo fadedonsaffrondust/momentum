@@ -375,28 +375,34 @@ export function RichDescriptionEditor({
     {
       id: 'image',
       title: 'Image',
-      description: 'Insert an image placeholder',
+      description: 'Insert an image and open the file picker',
       keywords: ['image', 'img', 'picture', 'photo', 'screenshot'],
       command: ({ editor, range }) => {
         editor
           .chain()
           .focus()
           .deleteRange(range)
-          .insertContent({ type: 'attachmentPlaceholder', attrs: { kind: 'image' } })
+          .insertContent({
+            type: 'attachmentPlaceholder',
+            attrs: { kind: 'image', autoOpen: true },
+          })
           .run();
       },
     },
     {
       id: 'attachment',
       title: 'Attachment',
-      description: 'Insert a file placeholder',
+      description: 'Insert a file and open the file picker',
       keywords: ['attachment', 'file', 'upload', 'doc'],
       command: ({ editor, range }) => {
         editor
           .chain()
           .focus()
           .deleteRange(range)
-          .insertContent({ type: 'attachmentPlaceholder', attrs: { kind: 'file' } })
+          .insertContent({
+            type: 'attachmentPlaceholder',
+            attrs: { kind: 'file', autoOpen: true },
+          })
           .run();
       },
     },

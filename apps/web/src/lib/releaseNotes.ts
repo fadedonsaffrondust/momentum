@@ -25,6 +25,38 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.15.2',
+    date: '2026-04-19',
+    headline: 'Resize images, faster attachment picker, download fixes',
+    summary:
+      'Images in task descriptions now have a drag handle for resizing — click the image, drag the green corner, done. Slash commands /image and /attachment open the OS file picker immediately instead of making you click the placeholder card first. And two attachment bugs are squashed: uploads no longer silently truncate to zero bytes, and attachments with special characters in the filename (em dashes, smart quotes, etc.) download correctly.',
+    items: [
+      {
+        title: 'Drag the corner to resize an image',
+        description:
+          'Click an image in a description to reveal a small green handle in its bottom-right corner. Drag inward or outward to resize. Height auto-scales so the image never squashes. Width clamps to the editor column on the high end and 80px on the low end.',
+        howTo:
+          'Open any task with an image in the description, click the image once, and drag the green corner handle.',
+      },
+      {
+        title: '/image and /attachment open the picker immediately',
+        description:
+          'The slash commands now drop the placeholder card AND open the OS file picker in a single gesture — no extra click needed. Dismiss the picker and the card stays where it was, so you can click it later without losing your spot.',
+        shortcuts: ['/'],
+      },
+      {
+        title: 'Attachment uploads no longer silently truncate',
+        description:
+          'Fixed a stream-handling bug that caused some uploads to persist zero bytes on disk even though the UI reported success. Files dropped, pasted, or picked via the menu now upload their full content reliably.',
+      },
+      {
+        title: 'Non-ASCII filenames download correctly',
+        description:
+          'Attachments whose original filename contained characters like em dashes or smart quotes were failing to download with an "invalid response" error. The download header is now RFC 6266-encoded, so any UTF-8 filename works.',
+      },
+    ],
+  },
+  {
     version: '0.15.1',
     date: '2026-04-19',
     headline: 'Persistent placeholder cards for /image and /attachment',
