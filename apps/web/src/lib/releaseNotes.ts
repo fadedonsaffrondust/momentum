@@ -25,6 +25,26 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.15.1',
+    date: '2026-04-19',
+    headline: 'Persistent placeholder cards for /image and /attachment',
+    summary:
+      'Typing /image or /attachment now drops a Notion-style placeholder card right where the cursor is, instead of opening a transient file-picker popover. The card stays in the description (saved with the rest of the HTML) until you click it to upload — picking a file swaps the card for the real image or attachment node at the same position. Backspace or the hover trash icon removes it. Drag-drop and Cmd+V paste are unchanged.',
+    items: [
+      {
+        title: 'Slash commands insert a card you can come back to',
+        description:
+          '/image inserts an "Add an image" card; /attachment inserts an "Upload or embed a file" card. Closing and reopening the drawer keeps the card exactly where you left it — no more lost inserts when you dismiss the OS picker by accident.',
+        shortcuts: ['/'],
+      },
+      {
+        title: 'Click the card to upload',
+        description:
+          'The whole card is clickable and opens the OS file picker (filtered to images for the image card). Pick a file → upload runs → the card transforms into the real inline image or downloadable attachment row. The trash icon on hover removes the placeholder if you change your mind.',
+      },
+    ],
+  },
+  {
     version: '0.15.0',
     date: '2026-04-19',
     headline: 'Images and file attachments in task descriptions',

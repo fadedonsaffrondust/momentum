@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Extension, ReactRenderer } from '@tiptap/react';
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -9,17 +9,23 @@ import Suggestion, { type SuggestionProps, type SuggestionKeyDownProps } from '@
 import tippy, { type Instance as TippyInstance } from 'tippy.js';
 import { cn } from '@/lib/utils';
 import { AttachmentNode, type AttachmentAttrs } from './editor/AttachmentNode';
+import { AttachmentPlaceholderNode, EditorUploadContext } from './editor/AttachmentPlaceholderNode';
 import { ImageWithAuth } from './editor/ImageWithAuth';
-import { UploadPopover } from '../modals/taskDrawer/UploadPopover';
+import type { UploadedAttachment, UploadFileFn } from './RichDescriptionEditor.types';
+
+export type { UploadedAttachment, UploadFileFn } from './RichDescriptionEditor.types';
 
 /**
  * Notion-style rich-text editor for task descriptions. Supports a minimal
- * set of block types (paragraph, heading 1–2, checklist, image, attachment)
- * and an inline slash-command menu: type `/` to open a picker, navigate
- * with arrow keys, Enter to apply, Esc to close.
+ * set of block types (paragraph, heading 1–2, checklist, image, attachment,
+ * attachment placeholder) and an inline slash-command menu: type `/` to
+ * open a picker, navigate with arrow keys, Enter to apply, Esc to close.
  *
  * Image and attachment support is wired three ways:
- *   - `/image` and `/attachment` slash commands open an upload popover.
+ *   - `/image` and `/attachment` slash commands insert a persistent
+ *     placeholder card; clicking it opens the OS file picker. The
+ *     placeholder lives in the document HTML so closing/reopening the
+ *     drawer keeps it in place.
  *   - Drag-and-drop a file onto the editor uploads it.
  *   - Paste a file (e.g. Cmd+V on a screenshot) uploads it.
  *
@@ -36,18 +42,6 @@ interface SlashItem {
   keywords: string[];
   command: (ctx: { editor: Editor; range: { from: number; to: number } }) => void;
 }
-
-/** Result the consumer's upload callback must return. */
-export interface UploadedAttachment {
-  id: string;
-  name: string;
-  mimeType: string;
-  size: number;
-  /** API URL the editor inserts as image src, e.g. `/attachments/<id>/download`. */
-  url: string;
-}
-
-export type UploadFileFn = (file: File) => Promise<UploadedAttachment>;
 
 /** React component that renders the slash menu list inside tippy. */
 function SlashMenuList({
@@ -256,12 +250,6 @@ interface Props {
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
-interface PopoverState {
-  open: boolean;
-  imageOnly: boolean;
-  anchor: { x: number; y: number } | null;
-}
-
 export function RichDescriptionEditor({
   value,
   onChange,
@@ -285,12 +273,23 @@ export function RichDescriptionEditor({
   // would loop `setContent` on every render.
   const lastKnownValueRef = useRef<string | null>(null);
 
-  // Popover state (set by /image and /attachment slash commands).
-  const [popover, setPopover] = useState<PopoverState>({
-    open: false,
-    imageOnly: false,
-    anchor: null,
-  });
+  /**
+   * Bridge between the parent's onUploadFile prop and the placeholder
+   * NodeView's React Context. Stable identity — callbacks reach the
+   * latest onUploadFile via uploadRef so the context value never has to
+   * change.
+   */
+  const placeholderUploadCtx = useMemo(
+    () => ({
+      upload: async (file: File): Promise<UploadedAttachment> => {
+        const fn = uploadRef.current;
+        if (!fn) throw new Error('Uploads are not enabled here.');
+        return fn(file);
+      },
+      onError: (msg: string) => errorRef.current?.(msg),
+    }),
+    [],
+  );
 
   /**
    * Upload + insert a single file at the current cursor (or `at` if given).
@@ -376,31 +375,29 @@ export function RichDescriptionEditor({
     {
       id: 'image',
       title: 'Image',
-      description: 'Upload an image',
+      description: 'Insert an image placeholder',
       keywords: ['image', 'img', 'picture', 'photo', 'screenshot'],
       command: ({ editor, range }) => {
-        editor.chain().focus().deleteRange(range).run();
-        const coords = editor.view.coordsAtPos(editor.state.selection.from);
-        setPopover({
-          open: true,
-          imageOnly: true,
-          anchor: { x: coords.left, y: coords.bottom + 4 },
-        });
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .insertContent({ type: 'attachmentPlaceholder', attrs: { kind: 'image' } })
+          .run();
       },
     },
     {
       id: 'attachment',
       title: 'Attachment',
-      description: 'Upload a file',
+      description: 'Insert a file placeholder',
       keywords: ['attachment', 'file', 'upload', 'doc'],
       command: ({ editor, range }) => {
-        editor.chain().focus().deleteRange(range).run();
-        const coords = editor.view.coordsAtPos(editor.state.selection.from);
-        setPopover({
-          open: true,
-          imageOnly: false,
-          anchor: { x: coords.left, y: coords.bottom + 4 },
-        });
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .insertContent({ type: 'attachmentPlaceholder', attrs: { kind: 'file' } })
+          .run();
       },
     },
   ];
@@ -422,6 +419,7 @@ export function RichDescriptionEditor({
       TaskItem.configure({ nested: true }),
       ImageWithAuth,
       AttachmentNode,
+      AttachmentPlaceholderNode,
       // The slash extension reads from the ref so adding/removing items
       // doesn't require re-creating the editor instance.
       createSlashExtension(slashItemsRef.current, (open) => {
@@ -493,18 +491,11 @@ export function RichDescriptionEditor({
   }, []);
 
   return (
-    <div className="task-description-editor">
-      <EditorContent editor={editor} />
-      <UploadPopover
-        open={popover.open}
-        imageOnly={popover.imageOnly}
-        anchor={popover.anchor}
-        onClose={() => setPopover((p) => ({ ...p, open: false }))}
-        onPick={(file) => {
-          if (editor) void uploadAndInsert(editor, file);
-        }}
-      />
-    </div>
+    <EditorUploadContext.Provider value={placeholderUploadCtx}>
+      <div className="task-description-editor">
+        <EditorContent editor={editor} />
+      </div>
+    </EditorUploadContext.Provider>
   );
 }
 
