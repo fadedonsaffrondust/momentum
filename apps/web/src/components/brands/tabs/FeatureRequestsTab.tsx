@@ -2,15 +2,15 @@ import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import clsx from 'clsx';
 import type { BrandFeatureRequest, FeatureRequestsConfig } from '@momentum/shared';
 import { RefreshCw, ExternalLink, Search, Plus } from 'lucide-react';
-import { FeatureRequestRow } from './FeatureRequestRow';
+import { FeatureRequestRow } from '../widgets/FeatureRequestRow';
 import {
   useCreateBrandFeatureRequest,
   useUpdateBrandFeatureRequest,
   useDeleteBrandFeatureRequest,
   useConvertFeatureRequestToAction,
-} from '../../api/hooks';
-import { useUiStore } from '../../store/ui';
-import { confirm } from '../ConfirmModal';
+} from '../../../api/hooks';
+import { useUiStore } from '../../../store/ui';
+import { confirm } from '../../ConfirmModal';
 
 type StatusFilter = 'all' | 'open' | 'resolved';
 type SortMode = 'date' | 'status';

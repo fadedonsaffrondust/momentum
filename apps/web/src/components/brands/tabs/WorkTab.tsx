@@ -1,6 +1,6 @@
 import type { BrandActionItem, BrandMeeting, BrandStakeholder } from '@momentum/shared';
-import { ActionItemsSection } from './ActionItemsSection';
-import { MeetingsSection } from './MeetingsSection';
+import { ActionItemsSection } from '../sections/ActionItemsSection';
+import { MeetingsSection } from '../sections/MeetingsSection';
 
 interface Props {
   brandId: string;

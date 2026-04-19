@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { BrandEvent } from '@momentum/shared';
-import { useBrandEvents } from '../../api/hooks';
-import { Avatar } from '../Avatar';
-import { formatTimeAgo } from '../../lib/format';
+import { useBrandEvents } from '../../../api/hooks';
+import { Avatar } from '../../Avatar';
+import { formatTimeAgo } from '../../../lib/format';
 
 interface Props {
   brandId: string;

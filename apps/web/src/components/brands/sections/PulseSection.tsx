@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import type { BrandMeeting, BrandActionItem, BrandStakeholder } from '@momentum/shared';
-import { StakeholderBadge } from './StakeholderBadge';
-import { formatDateShort } from '../../lib/format';
-import { todayIso } from '../../lib/date';
+import { StakeholderBadge } from '../widgets/StakeholderBadge';
+import { formatDateShort } from '../../../lib/format';
+import { todayIso } from '../../../lib/date';
 
 interface Props {
   meetings: BrandMeeting[];

@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import type { HealthStatus } from '../../hooks/useBrandHealth';
+import type { HealthStatus } from '../../../hooks/useBrandHealth';
 
 const STATUS_CONFIG: Record<HealthStatus, { color: string; glow: string; label: string }> = {
   on_track: { color: 'bg-emerald-500', glow: 'shadow-emerald-500/40', label: 'On track' },

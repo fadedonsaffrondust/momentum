@@ -9,18 +9,18 @@ import {
   usePullFeatureRequests,
   usePushFeatureRequests,
   useCompleteBrandActionItem,
-} from '../../api/hooks';
+} from '../../../api/hooks';
 import { BrandDetailHeader } from './BrandDetailHeader';
-import { BrandTabBar } from './BrandTabBar';
-import type { BrandTab } from './BrandTabBar';
-import { OverviewTab } from './OverviewTab';
-import { WorkTab } from './WorkTab';
-import { FeatureRequestsTab } from './FeatureRequestsTab';
-import { MeetingNoteModal } from './MeetingNoteModal';
+import { BrandTabBar } from '../tabs/BrandTabBar';
+import type { BrandTab } from '../tabs/BrandTabBar';
+import { OverviewTab } from '../tabs/OverviewTab';
+import { WorkTab } from '../tabs/WorkTab';
+import { FeatureRequestsTab } from '../tabs/FeatureRequestsTab';
+import { MeetingNoteModal } from '../modals/MeetingNoteModal';
 import { SyncSettingsPanel } from './SyncSettingsPanel';
-import { SyncReviewModal } from './SyncReviewModal';
-import { ConnectSheetModal } from './ConnectSheetModal';
-import { useUiStore } from '../../store/ui';
+import { SyncReviewModal } from '../modals/SyncReviewModal';
+import { ConnectSheetModal } from '../modals/ConnectSheetModal';
+import { useUiStore } from '../../../store/ui';
 
 interface Props {
   brandId: string;

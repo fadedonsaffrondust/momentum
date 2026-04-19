@@ -2,14 +2,14 @@ import { useMemo, useRef, useState, useEffect } from 'react';
 import clsx from 'clsx';
 import type { BrandActionItem } from '@momentum/shared';
 import { Plus } from 'lucide-react';
-import { ActionItemRow } from './ActionItemRow';
+import { ActionItemRow } from '../widgets/ActionItemRow';
 import {
   useCreateBrandActionItem,
   useUpdateBrandActionItem,
   useDeleteBrandActionItem,
   useCompleteBrandActionItem,
-} from '../../api/hooks';
-import { useUiStore } from '../../store/ui';
+} from '../../../api/hooks';
+import { useUiStore } from '../../../store/ui';
 
 interface Props {
   brandId: string;

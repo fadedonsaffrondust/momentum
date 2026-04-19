@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useImportBrand } from '../../api/hooks';
-import { useUiStore } from '../../store/ui';
+import { useImportBrand } from '../../../api/hooks';
+import { useUiStore } from '../../../store/ui';
 import { X, Upload, FileText } from 'lucide-react';
 
 interface Props {

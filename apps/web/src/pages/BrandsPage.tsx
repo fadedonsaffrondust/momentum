@@ -7,9 +7,9 @@ import {
   useAllBrandActionItems,
   useCreateBrand,
 } from '../api/hooks';
-import { BrandListRail } from '../components/brands/BrandListRail';
-import { BrandDetailView } from '../components/brands/BrandDetailView';
-import { ImportBrandModal } from '../components/brands/ImportBrandModal';
+import { BrandListRail } from '../components/brands/widgets/BrandListRail';
+import { BrandDetailView } from '../components/brands/widgets/BrandDetailView';
+import { ImportBrandModal } from '../components/brands/modals/ImportBrandModal';
 import { markBrandSeen } from '../lib/brand-last-seen';
 import { useUiStore } from '../store/ui';
 

@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { useConnectFeatureRequestSheet } from '../../api/hooks';
-import { useUiStore } from '../../store/ui';
+import { useConnectFeatureRequestSheet } from '../../../api/hooks';
+import { useUiStore } from '../../../store/ui';
 
 interface Props {
   brandId: string;

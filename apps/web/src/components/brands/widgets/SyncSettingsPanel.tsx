@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { Brand, BrandStakeholder, SyncConfig } from '@momentum/shared';
-import { useUpdateSyncConfig } from '../../api/hooks';
-import { useUiStore } from '../../store/ui';
+import { useUpdateSyncConfig } from '../../../api/hooks';
+import { useUiStore } from '../../../store/ui';
 import { X, AlertTriangle } from 'lucide-react';
 
 interface Props {

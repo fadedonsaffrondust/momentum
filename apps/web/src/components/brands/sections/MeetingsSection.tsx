@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react';
 import type { BrandMeeting, BrandStakeholder, UserSummary } from '@momentum/shared';
-import { useDeleteBrandMeeting, useCreateBrandActionItem, useUsers } from '../../api/hooks';
-import { useUiStore } from '../../store/ui';
-import { extractActionItems } from '../../lib/extractActionItems';
-import { formatDateShort } from '../../lib/format';
+import { useDeleteBrandMeeting, useCreateBrandActionItem, useUsers } from '../../../api/hooks';
+import { useUiStore } from '../../../store/ui';
+import { extractActionItems } from '../../../lib/extractActionItems';
+import { formatDateShort } from '../../../lib/format';
 import { ChevronDown, ChevronRight, Pencil, Trash2, Zap, Play } from 'lucide-react';
-import { MeetingNoteModal } from './MeetingNoteModal';
-import { AvatarStack } from '../AvatarStack';
-import { Avatar } from '../Avatar';
-import { confirm } from '../ConfirmModal';
+import { MeetingNoteModal } from '../modals/MeetingNoteModal';
+import { AvatarStack } from '../../AvatarStack';
+import { Avatar } from '../../Avatar';
+import { confirm } from '../../ConfirmModal';
 
 interface Props {
   brandId: string;

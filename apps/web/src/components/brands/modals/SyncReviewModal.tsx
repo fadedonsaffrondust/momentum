@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { SyncCandidate, SyncConfirmResponse } from '@momentum/shared';
-import { useFetchSyncCandidates, useConfirmSync, useLookupMeeting } from '../../api/hooks';
-import { useUiStore } from '../../store/ui';
-import { SyncCandidateRow } from './SyncCandidateRow';
+import { useFetchSyncCandidates, useConfirmSync, useLookupMeeting } from '../../../api/hooks';
+import { useUiStore } from '../../../store/ui';
+import { SyncCandidateRow } from '../widgets/SyncCandidateRow';
 import { X, Loader2, CheckCircle2, AlertTriangle, ArrowRight, Link2 } from 'lucide-react';
 
 interface Props {

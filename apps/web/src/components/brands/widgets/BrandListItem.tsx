@@ -1,9 +1,9 @@
 import clsx from 'clsx';
 import type { Brand, BrandMeeting, BrandActionItem } from '@momentum/shared';
 import { HealthPill } from './HealthPill';
-import { computeBrandHealth } from '../../hooks/useBrandHealth';
-import { useBrandUnseen } from '../../hooks/useBrandUnseen';
-import { formatTimeAgo } from '../../lib/format';
+import { computeBrandHealth } from '../../../hooks/useBrandHealth';
+import { useBrandUnseen } from '../../../hooks/useBrandUnseen';
+import { formatTimeAgo } from '../../../lib/format';
 
 interface Props {
   brand: Brand;

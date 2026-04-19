@@ -2,11 +2,11 @@ import { useRef, useState, useEffect } from 'react';
 import type { Brand, BrandMeeting, BrandActionItem } from '@momentum/shared';
 import { RefreshCw } from 'lucide-react';
 import { HealthPill } from './HealthPill';
-import { computeBrandHealth } from '../../hooks/useBrandHealth';
-import { useUpdateBrand, useDeleteBrand } from '../../api/hooks';
+import { computeBrandHealth } from '../../../hooks/useBrandHealth';
+import { useUpdateBrand, useDeleteBrand } from '../../../api/hooks';
 import { useNavigate } from 'react-router-dom';
-import { useUiStore } from '../../store/ui';
-import { confirm } from '../ConfirmModal';
+import { useUiStore } from '../../../store/ui';
+import { confirm } from '../../ConfirmModal';
 
 interface Props {
   brand: Brand;

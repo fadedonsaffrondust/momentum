@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import type { BrandActionItem, UserSummary } from '@momentum/shared';
 import { ArrowRight, Pencil, Trash2 } from 'lucide-react';
-import { Avatar } from '../Avatar';
-import { useMe, useUsers } from '../../api/hooks';
-import { useUiStore } from '../../store/ui';
+import { Avatar } from '../../Avatar';
+import { useMe, useUsers } from '../../../api/hooks';
+import { useUiStore } from '../../../store/ui';
 
 interface Props {
   item: BrandActionItem;

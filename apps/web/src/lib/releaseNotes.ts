@@ -25,6 +25,40 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.14.3',
+    date: '2026-04-19',
+    headline: 'Internal restructure of the brand workspace and task drawer',
+    summary:
+      'Three of the largest UI files were broken apart and the autosave logic that the task drawer and brand overview both reimplemented is now a single shared hook. The Brands components folder gained tabs/, sections/, modals/, and widgets/ subdirectories so it stops being a 24-file flat dump. The keyboard controller for the Today and Parkings pages was split out of one 438-line monolith. Behavior is unchanged across the board — every keyboard binding round-trips identical and all 506 tests pass.',
+    items: [
+      {
+        title: 'Brands components folder restructured',
+        description:
+          'apps/web/src/components/brands/ was 24 flat .tsx files. They now live under tabs/ (4), sections/ (7), modals/ (4), and widgets/ (10). All moves were done with git mv so blame survives.',
+      },
+      {
+        title: 'New useAutosaveForm hook',
+        description:
+          'The 80-line ref-juggling autosave block in TaskDetailDrawer is now a generic apps/web/src/hooks/useAutosaveForm.ts: { values, setField, status, flush } with debounced save, sync-on-resource-change (taskId-style resetKey), flush-on-deps-change, flush-on-unmount, and an isUnchanged short-circuit for invalid or already-saved states. 8 unit tests cover every path.',
+      },
+      {
+        title: 'Task detail drawer halved',
+        description:
+          'TaskDetailDrawer.tsx went from 512 → 253 lines. The drawer header, footer, and the five property-panel rows (Assignee, Priority, Role, Estimate, Schedule) are now small focused components under apps/web/src/modals/taskDrawer/. Autosave migrates onto the new hook.',
+      },
+      {
+        title: 'Brand Overview tab cut by 54%',
+        description:
+          'OverviewTab.tsx went from 545 → 249 lines. The inline stakeholders editor, the goals + success-definition cards, and the raw-import collapsible were each lifted into their own files alongside the existing sections.',
+      },
+      {
+        title: 'Keyboard controller split by page',
+        description:
+          "useKeyboardController.ts went from 438 lines to a 33-line composer that calls two page-scoped sub-hooks (useTodayPageKeys, useParkingsPageKeys) under apps/web/src/hooks/keyboard/. The plan called for a 6-file action-level split; a 2-file page-level split won out because each page's nav + actions are tightly coupled and fragmenting them would have created more wiring than insight. Every binding was ported verbatim and the ShortcutsModal source had a zero-line diff at the end of the change.",
+      },
+    ],
+  },
+  {
     version: '0.14.2',
     date: '2026-04-19',
     headline: 'Internal API hook layer split into per-domain files',

@@ -5,7 +5,7 @@ import {
   useCreateBrandStakeholder,
   useUpdateBrandStakeholder,
   useDeleteBrandStakeholder,
-} from '../../api/hooks';
+} from '../../../api/hooks';
 import { Check, ChevronDown, ChevronRight, Plus, Trash2, Pencil } from 'lucide-react';
 
 interface Props {
