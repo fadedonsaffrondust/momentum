@@ -25,6 +25,30 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.14.4',
+    date: '2026-04-19',
+    headline: 'Today board kanban columns: equal widths, intentional empty states',
+    summary:
+      "Three small fixes to the Today board's three-column layout. Empty columns no longer drift narrower than the filled column. The empty hint text vertically centers in its column instead of pinning to the top, and each column now shows a small muted icon (Up Next: ⊕, In Progress: ◌, Done: ✓) above the hint so an empty column reads as designed rather than unfinished.",
+    items: [
+      {
+        title: 'All three columns are now exactly equal width',
+        description:
+          "The inner column section was a single flex-item child inside a display:flex wrapper, so it defaulted to content-width on the main axis — Up Next was wider than In Progress and Done because it had cards. Adding w-full + min-w-0 to the section forces it to fill its wrapper regardless of content. Empty columns now match the filled column's width.",
+      },
+      {
+        title: 'Empty-state hints centered, not top-pinned',
+        description:
+          'Previously the "Nothing in progress…" / "Nothing done yet today." text sat at the top of an otherwise-empty column with a wall of empty space below. The hint now vertically centers in the available column body.',
+      },
+      {
+        title: 'Muted icons mark each empty column',
+        description:
+          'A subtle 28px lucide icon (40% opacity, light stroke) sits above the centered hint: a plus-in-circle for Up Next, a dashed circle for In Progress, a checked circle for Done. Reads as a quiet visual anchor — empty columns look like designed empty states, not loading shells.',
+      },
+    ],
+  },
+  {
     version: '0.14.3',
     date: '2026-04-19',
     headline: 'Internal restructure of the brand workspace and task drawer',

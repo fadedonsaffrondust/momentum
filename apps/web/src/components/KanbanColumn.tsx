@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { useDroppable } from '@dnd-kit/core';
+import { CircleCheck, CircleDashed, CirclePlus } from 'lucide-react';
 import type { Task, Role, TaskColumn } from '@momentum/shared';
 import { TaskCard } from './TaskCard';
 import { useUiStore } from '../store/ui';
@@ -33,7 +34,10 @@ export function KanbanColumn({ column, title, tasks, roles, dnd = false }: Props
     <section
       ref={dnd ? drop.setNodeRef : undefined}
       className={clsx(
-        'flex flex-col rounded-xl border transition-colors duration-150 h-full min-h-0',
+        // w-full + min-w-0 force the column to fill its wrapper rather
+        // than collapsing to its content width (default behavior of a
+        // single flex-item child inside a display:flex wrapper).
+        'flex flex-col rounded-xl border transition-colors duration-150 h-full w-full min-w-0 min-h-0',
         isFocused ? 'border-border bg-background/85' : 'border-border/60 bg-background/60',
         dnd && drop.isOver && 'border-primary bg-primary/10 ring-1 ring-inset ring-primary/20',
       )}
@@ -46,40 +50,55 @@ export function KanbanColumn({ column, title, tasks, roles, dnd = false }: Props
           </p>
         </div>
       </header>
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
-        {tasks.length === 0 && column === 'up_next' && (
-          <div className="flex flex-col items-center gap-1 py-8 text-center">
-            <p className="text-xs text-muted-foreground">No tasks up next.</p>
-            <p className="text-2xs text-muted-foreground/70">
-              Press <kbd className="font-mono">/</kbd> or <kbd className="font-mono">n</kbd> to add
-              one.
-            </p>
+      <div className="flex-1 overflow-y-auto p-3">
+        {tasks.length === 0 ? (
+          // Empty columns vertically center their hint so the column
+          // doesn't read as "broken" — Up Next gets a two-line nudge,
+          // In Progress and Done each get a single muted line.
+          <div className="h-full flex flex-col items-center justify-center text-center px-4">
+            {column === 'up_next' && (
+              <>
+                <CirclePlus className="h-7 w-7 text-muted-foreground/40 mb-3" strokeWidth={1.5} />
+                <p className="text-xs text-muted-foreground">No tasks up next.</p>
+                <p className="text-2xs text-muted-foreground/70 mt-1">
+                  Press <kbd className="font-mono">/</kbd> or <kbd className="font-mono">n</kbd> to
+                  add one.
+                </p>
+              </>
+            )}
+            {column === 'in_progress' && (
+              <>
+                <CircleDashed className="h-7 w-7 text-muted-foreground/40 mb-3" strokeWidth={1.5} />
+                <p className="text-xs text-muted-foreground/70">
+                  Nothing in progress. Press <kbd className="font-mono">Enter</kbd> on an Up Next
+                  task to start.
+                </p>
+              </>
+            )}
+            {column === 'done' && (
+              <>
+                <CircleCheck className="h-7 w-7 text-muted-foreground/40 mb-3" strokeWidth={1.5} />
+                <p className="text-xs text-muted-foreground/70">Nothing done yet today.</p>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {tasks.map((t) => (
+              <TaskCard
+                key={t.id}
+                task={t}
+                role={t.roleId ? rolesById.get(t.roleId) : undefined}
+                selected={selectedTaskId === t.id && isFocused}
+                onSelect={() => {
+                  setSelectedTaskId(t.id);
+                  setFocusedColumn(column);
+                }}
+                draggable={dnd}
+              />
+            ))}
           </div>
         )}
-        {tasks.length === 0 && column === 'in_progress' && (
-          <p className="text-xs text-muted-foreground/70 text-center py-8">
-            Nothing in progress. Press <kbd className="font-mono">Enter</kbd> on an Up Next task to
-            start.
-          </p>
-        )}
-        {tasks.length === 0 && column === 'done' && (
-          <p className="text-xs text-muted-foreground/70 text-center py-8">
-            Nothing done yet today.
-          </p>
-        )}
-        {tasks.map((t) => (
-          <TaskCard
-            key={t.id}
-            task={t}
-            role={t.roleId ? rolesById.get(t.roleId) : undefined}
-            selected={selectedTaskId === t.id && isFocused}
-            onSelect={() => {
-              setSelectedTaskId(t.id);
-              setFocusedColumn(column);
-            }}
-            draggable={dnd}
-          />
-        ))}
       </div>
     </section>
   );

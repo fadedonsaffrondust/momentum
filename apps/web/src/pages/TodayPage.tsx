@@ -233,12 +233,15 @@ export function TodayPage() {
               <motion.div
                 key="done-col"
                 layout
-                initial={{ opacity: 0, flexGrow: 0 }}
-                animate={{ opacity: 1, flexGrow: 1 }}
-                exit={{ opacity: 0, flexGrow: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.15, ease: 'easeOut' }}
-                style={{ flexBasis: 0 }}
-                className="min-w-0 flex overflow-hidden"
+                // Same flex sizing as the other two columns so widths stay
+                // equal in steady state. Framer's `layout` prop handles the
+                // grow/shrink animation when the column mounts / unmounts;
+                // opacity is what fades it.
+                className="flex-1 min-w-0 flex overflow-hidden"
               >
                 <KanbanColumn column="done" title="Done" tasks={columns.done} roles={roles} dnd />
               </motion.div>
