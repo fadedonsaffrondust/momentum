@@ -268,7 +268,7 @@ context from the static file, and split cache breakpoints.
   **Natural split:** if this task runs long, split as "9a: remaining tools" and
   "9b: dynamic prompt construction + caching".
 
-### [ ] Task 10: Observability polish — cost, structured logs, `jarvis_tool_calls` analytics
+### [x] Task 10: Observability polish — cost, structured logs, `jarvis_tool_calls` analytics
 
 **Goal:** Every turn produces the structured log line from spec §9. Per-turn cost
 computed from `token_usage`. Tool-level latency/success queryable.
