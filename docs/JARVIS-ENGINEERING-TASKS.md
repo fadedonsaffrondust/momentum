@@ -313,7 +313,7 @@ computed from `token_usage`. Tool-level latency/success queryable.
   **Depends on:** Task 8 (UI components must exist to bind against)
   **Out of scope:** conversation-list reordering, list search (captured in TODOs).
 
-### [ ] Task 12: Eval harness + 20 starter cases + CI wiring
+### [x] Task 12: Eval harness + 20 starter cases + CI wiring
 
 **Goal:** `pnpm jarvis:eval` runs all cases against a seeded test DB and emits a
 pass-rate report. CI runs on PR open + merge to main; fails below 90%.
