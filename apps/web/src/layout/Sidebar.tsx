@@ -7,6 +7,7 @@ import {
   Inbox,
   Sparkles,
   Keyboard,
+  Bot,
   Sun,
   Moon,
   LogOut,
@@ -185,6 +186,7 @@ export function Sidebar() {
         <SidebarNavItem to="/parkings" label="Parkings" shortcut="g p" icon={CarFront} />
         <SidebarNavItem to="/team" label="Team" shortcut="g u" icon={Users} />
         <SidebarNavItem to="/brands" label="Brands" shortcut="g b" icon={ShoppingBag} />
+        <SidebarNavItem to="/jarvis" label="Jarvis" shortcut="g j" icon={Bot} />
       </nav>
 
       <div className="flex w-full flex-col items-center border-t border-border pt-2 pb-2">

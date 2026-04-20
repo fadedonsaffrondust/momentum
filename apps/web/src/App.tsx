@@ -10,6 +10,7 @@ import { ParkingsPage } from './pages/ParkingsPage';
 import { BrandsPage } from './pages/BrandsPage';
 import { TeamPage } from './pages/TeamPage';
 import { InboxPage } from './pages/InboxPage';
+import { JarvisPage } from './jarvis/JarvisPage';
 import { TasksLayout } from './layout/TasksLayout';
 import { Protected } from './components/Protected';
 import { CommandsProvider } from './lib/commands/context';
@@ -39,6 +40,8 @@ export function App() {
               <Route path="inbox" element={<InboxPage />} />
               <Route path="brands" element={<BrandsPage />} />
               <Route path="brands/:id" element={<BrandsPage />} />
+              <Route path="jarvis" element={<JarvisPage />} />
+              <Route path="jarvis/:conversationId" element={<JarvisPage />} />
             </Route>
           </Routes>
         </BrowserRouter>
