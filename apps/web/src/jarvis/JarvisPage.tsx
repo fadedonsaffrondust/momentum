@@ -1,31 +1,28 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ConversationList } from './ConversationList';
+import { ConversationView } from './ConversationView';
 import { EmptyState } from './EmptyState';
-import {
-  useCreateJarvisConversation,
-  useJarvisConversation,
-  useJarvisConversations,
-} from './api/conversations';
+import { useCreateJarvisConversation, useJarvisConversations } from './api/conversations';
 
 /**
  * Full-page Jarvis surface at /jarvis (and /jarvis/:conversationId).
- * The URL owns selection — clicking a row or creating a new conversation
- * navigates; the page reads `useParams` to render the active thread.
+ * URL owns selection — ConversationList navigates on click, the page
+ * reads `useParams` to render the active thread.
  *
- * Task 7 ships the scaffold (left rail + empty state + new-conversation
- * wiring). Task 8 replaces the main-area placeholder with the real
- * composer + message list + tool-call pills, and also wires the
- * initial-message auto-send flow for the EmptyState prompt cards.
+ * When the empty-state prompt cards create a new conversation, the seed
+ * prompt is forwarded via `location.state.initialMessage` so
+ * ConversationView can auto-post it. This keeps the prompt alive across
+ * the `navigate()` hop without stashing it in a global store.
  */
 export function JarvisPage() {
   const params = useParams<{ conversationId?: string }>();
   const activeId = params.conversationId ?? null;
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchValue, setSearchValue] = useState('');
 
   const listQ = useJarvisConversations();
-  const detailQ = useJarvisConversation(activeId ?? undefined);
   const createConversation = useCreateJarvisConversation();
 
   const conversations = useMemo(() => listQ.data ?? [], [listQ.data]);
@@ -42,24 +39,19 @@ export function JarvisPage() {
   };
 
   const handlePromptClick = (prompt: string) => {
-    // Task 8 extends the onSuccess handler to auto-post this prompt as
-    // the first message so the assistant streams a reply immediately.
     createConversation.mutate(
       { initialMessage: prompt },
       {
         onSuccess: (res) => {
-          navigate(`/jarvis/${res.conversationId}`);
+          navigate(`/jarvis/${res.conversationId}`, {
+            state: { initialMessage: prompt },
+          });
         },
       },
     );
   };
 
-  const handleSelect = (_id: string) => {
-    // Navigation is handled by ConversationList itself; this hook lets
-    // future work (e.g. collapsing the pane on mobile, marking-seen
-    // behaviour, or telemetry) live at the page level without
-    // rewriting the list.
-  };
+  const initialMessage = readInitialMessage(location.state);
 
   return (
     <div className="flex h-full">
@@ -68,16 +60,19 @@ export function JarvisPage() {
         activeConversationId={activeId}
         isLoading={listQ.isLoading}
         onNewConversation={handleNewConversation}
-        onSelect={handleSelect}
+        onSelect={() => {}}
         searchValue={searchValue}
         onSearchChange={setSearchValue}
       />
 
       <main className="flex flex-1 flex-col overflow-hidden">
         {activeId ? (
-          <ActiveConversationPlaceholder
-            conversationTitle={detailQ.data?.conversation.title ?? null}
-            isLoading={detailQ.isLoading}
+          <ConversationView
+            // keyed on conversationId so switching threads resets all
+            // local state (reducer, abort controller, composer value).
+            key={activeId}
+            conversationId={activeId}
+            initialMessage={initialMessage}
           />
         ) : (
           <EmptyState onPromptClick={handlePromptClick} isCreating={createConversation.isPending} />
@@ -87,33 +82,8 @@ export function JarvisPage() {
   );
 }
 
-/**
- * Minimal stand-in for the real conversation view — composer + message
- * list land in Task 8. Kept intentionally empty except for the title so
- * the /jarvis/:id route resolves end-to-end in V1 scaffolding.
- */
-function ActiveConversationPlaceholder({
-  conversationTitle,
-  isLoading,
-}: {
-  conversationTitle: string | null;
-  isLoading: boolean;
-}) {
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-      {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      ) : (
-        <>
-          <p className="text-sm text-muted-foreground">
-            {conversationTitle ? `Conversation: ${conversationTitle}` : 'Conversation'}
-          </p>
-          <p className="max-w-md text-xs text-muted-foreground">
-            The composer and streaming message view arrive in the next task. For now, the URL is
-            owned and the conversation exists.
-          </p>
-        </>
-      )}
-    </div>
-  );
+function readInitialMessage(state: unknown): string | null {
+  if (typeof state !== 'object' || state === null) return null;
+  const value = (state as { initialMessage?: unknown }).initialMessage;
+  return typeof value === 'string' ? value : null;
 }
