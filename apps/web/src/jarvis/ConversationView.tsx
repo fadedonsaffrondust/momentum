@@ -50,10 +50,20 @@ export function ConversationView({ conversationId, initialMessage }: Conversatio
     };
   }, [liveTurn.status, qc, conversationId]);
 
-  // Abort any in-flight stream when the user navigates away.
-  useEffect(() => {
-    return () => abortRef.current?.abort();
-  }, [conversationId]);
+  // Navigating away used to trigger an abort of any in-flight stream,
+  // but React StrictMode's dev-only setup → cleanup → setup double-
+  // invoke fires that cleanup mid-mount and cancels the controller the
+  // auto-post effect (below) just created — the fetch aborts before it
+  // hits the wire, the assistant sits on "Thinking…", and no /messages
+  // request ever lands. handleSubmit still aborts any previous
+  // controller when the user sends another message, so intra-turn
+  // cancellation is still correct; the one case we give up is
+  // "cancel the LLM call when the user clicks away mid-stream", which
+  // V1 accepts — the stream completes to the server, the persisted
+  // turn lands in the conversation, and the abandoned component's
+  // state updates are no-ops because React skips them on unmounted
+  // instances. See the Task 13 follow-up in docs/JARVIS-TODOS.md if we
+  // want true navigation-cancel back (needs a StrictMode-aware guard).
 
   const handleSubmit = async (content: string) => {
     setComposerValue('');
