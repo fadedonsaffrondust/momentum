@@ -25,6 +25,7 @@ import {
   MEETING_SOURCE,
   FEATURE_REQUEST_SYNC_STATUS,
   TASK_ATTACHMENT_KIND,
+  JARVIS_MESSAGE_ROLE,
 } from '@momentum/shared/enums';
 
 /* ─────────────── enums ─────────────── */
@@ -46,6 +47,7 @@ export const featureRequestSyncStatusEnum = pgEnum(
   FEATURE_REQUEST_SYNC_STATUS,
 );
 export const taskAttachmentKindEnum = pgEnum('task_attachment_kind', TASK_ATTACHMENT_KIND);
+export const jarvisMessageRoleEnum = pgEnum('jarvis_message_role', JARVIS_MESSAGE_ROLE);
 
 /* ─────────────── users ─────────────── */
 
@@ -392,6 +394,86 @@ export const inboxEvents = pgTable(
   (t) => ({
     userReadIdx: index('idx_ie_user_read').on(t.userId, t.readAt, t.createdAt.desc()),
     entityIdx: index('idx_ie_entity').on(t.entityType, t.entityId),
+  }),
+);
+
+/* ─────────────── jarvis_conversations (per-user AI assistant threads) ─────────────── */
+// Jarvis is Momentum's internal AI assistant. Each conversation belongs to a
+// single user and is strictly private (no team visibility in V1). See
+// apps/api/src/jarvis/CLAUDE.md for architectural invariants.
+
+export const jarvisConversations = pgTable(
+  'jarvis_conversations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    metadata: jsonb('metadata').notNull().default('{}'),
+  },
+  (t) => ({
+    userUpdatedIdx: index('idx_jarvis_conversations_user_updated').on(t.userId, t.updatedAt.desc()),
+  }),
+);
+
+/* ─────────────── jarvis_messages (turns within a conversation) ─────────────── */
+// `content` stores Anthropic-format content blocks (text, tool_use,
+// tool_result) as jsonb so the full turn is replayable for debugging and
+// drives the next LLM call's history. `intent` is reserved for the V1.5
+// router and stays null in V1.
+
+export const jarvisMessages = pgTable(
+  'jarvis_messages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    conversationId: uuid('conversation_id')
+      .notNull()
+      .references(() => jarvisConversations.id, { onDelete: 'cascade' }),
+    role: jarvisMessageRoleEnum('role').notNull(),
+    content: jsonb('content').notNull(),
+    intent: text('intent'),
+    model: text('model'),
+    latencyMs: integer('latency_ms'),
+    tokenUsage: jsonb('token_usage'),
+    error: jsonb('error'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    metadata: jsonb('metadata').notNull().default('{}'),
+  },
+  (t) => ({
+    conversationCreatedIdx: index('idx_jarvis_messages_conversation_created').on(
+      t.conversationId,
+      t.createdAt,
+    ),
+  }),
+);
+
+/* ─────────────── jarvis_tool_calls (observability log) ─────────────── */
+// Denormalized log of every tool invocation. Tool calls are recoverable
+// from jarvis_messages.content, but a flat table makes "which tools fail"
+// and "which tools are slow" trivial to query.
+
+export const jarvisToolCalls = pgTable(
+  'jarvis_tool_calls',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    messageId: uuid('message_id')
+      .notNull()
+      .references(() => jarvisMessages.id, { onDelete: 'cascade' }),
+    toolName: text('tool_name').notNull(),
+    arguments: jsonb('arguments').notNull(),
+    result: jsonb('result'),
+    error: text('error'),
+    latencyMs: integer('latency_ms').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    metadata: jsonb('metadata').notNull().default('{}'),
+  },
+  (t) => ({
+    messageIdx: index('idx_jarvis_tool_calls_message').on(t.messageId),
+    toolNameIdx: index('idx_jarvis_tool_calls_tool_name').on(t.toolName, t.createdAt.desc()),
   }),
 );
 

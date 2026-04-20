@@ -11,6 +11,7 @@ import {
   MEETING_SOURCE,
   FEATURE_REQUEST_SYNC_STATUS,
   TASK_ATTACHMENT_KIND,
+  JARVIS_MESSAGE_ROLE,
 } from './enums.ts';
 
 /**
@@ -64,5 +65,9 @@ describe('canonical enum tuples', () => {
 
   it('TASK_ATTACHMENT_KIND', () => {
     expect(TASK_ATTACHMENT_KIND).toEqual(['image', 'file']);
+  });
+
+  it('JARVIS_MESSAGE_ROLE', () => {
+    expect(JARVIS_MESSAGE_ROLE).toEqual(['user', 'assistant', 'tool']);
   });
 });
