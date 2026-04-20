@@ -176,6 +176,7 @@ export function Sidebar() {
       </Tooltip>
 
       <nav className="flex w-full flex-1 flex-col items-center gap-1 pt-2">
+        <SidebarNavItem to="/jarvis" label="Jarvis" shortcut="g j" icon={Bot} />
         <SidebarNavItem
           to="/"
           label="Tasks"
@@ -186,7 +187,6 @@ export function Sidebar() {
         <SidebarNavItem to="/parkings" label="Parkings" shortcut="g p" icon={CarFront} />
         <SidebarNavItem to="/team" label="Team" shortcut="g u" icon={Users} />
         <SidebarNavItem to="/brands" label="Brands" shortcut="g b" icon={ShoppingBag} />
-        <SidebarNavItem to="/jarvis" label="Jarvis" shortcut="g j" icon={Bot} />
       </nav>
 
       <div className="flex w-full flex-col items-center border-t border-border pt-2 pb-2">
