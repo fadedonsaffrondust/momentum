@@ -133,7 +133,7 @@ format so replay works. Tool calls land in `jarvis_tool_calls`.
   **Depends on:** Task 4
   **Out of scope:** SSE, API routes, streaming.
 
-### [ ] Task 6: Fastify routes + SSE streaming
+### [x] Task 6: Fastify routes + SSE streaming
 
 **Goal:** Five routes under `/api/jarvis` exist, authenticated, and the `POST
 /messages` route streams via SSE. First token reaches the client in <1.5s on a
