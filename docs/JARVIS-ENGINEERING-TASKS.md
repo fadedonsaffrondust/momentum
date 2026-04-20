@@ -34,7 +34,7 @@ place, and the project-root `CLAUDE.md` points at them.
   **Depends on:** none
   **Out of scope:** any code. No schema, no tools, no routes yet.
 
-### [ ] Task 2: Drizzle schema + migration for the three Jarvis tables
+### [x] Task 2: Drizzle schema + migration for the three Jarvis tables
 
 **Goal:** `jarvis_conversations`, `jarvis_messages`, `jarvis_tool_calls` exist in the
 DB with migrations, types exported from `packages/db`.
