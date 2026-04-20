@@ -113,7 +113,7 @@ assistant text. No DB persistence, no SSE. Proves the loop mechanics work.
   **Out of scope:** persistence, streaming, SSE, API routes, dynamic prompt content
   (rosters), additional tools beyond the three from Task 3.
 
-### [ ] Task 5: Persist conversations, messages, tool calls
+### [x] Task 5: Persist conversations, messages, tool calls
 
 **Goal:** Orchestrator writes every turn to DB. Messages stored in Anthropic content
 format so replay works. Tool calls land in `jarvis_tool_calls`.
