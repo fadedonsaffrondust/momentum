@@ -191,6 +191,31 @@ export const tasksRoutes: FastifyPluginAsyncZod = async (app) => {
       const updateSet: Record<string, unknown> = { ...rest };
       if (newAssigneeId !== undefined) updateSet.assigneeId = newAssigneeId;
 
+      // Invariant: column and status must stay coherent. The generic
+      // PATCH accepts either independently, but leaving one behind
+      // produces a zombie state — column='up_next' with
+      // status='in_progress' hides the task from the Today board
+      // (which renders by column) while still counting against the
+      // MAX_IN_PROGRESS cap (which reads status). Seen in the wild via
+      // "Plan My Day → Move to today" on tasks that were in_progress
+      // the previous day.
+      //
+      // When the caller mutates `column` without also declaring
+      // `status`, force status to match. For 'up_next' also clear
+      // startedAt because the task is no longer in progress. The
+      // dedicated /start, /pause, /complete, /reopen, /defer endpoints
+      // already get this right; this block is the safety net for PATCH.
+      if ('column' in rest && !('status' in rest)) {
+        if (rest.column === 'up_next') {
+          updateSet.status = 'todo';
+          updateSet.startedAt = null;
+        } else if (rest.column === 'in_progress') {
+          updateSet.status = 'in_progress';
+        } else if (rest.column === 'done') {
+          updateSet.status = 'done';
+        }
+      }
+
       // Reassignment-over-capacity rule (spec §16.1): if the task is in
       // progress and the new assignee is already at MAX_IN_PROGRESS,
       // silently reset the task to todo/up_next. No error, no inbox event

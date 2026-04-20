@@ -7,6 +7,7 @@ import {
   Inbox,
   Sparkles,
   Keyboard,
+  Bot,
   Sun,
   Moon,
   LogOut,
@@ -175,6 +176,7 @@ export function Sidebar() {
       </Tooltip>
 
       <nav className="flex w-full flex-1 flex-col items-center gap-1 pt-2">
+        <SidebarNavItem to="/jarvis" label="Jarvis" shortcut="g j" icon={Bot} />
         <SidebarNavItem
           to="/"
           label="Tasks"

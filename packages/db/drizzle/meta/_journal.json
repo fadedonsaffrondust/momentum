@@ -71,6 +71,13 @@
       "when": 1776629119198,
       "tag": "0009_silky_vapor",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1776656264724,
+      "tag": "0010_aromatic_mongu",
+      "breakpoints": true
     }
   ]
 }

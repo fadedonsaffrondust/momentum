@@ -184,6 +184,7 @@ export function useGlobalShortcuts(): void {
         else if (e.key === 'b') target = '/brands';
         else if (e.key === 'u') target = '/team';
         else if (e.key === 'i') target = '/inbox';
+        else if (e.key === 'j') target = '/jarvis';
 
         if (target) {
           consume(e);

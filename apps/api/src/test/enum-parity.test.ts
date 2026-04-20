@@ -11,6 +11,7 @@ import {
   MEETING_SOURCE,
   FEATURE_REQUEST_SYNC_STATUS,
   TASK_ATTACHMENT_KIND,
+  JARVIS_MESSAGE_ROLE,
 } from '@momentum/shared/enums';
 import {
   priorityEnum,
@@ -24,6 +25,7 @@ import {
   meetingSourceEnum,
   featureRequestSyncStatusEnum,
   taskAttachmentKindEnum,
+  jarvisMessageRoleEnum,
 } from '@momentum/db';
 
 /**
@@ -49,6 +51,7 @@ describe('Drizzle ↔ shared enum parity', () => {
       FEATURE_REQUEST_SYNC_STATUS,
     ],
     ['task_attachment_kind', taskAttachmentKindEnum.enumValues, TASK_ATTACHMENT_KIND],
+    ['jarvis_message_role', jarvisMessageRoleEnum.enumValues, JARVIS_MESSAGE_ROLE],
   ] as const)('%s tuple matches Drizzle enumValues', (_name, drizzleValues, sharedTuple) => {
     expect([...drizzleValues]).toEqual([...sharedTuple]);
   });

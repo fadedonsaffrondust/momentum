@@ -25,6 +25,82 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.16.2',
+    date: '2026-04-20',
+    headline: 'Fix: tasks no longer get stuck as in-progress zombies after moving to today',
+    summary:
+      'If a task was in_progress at the end of a day and you used "Plan My Day → Move to today" to carry it forward, it could land on the new day with an inconsistent state — hidden from the Today board (which renders by column) but still counting against the 2-task in-progress cap (which reads status). The PATCH handler now keeps status and column coherent automatically.',
+    items: [
+      {
+        title: 'Rescheduling a task resets it to "Up Next" cleanly',
+        description:
+          'Any write to a task that sets column back to "Up Next" (via the Plan My Day modal, drag-and-drop, or the generic PATCH endpoint) now also resets status to todo and clears startedAt. Previously the column would flip but the status would linger as in_progress, producing a zombie task that the Today board didn\'t show but that still blocked the 2-in-progress cap.',
+      },
+    ],
+  },
+  {
+    version: '0.16.1',
+    date: '2026-04-20',
+    headline: 'Jarvis polish — live conversation titles and a centered composer',
+    summary:
+      'Two small fixes for the new Jarvis surface: conversations started from the sidebar "+ new" button now get a real title as soon as you send your first message (no refresh needed), and the composer placeholder sits vertically centered in its box.',
+    items: [
+      {
+        title: 'Sidebar titles update after your first message',
+        description:
+          'Clicking "+ new" in the Jarvis sidebar used to leave the row titled "New conversation" until you refreshed the page. Now the first message you send overwrites the placeholder — the sidebar refreshes as soon as the assistant finishes streaming, so the row picks up a real title the way empty-state-prompt conversations already did.',
+      },
+      {
+        title: 'Composer placeholder is vertically centered',
+        description:
+          'The "Ask Jarvis — use Enter to send, Shift+Enter for a newline" placeholder was drifting to one edge of its box. It now sits centered, matching the send button next to it.',
+      },
+    ],
+  },
+  {
+    version: '0.16.0',
+    date: '2026-04-20',
+    headline: 'Meet Jarvis — ask questions about your team, brands, and tasks',
+    summary:
+      'Jarvis is Omnirev\'s internal AI assistant, built into Momentum as a new top-level surface at /jarvis. Ask natural-language questions — "what\'s overdue", "how is Boudin doing", "which brand needs the most attention" — and Jarvis answers by calling 14 read-only tools across Momentum\'s data. Every answer streams token-by-token; every tool call shows up as an inline pill you can expand to see exactly what data Jarvis fetched. V1 is read-only by design: Jarvis can summarize, compare, and rank, but never changes your data.',
+    items: [
+      {
+        title: 'New top-level view at /jarvis',
+        description:
+          'Jarvis lives in the left sidebar next to Brands. Full-page chat with a conversation list on the left (search + recent-first, like a mail app) and a stream view on the right. Your conversations are strictly private — no one else on the team can read them.',
+        shortcuts: ['g', 'j'],
+        howTo:
+          'Press g j from anywhere, or click the Bot icon in the sidebar. Click one of the example-prompt cards to get an instant answer, or type your own question.',
+      },
+      {
+        title: 'Streaming answers with inline tool-call pills',
+        description:
+          'Tokens arrive live; tool calls render as "→ Looking up Boudin\'s action items…" pills between user and assistant turns, animating while the tool runs and switching to a checkmark when done. Click any pill to expand and see the exact arguments Jarvis used and the raw result it got back.',
+      },
+      {
+        title: 'Fourteen read-only tools across every Momentum surface',
+        description:
+          "Tasks (yours, the team's, or one member's), brands (summary, list, action items, meetings), action items (cross-brand, by assignee, overdue), meetings (recent, per-brand, full notes), team roster, plus one analytical tool that ranks brands by a composite attention score (overdue items × 10 + open items × 2 + days since last meeting / event). V1 is read-only — no createTask, no updateActionItem, no stubs; write actions arrive in V2 behind a confirmation flow.",
+      },
+      {
+        title: 'Keyboard-first from anywhere',
+        description:
+          'Press n for a new conversation, / to focus the composer, Enter to send, Shift+Enter for a newline, Cmd+Enter as an alternate send, j/k to cycle through the conversation list, and ? as always to see the full map. The Shortcuts modal has a new Jarvis section with every binding.',
+        shortcuts: ['n'],
+      },
+      {
+        title: 'Transparent about what it cannot see',
+        description:
+          "When you ask about something Jarvis doesn't have a tool for — platform usage data, revenue numbers, anything outside the 14 shipped tools — it states the gap explicitly and answers from what it does have, instead of dodging or making up the missing piece. Partial-but-honest is the posture; complete-but-hallucinated is the anti-pattern.",
+      },
+      {
+        title: 'Setup: ANTHROPIC_API_KEY in .env',
+        description:
+          'Jarvis uses Claude Sonnet 4.6 via the Anthropic SDK. Add ANTHROPIC_API_KEY to your .env (see .env.example) and restart the API. The rest of Momentum works without the key — only the /messages endpoint on /jarvis requires it.',
+      },
+    ],
+  },
+  {
     version: '0.15.2',
     date: '2026-04-19',
     headline: 'Resize images, faster attachment picker, download fixes',

@@ -25,3 +25,4 @@ export const BRAND_ACTION_STATUS = ['open', 'done'] as const;
 export const MEETING_SOURCE = ['manual', 'recording_sync'] as const;
 export const FEATURE_REQUEST_SYNC_STATUS = ['synced', 'pending', 'error'] as const;
 export const TASK_ATTACHMENT_KIND = ['image', 'file'] as const;
+export const JARVIS_MESSAGE_ROLE = ['user', 'assistant', 'tool'] as const;

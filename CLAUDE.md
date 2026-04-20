@@ -222,6 +222,10 @@ Test files are colocated with source: `foo.ts` → `foo.test.ts`. Use Vitest (`d
 
 See `packages/db/src/schema.ts` for the source of truth. Tables: `users`, `roles`, `tasks`, `daily_logs`, `user_settings`. Task has `status` (`todo|in_progress|done`), `column` (`up_next|in_progress|done`), `scheduled_date`, `estimate_minutes`, `actual_minutes`, `priority`.
 
+## Subsystem-specific guardrails
+
+Jarvis has its own architectural guardrails — see `apps/api/src/jarvis/CLAUDE.md` before modifying any Jarvis code.
+
 ## Deployment
 
 Not wired up yet. `docker-compose.yml` boots postgres for local dev only.

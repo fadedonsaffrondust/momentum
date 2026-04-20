@@ -15,6 +15,7 @@
     "db:migrate": "pnpm --filter @momentum/db migrate",
     "db:migrate:team-space-backfill": "pnpm --filter @momentum/db migrate:team-space-backfill",
     "db:studio": "pnpm --filter @momentum/db studio",
+    "jarvis:eval": "pnpm --filter @momentum/api jarvis:eval",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
     "prepare": "lefthook install || true"

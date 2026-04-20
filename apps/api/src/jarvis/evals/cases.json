@@ -1,0 +1,166 @@
+[
+  {
+    "id": "tasks-001",
+    "input": "What are my tasks for today?",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getMyTasks"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "tasks-002",
+    "input": "What's on my plate this week?",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getMyTasks"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "tasks-003",
+    "input": "Show me my in-progress tasks.",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getMyTasks"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "tasks-004",
+    "input": "What is the team working on today?",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getTasks"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "tasks-005",
+    "input": "What is Sara working on?",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getMemberTasks"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "tasks-006",
+    "input": "What's scheduled for me tomorrow?",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getMyTasks"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "tasks-007",
+    "input": "What did I complete recently?",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getMyTasks"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "tasks-008",
+    "input": "Any high-priority tasks across the team right now?",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getTasks"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+
+  {
+    "id": "brands-001",
+    "input": "How is Boudin doing?",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getBrand"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "brands-002",
+    "input": "List our active brands.",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getBrands"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "brands-003",
+    "input": "What are the open action items on Boudin?",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getBrandActionItems"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "brands-004",
+    "input": "Show me recent meetings with Boudin.",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getBrandMeetings"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+
+  {
+    "id": "team-001",
+    "input": "Who is on the team?",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getTeamMembers"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "team-002",
+    "input": "What is Sara's current plate?",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getMemberTasks"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "team-003",
+    "input": "Show me Ryan's in-progress work.",
+    "as_user": "nader",
+    "expected_intent": "data_query",
+    "expected_tool_calls": ["getMemberTasks"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+
+  {
+    "id": "analytical-001",
+    "input": "Which brand needs the most attention right now?",
+    "as_user": "nader",
+    "expected_intent": "analytical",
+    "expected_tool_calls": ["getBrandsRequiringAttention"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "analytical-002",
+    "input": "What's overdue right now across the team?",
+    "as_user": "nader",
+    "expected_intent": "analytical",
+    "expected_tool_calls": ["getOverdueActionItems"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "analytical-003",
+    "input": "What overdue items do I have on my plate?",
+    "as_user": "nader",
+    "expected_intent": "analytical",
+    "expected_tool_calls": ["getOverdueActionItems"],
+    "answer_must_not_contain": ["I don't know"]
+  },
+
+  {
+    "id": "oos-001",
+    "input": "What's the weather in San Francisco today?",
+    "as_user": "nader",
+    "expected_intent": "out_of_scope",
+    "expected_tool_calls": [],
+    "answer_must_not_contain": ["I don't know"]
+  },
+  {
+    "id": "oos-002",
+    "input": "How much revenue did Boudin make last month?",
+    "as_user": "nader",
+    "expected_intent": "out_of_scope",
+    "expected_tool_calls": [],
+    "answer_must_not_contain": ["I don't know"]
+  }
+]
