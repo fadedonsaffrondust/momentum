@@ -59,7 +59,7 @@ jarvis_messages`.
   **Depends on:** Task 1
   **Out of scope:** repository functions, seed data, tool handlers, any API route.
 
-### [ ] Task 3: Tool registry skeleton + first three tools
+### [x] Task 3: Tool registry skeleton + first three tools
 
 **Goal:** The registry pattern exists; `getMyTasks`, `getBrand`,
 `getBrandsRequiringAttention` run against the DB with tests.

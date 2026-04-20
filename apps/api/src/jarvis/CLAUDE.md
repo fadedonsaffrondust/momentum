@@ -271,7 +271,7 @@ If you need a new file, follow this structure. If you think the structure needs 
 
 This is the roadmap as understood today. Knowing what comes next prevents premature building.
 
-**V1 (current).** Read-only. 15 tools. Flat knowledge file. Single LLM provider. Any authed user sees everything. Private conversations.
+**V1 (current).** Read-only. 14 tools. Flat knowledge file. Single LLM provider. Any authed user sees everything. Private conversations. (The originally specified 15th tool, `getTeamMemberByName`, was dropped during planning — the team roster is inlined into every system prompt, so the model resolves names to IDs without a tool call.)
 
 **V1.5 (next).** RAG-backed knowledge base with proper retrieval. Possible router-on-Haiku optimization. Possible fine-grained permissions if user demands. More tools as gaps surface.
 
