@@ -159,7 +159,13 @@ export const jarvisRoutes: FastifyPluginAsyncZod = async (app) => {
 
       const service = getJarvisService();
 
-      writeSseHeaders(reply.raw);
+      // `reply.hijack()` skips Fastify's response pipeline — including
+      // `@fastify/cors`'s onSend hook — so we have to echo the request
+      // Origin back manually or the browser rejects the response with a
+      // CORS error (despite the preflight OPTIONS having succeeded).
+      const originHeader = req.headers.origin;
+      const origin = typeof originHeader === 'string' ? originHeader : undefined;
+      writeSseHeaders(reply.raw, { origin });
       reply.hijack();
       const stopKeepAlive = startSseKeepAlive(reply.raw);
 

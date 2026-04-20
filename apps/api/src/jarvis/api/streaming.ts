@@ -17,19 +17,39 @@ import type { JarvisStreamEvent } from '@momentum/shared';
  * also carries `type`), so a client can filter either way.
  */
 
+export interface SseHeaderOptions {
+  /**
+   * CORS origin to echo on the SSE response. Required when the SSE endpoint
+   * is called cross-origin (every browser case for us — the web client runs
+   * on 5173 while the API runs on 3001). `reply.hijack()` bypasses Fastify's
+   * normal `onSend` pipeline, so the `@fastify/cors` plugin NEVER gets a
+   * chance to add `Access-Control-Allow-Origin`. Without it, the browser
+   * rejects the response with a `Failed to fetch` CORS error — even though
+   * the preflight OPTIONS succeeded. Pass the request's `Origin` header here
+   * so the response echoes it back.
+   */
+  origin?: string;
+}
+
 /**
  * Write the response headers SSE needs. Must be called before any event
  * write and before `reply.hijack()` is already active.
  */
-export function writeSseHeaders(res: ServerResponse): void {
-  res.writeHead(200, {
+export function writeSseHeaders(res: ServerResponse, opts: SseHeaderOptions = {}): void {
+  const headers: Record<string, string> = {
     'Content-Type': 'text/event-stream; charset=utf-8',
     'Cache-Control': 'no-cache, no-transform',
     Connection: 'keep-alive',
     // Disable nginx/other proxy buffering so the first token is visible
     // client-side immediately.
     'X-Accel-Buffering': 'no',
-  });
+  };
+  if (opts.origin) {
+    headers['Access-Control-Allow-Origin'] = opts.origin;
+    headers['Access-Control-Allow-Credentials'] = 'true';
+    headers.Vary = 'Origin';
+  }
+  res.writeHead(200, headers);
 }
 
 /**
