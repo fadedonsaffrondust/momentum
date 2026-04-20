@@ -25,6 +25,7 @@ import type {
 import type { JarvisPersistence } from './persistence/index.ts';
 import type { MessageRow } from './persistence/messages.ts';
 import type { ToolCallRow } from './persistence/tool-calls.ts';
+import type { JarvisStreamEvent } from '@momentum/shared';
 
 const USER_ID = '00000000-0000-0000-0000-0000000000a1';
 const CONVERSATION_ID = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
@@ -69,10 +70,33 @@ function llmResponse(
 
 function makeMockLLM(responses: LLMResponse[]): LLMProvider & {
   sendMessage: ReturnType<typeof vi.fn>;
+  streamMessage: ReturnType<typeof vi.fn>;
 } {
-  const fn = vi.fn<(req: LLMRequest) => Promise<LLMResponse>>();
-  for (const r of responses) fn.mockResolvedValueOnce(r);
-  return { sendMessage: fn } as LLMProvider & { sendMessage: ReturnType<typeof vi.fn> };
+  // Both sendMessage and streamMessage pull from the same response queue
+  // so tests can exercise either path with a single `responses` array.
+  const queue: LLMResponse[] = [...responses];
+  const send = vi.fn(async (_req: LLMRequest): Promise<LLMResponse> => {
+    const next = queue.shift();
+    if (!next) throw new Error('mock LLM ran out of responses');
+    return next;
+  });
+  const stream = vi.fn(
+    async (
+      _req: LLMRequest,
+      opts: { onTextDelta: (text: string) => void },
+    ): Promise<LLMResponse> => {
+      const next = queue.shift();
+      if (!next) throw new Error('mock LLM ran out of responses');
+      // Forward the final text as a single delta so streaming consumers
+      // get something to exercise. Real providers emit per-token deltas;
+      // for tests, one delta per text block is enough to prove the wiring.
+      for (const block of next.content) {
+        if (block.type === 'text') opts.onTextDelta(block.text);
+      }
+      return next;
+    },
+  );
+  return { sendMessage: send, streamMessage: stream };
 }
 
 /**
@@ -389,12 +413,15 @@ describe('JarvisService.handleMessage — loop exhaustion', () => {
       },
     });
 
+    const makeToolUse = () =>
+      llmResponse('tool_use', [toolUseBlock(`tu_${Math.random()}`, 'noop', {})]);
     const sendMessage = vi
       .fn<(req: LLMRequest) => Promise<LLMResponse>>()
-      .mockImplementation(async () =>
-        llmResponse('tool_use', [toolUseBlock(`tu_${Math.random()}`, 'noop', {})]),
-      );
-    const mockLLM: LLMProvider = { sendMessage };
+      .mockImplementation(async () => makeToolUse());
+    const streamMessage = vi
+      .fn<(req: LLMRequest, opts: { onTextDelta: (t: string) => void }) => Promise<LLMResponse>>()
+      .mockImplementation(async () => makeToolUse());
+    const mockLLM: LLMProvider = { sendMessage, streamMessage };
     const persistence = makeMockPersistence();
 
     const logger = makeLogger();
@@ -432,7 +459,10 @@ describe('JarvisService.handleMessage — turn timeout', () => {
   afterEach(() => vi.useRealTimers());
 
   it('throws TurnTimeoutError, persists an error-marker assistant message, and re-throws', async () => {
-    const mockLLM: LLMProvider = { sendMessage: () => new Promise(() => {}) };
+    const mockLLM: LLMProvider = {
+      sendMessage: () => new Promise(() => {}),
+      streamMessage: () => new Promise(() => {}),
+    };
     const persistence = makeMockPersistence();
 
     const service = new JarvisService({
@@ -464,6 +494,107 @@ describe('JarvisService.handleMessage — turn timeout', () => {
     });
     // Still bump updated_at so the list view surfaces the failed turn.
     expect(persistence.bumpConversationUpdatedAt).toHaveBeenCalledTimes(1);
+  });
+});
+
+/* ─────────────── streamMessage events ─────────────── */
+
+describe('JarvisService.streamMessage', () => {
+  it('emits intent → tool_call_start/end → text_delta → done across a two-turn flow', async () => {
+    const registry = new ToolRegistry();
+    registry.registerTool({
+      name: 'noop',
+      description: 'Does nothing.',
+      inputSchema: z.object({}),
+      readOnly: true,
+      async handler() {
+        return { ok: true };
+      },
+    });
+
+    const mockLLM = makeMockLLM([
+      llmResponse('tool_use', [toolUseBlock('tu_1', 'noop', {})]),
+      llmResponse('end_turn', [textBlock('All done.')], {
+        usage: usage({ inputTokens: 50, outputTokens: 10 }),
+      }),
+    ]);
+
+    const persistence = makeMockPersistence();
+    const service = new JarvisService({
+      llm: mockLLM,
+      registry,
+      db: createMockDb() as unknown as Database,
+      persistence,
+      now: () => NOW,
+    });
+
+    const events: JarvisStreamEvent[] = [];
+    const result = await service.streamMessage(
+      {
+        conversationId: CONVERSATION_ID,
+        userId: USER_ID,
+        userMessage: 'hi',
+        logger: makeLogger(),
+      },
+      (e) => events.push(e),
+    );
+
+    const types = events.map((e) => e.type);
+    expect(types).toEqual(['intent', 'tool_call_start', 'tool_call_end', 'text_delta', 'done']);
+
+    const intent = events[0] as Extract<JarvisStreamEvent, { type: 'intent' }>;
+    expect(intent.intent).toBe('');
+
+    const start = events[1] as Extract<JarvisStreamEvent, { type: 'tool_call_start' }>;
+    expect(start.toolName).toBe('noop');
+    expect(start.toolCallId).toBe('tu_1');
+
+    const end = events[2] as Extract<JarvisStreamEvent, { type: 'tool_call_end' }>;
+    expect(end.success).toBe(true);
+    expect(end.toolCallId).toBe('tu_1');
+
+    const delta = events[3] as Extract<JarvisStreamEvent, { type: 'text_delta' }>;
+    expect(delta.text).toBe('All done.');
+
+    const done = events[4] as Extract<JarvisStreamEvent, { type: 'done' }>;
+    expect(done.stopReason).toBe('end_turn');
+    expect(done.messageId).toBe(result.lastAssistantMessageId);
+    expect(done.tokenUsage.inputTokens).toBe(50);
+  });
+
+  it('emits an error event when a turn fails (stream LLM throws)', async () => {
+    const sendMessage = vi.fn(async (): Promise<LLMResponse> => {
+      throw new Error('boom');
+    });
+    const streamMessage = vi.fn(async (): Promise<LLMResponse> => {
+      throw new Error('boom');
+    });
+    const persistence = makeMockPersistence();
+    const service = new JarvisService({
+      llm: { sendMessage, streamMessage },
+      registry: new ToolRegistry(),
+      db: createMockDb() as unknown as Database,
+      persistence,
+      now: () => NOW,
+    });
+
+    const events: JarvisStreamEvent[] = [];
+    await expect(
+      service.streamMessage(
+        {
+          conversationId: CONVERSATION_ID,
+          userId: USER_ID,
+          userMessage: 'hi',
+          logger: makeLogger(),
+        },
+        (e) => events.push(e),
+      ),
+    ).rejects.toThrow(/boom/);
+
+    // intent first, then the error event.
+    expect(events.map((e) => e.type)).toEqual(['intent', 'error']);
+    const err = events[1] as Extract<JarvisStreamEvent, { type: 'error' }>;
+    expect(err.message).toMatch(/boom/);
   });
 });
 

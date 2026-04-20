@@ -1,5 +1,6 @@
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import type { Database } from '@momentum/db';
+import type { JarvisStreamEvent } from '@momentum/shared';
 import type {
   LLMContentBlock,
   LLMMessageParam,
@@ -14,6 +15,9 @@ import type { ToolRegistry } from './tools/index.ts';
 import { SYNTHESIS_PROMPT_V1 } from './prompts/synthesis.ts';
 import { buildPersistence, type JarvisPersistence } from './persistence/index.ts';
 import type { MessageRow } from './persistence/messages.ts';
+
+export type JarvisStreamCallback = (event: JarvisStreamEvent) => void;
+const NOOP_STREAM: JarvisStreamCallback = () => {};
 
 /**
  * Hard cap on sequential tool calls per user turn. Per the spec (§7) and
@@ -90,6 +94,8 @@ export interface HandleMessageResult {
   stopReason: string | null;
   /** True when the loop was cut off by TOOL_LOOP_MAX rather than end_turn. */
   loopExhausted: boolean;
+  /** Id of the last persisted assistant message; surfaced in the SSE `done` event. */
+  lastAssistantMessageId: string | null;
 }
 
 /**
@@ -119,7 +125,50 @@ export class JarvisService {
     };
   }
 
+  /** Non-streaming handler — used by evals, CLI tooling, and tests. */
   async handleMessage(input: HandleMessageInput): Promise<HandleMessageResult> {
+    return this.runTurn(input, NOOP_STREAM, false);
+  }
+
+  /**
+   * Streaming handler used by the SSE route. Emits the V1 event types
+   * (intent, tool_call_start/end, text_delta, done, error) as the turn
+   * progresses. Resolves with the same HandleMessageResult shape as
+   * handleMessage so callers that don't need SSE can treat the two
+   * interchangeably.
+   */
+  async streamMessage(
+    input: HandleMessageInput,
+    onEvent: JarvisStreamCallback,
+  ): Promise<HandleMessageResult> {
+    // V1 emits `intent` as an empty-string marker so the client parser
+    // stays future-proof for when the router (V1.5) lands.
+    onEvent({ type: 'intent', intent: '' });
+
+    const startedAt = Date.now();
+    try {
+      const result = await this.runTurn(input, onEvent, true);
+      onEvent({
+        type: 'done',
+        messageId: result.lastAssistantMessageId ?? '',
+        totalLatencyMs: Date.now() - startedAt,
+        tokenUsage: result.usage,
+        stopReason: result.stopReason,
+      });
+      return result;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const name = err instanceof Error ? err.name : undefined;
+      onEvent({ type: 'error', message, ...(name ? { name } : {}) });
+      throw err;
+    }
+  }
+
+  private async runTurn(
+    input: HandleMessageInput,
+    onEvent: JarvisStreamCallback,
+    streaming: boolean,
+  ): Promise<HandleMessageResult> {
     const ctx: ToolContext = {
       userId: input.userId,
       now: this.opts.now(),
@@ -155,7 +204,7 @@ export class JarvisService {
 
     try {
       const result = await Promise.race([
-        this.runLoop(input, ctx, anthropicMessages),
+        this.runLoop(input, ctx, anthropicMessages, onEvent, streaming),
         timeoutPromise,
       ]);
       await this.opts.persistence.bumpConversationUpdatedAt(input.conversationId);
@@ -188,6 +237,8 @@ export class JarvisService {
     input: HandleMessageInput,
     ctx: ToolContext,
     anthropicMessages: LLMMessageParam[],
+    onEvent: JarvisStreamCallback,
+    streaming: boolean,
   ): Promise<HandleMessageResult> {
     const messages: LLMMessageParam[] = [...anthropicMessages];
 
@@ -196,18 +247,24 @@ export class JarvisService {
     const usage = emptyUsage();
     let lastContent: LLMContentBlock[] = [];
     let lastStopReason: string | null = null;
+    let lastAssistantMessageId: string | null = null;
 
     for (let iter = 0; iter < this.opts.toolLoopMax; iter++) {
       const llmStartedAt = Date.now();
-      const response = await this.opts.llm.sendMessage({
+      // Shallow-copy `messages` so we don't hand the LLM provider a
+      // mutable reference that keeps growing under it mid-turn. The SDK
+      // would serialize anyway, but keeping the boundary defensive lets
+      // tests (and any future provider) observe a stable snapshot.
+      const llmRequest = {
         system: SYNTHESIS_PROMPT_V1,
-        // Shallow-copy so we don't hand the LLM provider a mutable
-        // reference that keeps growing under it mid-turn. The SDK would
-        // serialize anyway, but keeping the boundary defensive lets
-        // tests (and any future provider) observe a stable snapshot.
         messages: [...messages],
         tools,
-      });
+      };
+      const response = streaming
+        ? await this.opts.llm.streamMessage(llmRequest, {
+            onTextDelta: (text) => onEvent({ type: 'text_delta', text }),
+          })
+        : await this.opts.llm.sendMessage(llmRequest);
       const llmLatencyMs = Date.now() - llmStartedAt;
       lastContent = response.content;
       lastStopReason = response.stopReason;
@@ -223,6 +280,7 @@ export class JarvisService {
         latencyMs: llmLatencyMs,
         tokenUsage: response.usage,
       });
+      lastAssistantMessageId = assistantRow.id;
 
       if (response.stopReason === 'end_turn' || response.stopReason === 'stop_sequence') {
         return {
@@ -232,6 +290,7 @@ export class JarvisService {
           usage,
           stopReason: response.stopReason,
           loopExhausted: false,
+          lastAssistantMessageId,
         };
       }
 
@@ -248,6 +307,7 @@ export class JarvisService {
           usage,
           stopReason: response.stopReason,
           loopExhausted: false,
+          lastAssistantMessageId,
         };
       }
 
@@ -255,8 +315,22 @@ export class JarvisService {
 
       const toolResults: Anthropic_ToolResultBlockParam[] = [];
       for (const block of toolUseBlocks) {
+        onEvent({
+          type: 'tool_call_start',
+          toolCallId: block.id,
+          toolName: block.name,
+          arguments: block.input,
+        });
         const record = await this.executeToolForLoop(block, ctx);
         toolCalls.push(record);
+        onEvent({
+          type: 'tool_call_end',
+          toolCallId: block.id,
+          toolName: record.name,
+          latencyMs: record.latencyMs,
+          success: record.error === null,
+          ...(record.error ? { error: record.error } : {}),
+        });
         await this.opts.persistence.insertToolCall({
           messageId: assistantRow.id,
           toolName: record.name,
@@ -301,6 +375,7 @@ export class JarvisService {
       usage,
       stopReason: 'tool_loop_exhausted',
       loopExhausted: true,
+      lastAssistantMessageId,
     };
   }
 

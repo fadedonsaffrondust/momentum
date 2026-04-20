@@ -31,6 +31,7 @@ import { dailyLogsRoutes } from './routes/daily-logs.ts';
 import { statsRoutes } from './routes/stats.ts';
 import { dataRoutes } from './routes/data.ts';
 import { taskAttachmentsRoutes } from './routes/task-attachments.ts';
+import { jarvisRoutes } from './jarvis/api/routes.ts';
 
 async function main() {
   const app = Fastify({
@@ -93,6 +94,7 @@ async function main() {
   await app.register(dailyLogsRoutes);
   await app.register(statsRoutes);
   await app.register(dataRoutes);
+  await app.register(jarvisRoutes);
 
   try {
     await app.listen({ port: env.API_PORT, host: env.API_HOST });

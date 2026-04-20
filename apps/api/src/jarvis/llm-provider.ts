@@ -48,10 +48,21 @@ export interface LLMResponse {
   usage: LLMUsage;
 }
 
+export interface StreamOptions {
+  /** Called with each text-delta chunk as the LLM streams its response. */
+  onTextDelta: (text: string) => void;
+}
+
 export interface LLMProvider {
   sendMessage(request: LLMRequest): Promise<LLMResponse>;
-  // Streaming (`streamMessage`) lands in Task 6. The orchestrator
-  // currently only calls `sendMessage`.
+  /**
+   * Streaming variant. Invokes `onTextDelta` for each token as it arrives
+   * and resolves with the final, complete response when the stream
+   * finishes. The returned shape is identical to `sendMessage` — callers
+   * that don't care about deltas can pass a no-op callback and treat this
+   * like the non-streaming method.
+   */
+  streamMessage(request: LLMRequest, opts: StreamOptions): Promise<LLMResponse>;
 }
 
 export const DEFAULT_MODEL = 'claude-sonnet-4-6';
@@ -88,6 +99,30 @@ export class AnthropicProvider implements LLMProvider {
       tools: request.tools,
     });
 
+    return this.toResponse(response);
+  }
+
+  async streamMessage(request: LLMRequest, opts: StreamOptions): Promise<LLMResponse> {
+    const stream = this.client.messages.stream({
+      model: this.model,
+      max_tokens: request.maxTokens ?? this.maxTokens,
+      system: request.system,
+      messages: request.messages,
+      tools: request.tools,
+    });
+
+    // `text` fires per text-delta token; we just forward it. The SDK also
+    // exposes `inputJson` for tool_use argument streaming, but for V1 we
+    // wait until the full tool_use block is available via finalMessage
+    // before executing — streaming partial JSON into a running tool
+    // handler would be a footgun.
+    stream.on('text', (textDelta) => opts.onTextDelta(textDelta));
+
+    const finalMessage = await stream.finalMessage();
+    return this.toResponse(finalMessage);
+  }
+
+  private toResponse(response: Anthropic.Messages.Message): LLMResponse {
     return {
       id: response.id,
       model: response.model,
