@@ -167,7 +167,7 @@ warm path.
   **Depends on:** Task 5
   **Out of scope:** frontend, remaining tools, dynamic prompt content, evals.
 
-### [ ] Task 7: Frontend scaffold — route, sidebar entry, conversation list, API client
+### [x] Task 7: Frontend scaffold — route, sidebar entry, conversation list, API client
 
 **Goal:** `/jarvis` renders as a full page with the left-rail conversation list and a
 placeholder main area. Sidebar gets a Jarvis entry. Data loading via TanStack Query
