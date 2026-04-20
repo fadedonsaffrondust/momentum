@@ -25,6 +25,39 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '0.16.2',
+    date: '2026-04-20',
+    headline: 'Fix: tasks no longer get stuck as in-progress zombies after moving to today',
+    summary:
+      'If a task was in_progress at the end of a day and you used "Plan My Day → Move to today" to carry it forward, it could land on the new day with an inconsistent state — hidden from the Today board (which renders by column) but still counting against the 2-task in-progress cap (which reads status). The PATCH handler now keeps status and column coherent automatically.',
+    items: [
+      {
+        title: 'Rescheduling a task resets it to "Up Next" cleanly',
+        description:
+          'Any write to a task that sets column back to "Up Next" (via the Plan My Day modal, drag-and-drop, or the generic PATCH endpoint) now also resets status to todo and clears startedAt. Previously the column would flip but the status would linger as in_progress, producing a zombie task that the Today board didn\'t show but that still blocked the 2-in-progress cap.',
+      },
+    ],
+  },
+  {
+    version: '0.16.1',
+    date: '2026-04-20',
+    headline: 'Jarvis polish — live conversation titles and a centered composer',
+    summary:
+      'Two small fixes for the new Jarvis surface: conversations started from the sidebar "+ new" button now get a real title as soon as you send your first message (no refresh needed), and the composer placeholder sits vertically centered in its box.',
+    items: [
+      {
+        title: 'Sidebar titles update after your first message',
+        description:
+          'Clicking "+ new" in the Jarvis sidebar used to leave the row titled "New conversation" until you refreshed the page. Now the first message you send overwrites the placeholder — the sidebar refreshes as soon as the assistant finishes streaming, so the row picks up a real title the way empty-state-prompt conversations already did.',
+      },
+      {
+        title: 'Composer placeholder is vertically centered',
+        description:
+          'The "Ask Jarvis — use Enter to send, Shift+Enter for a newline" placeholder was drifting to one edge of its box. It now sits centered, matching the send button next to it.',
+      },
+    ],
+  },
+  {
     version: '0.16.0',
     date: '2026-04-20',
     headline: 'Meet Jarvis — ask questions about your team, brands, and tasks',

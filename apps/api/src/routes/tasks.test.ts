@@ -58,6 +58,43 @@ const OTHER_USER = 'b1ffcd00-ad1c-5ff9-cc7e-7ccaae491b22';
 const THIRD_USER = 'c2ffcd00-ad1c-5ff9-cc7e-7ccaae491b33';
 const TASK_ID = 'b1234567-1234-1234-1234-123456789012';
 
+/**
+ * The default mockDb.update proxy swallows method-call arguments (it
+ * returns itself for any access), so there's no way to assert what was
+ * passed to `.set({...})`. For tests that need to introspect the
+ * Drizzle UPDATE payload (e.g. invariant coercion), temporarily swap
+ * `mockDb.update` for a hand-rolled chain that captures `.set()`'s
+ * values. Always restored via try/finally so one test's overrides
+ * can't leak into the next.
+ */
+async function withCapturedUpdate(
+  body: (captured: {
+    setValues: Record<string, unknown> | null;
+    returning: unknown[];
+  }) => Promise<void>,
+): Promise<void> {
+  const captured: { setValues: Record<string, unknown> | null; returning: unknown[] } = {
+    setValues: null,
+    returning: [],
+  };
+  const originalUpdate = mockDb.update;
+  mockDb.update = vi.fn(() => {
+    const chain: Record<string, unknown> = {};
+    chain.set = (values: Record<string, unknown>) => {
+      captured.setValues = values;
+      return chain;
+    };
+    chain.where = () => chain;
+    chain.returning = () => Promise.resolve(captured.returning);
+    return chain;
+  });
+  try {
+    await body(captured);
+  } finally {
+    mockDb.update = originalUpdate;
+  }
+}
+
 function makeTaskRow(overrides: Record<string, unknown> = {}) {
   return {
     id: TASK_ID,
@@ -382,6 +419,71 @@ describe('tasks routes', () => {
     });
 
     expect(res.statusCode).toBe(200);
+  });
+
+  it("PATCH /tasks/:id setting column='up_next' without status coerces status='todo' and clears startedAt (fixes in_progress→up_next zombie state)", async () => {
+    // Regression test: "Plan My Day → Move to today" on a task that was
+    // in_progress yesterday used to send { scheduledDate, column:'up_next' }
+    // and leave status='in_progress' behind, producing a task that the
+    // Today board didn't render (renders by column) but that still
+    // counted against the MAX_IN_PROGRESS cap (reads status). The PATCH
+    // handler now coerces status + startedAt when column is reset.
+    await withCapturedUpdate(async (captured) => {
+      const existing = makeTaskRow({
+        status: 'in_progress',
+        column: 'in_progress',
+        startedAt: new Date('2026-04-14T15:00:00Z'),
+        scheduledDate: '2026-04-14',
+      });
+      mockDb._pushResult([existing]);
+      captured.returning = [
+        makeTaskRow({
+          ...existing,
+          status: 'todo',
+          column: 'up_next',
+          startedAt: null,
+          scheduledDate: '2026-04-15',
+        }),
+      ];
+
+      const res = await app.inject({
+        method: 'PATCH',
+        url: `/tasks/${TASK_ID}`,
+        headers: { authorization: `Bearer ${token}` },
+        payload: { scheduledDate: '2026-04-15', column: 'up_next' },
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(captured.setValues).toMatchObject({
+        column: 'up_next',
+        status: 'todo',
+        startedAt: null,
+        scheduledDate: '2026-04-15',
+      });
+    });
+  });
+
+  it('PATCH /tasks/:id respects an explicit status even when column is set (no coercion when caller is explicit)', async () => {
+    await withCapturedUpdate(async (captured) => {
+      mockDb._pushResult([makeTaskRow()]);
+      captured.returning = [makeTaskRow({ status: 'in_progress', column: 'up_next' })];
+
+      const res = await app.inject({
+        method: 'PATCH',
+        url: `/tasks/${TASK_ID}`,
+        headers: { authorization: `Bearer ${token}` },
+        // Pathological-but-explicit: caller sends both, so honor what
+        // they said and don't overwrite status with the column-derived
+        // default.
+        payload: { column: 'up_next', status: 'in_progress' },
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(captured.setValues).toMatchObject({ column: 'up_next', status: 'in_progress' });
+      // startedAt is only cleared in the coercion branch, which we
+      // skipped because `status` was explicit.
+      expect(captured.setValues!).not.toHaveProperty('startedAt');
+    });
   });
 
   // ── POST /tasks/:id/start ───────────────────────────────────────────
