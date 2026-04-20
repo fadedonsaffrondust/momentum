@@ -21,6 +21,7 @@ import {
 import { loadOmnirevContext } from './knowledge/loader.ts';
 import { buildPersistence, type JarvisPersistence } from './persistence/index.ts';
 import type { MessageRow } from './persistence/messages.ts';
+import { logJarvisTurn } from './observability/logger.ts';
 
 export type JarvisStreamCallback = (event: JarvisStreamEvent) => void;
 const NOOP_STREAM: JarvisStreamCallback = () => {};
@@ -102,6 +103,8 @@ export interface HandleMessageResult {
   loopExhausted: boolean;
   /** Id of the last persisted assistant message; surfaced in the SSE `done` event. */
   lastAssistantMessageId: string | null;
+  /** Model reported by the last LLM response. Drives the pricing lookup in turn logs. */
+  model: string;
 }
 
 /**
@@ -181,6 +184,7 @@ export class JarvisService {
     onEvent: JarvisStreamCallback,
     streaming: boolean,
   ): Promise<HandleMessageResult> {
+    const turnStartedAt = Date.now();
     const ctx: ToolContext = {
       userId: input.userId,
       now: this.opts.now(),
@@ -237,6 +241,21 @@ export class JarvisService {
         timeoutPromise,
       ]);
       await this.opts.persistence.bumpConversationUpdatedAt(input.conversationId);
+
+      // Structured per-turn log (spec §9). Loop-exhaustion is returned
+      // from runLoop as a successful-shape HandleMessageResult but is
+      // semantically an error for the telemetry surface.
+      logJarvisTurn(input.logger, {
+        conversationId: input.conversationId,
+        userId: input.userId,
+        intent: null,
+        toolCalls: result.toolCalls,
+        totalLatencyMs: Date.now() - turnStartedAt,
+        tokenUsage: result.usage,
+        model: result.model,
+        status: result.loopExhausted ? 'error' : 'success',
+        ...(result.loopExhausted ? { error: 'tool_loop_exhausted' } : {}),
+      });
       return result;
     } catch (err) {
       // Best-effort: record the failure as an assistant-side marker so the
@@ -256,6 +275,28 @@ export class JarvisService {
           'jarvis: failed to persist error marker after turn failure',
         );
       }
+
+      // Error-path turn log. We don't have runLoop's accumulated state
+      // (it was local to that generator's frame and isn't surfaced on
+      // timeout) — keep fidelity modest but include conversation id,
+      // elapsed time, and the error cause. A follow-up can pass an
+      // accumulator into runLoop so partial toolCalls / usage survive.
+      logJarvisTurn(input.logger, {
+        conversationId: input.conversationId,
+        userId: input.userId,
+        intent: null,
+        toolCalls: [],
+        totalLatencyMs: Date.now() - turnStartedAt,
+        tokenUsage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          cacheReadInputTokens: 0,
+          cacheCreationInputTokens: 0,
+        },
+        model: '',
+        status: err instanceof TurnTimeoutError ? 'timeout' : 'error',
+        error: err,
+      });
       throw err;
     } finally {
       if (timer) clearTimeout(timer);
@@ -281,6 +322,7 @@ export class JarvisService {
     let lastContent: LLMContentBlock[] = [];
     let lastStopReason: string | null = null;
     let lastAssistantMessageId: string | null = null;
+    let lastModel = '';
 
     for (let iter = 0; iter < this.opts.toolLoopMax; iter++) {
       const llmStartedAt = Date.now();
@@ -301,6 +343,7 @@ export class JarvisService {
       const llmLatencyMs = Date.now() - llmStartedAt;
       lastContent = response.content;
       lastStopReason = response.stopReason;
+      lastModel = response.model;
       addUsage(usage, response.usage);
 
       // Persist the assistant turn before executing tools. Tool-call rows
@@ -324,6 +367,7 @@ export class JarvisService {
           stopReason: response.stopReason,
           loopExhausted: false,
           lastAssistantMessageId,
+          model: lastModel,
         };
       }
 
@@ -341,6 +385,7 @@ export class JarvisService {
           stopReason: response.stopReason,
           loopExhausted: false,
           lastAssistantMessageId,
+          model: lastModel,
         };
       }
 
@@ -409,6 +454,7 @@ export class JarvisService {
       stopReason: 'tool_loop_exhausted',
       loopExhausted: true,
       lastAssistantMessageId,
+      model: lastModel,
     };
   }
 

@@ -240,12 +240,37 @@ describe('JarvisService.handleMessage — happy path', () => {
       now: () => NOW,
     });
 
+    const logger = makeLogger();
     const result = await service.handleMessage({
       conversationId: CONVERSATION_ID,
       userId: USER_ID,
       userMessage: 'What do I need to look at today?',
-      logger: makeLogger(),
+      logger,
     });
+
+    // Structured per-turn log (spec §9) — a single info record with the
+    // stable shape downstream monitoring keys off.
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversationId: CONVERSATION_ID,
+        userId: USER_ID,
+        intent: null,
+        status: 'success',
+        model: 'claude-sonnet-4-6',
+        toolCalls: [
+          { name: 'getMyTasks', latencyMs: expect.any(Number), success: true },
+          {
+            name: 'getBrandsRequiringAttention',
+            latencyMs: expect.any(Number),
+            success: true,
+          },
+        ],
+        tokenUsage: expect.objectContaining({ inputTokens: 250, outputTokens: 120 }),
+        costEstimateUsd: expect.any(Number),
+        totalLatencyMs: expect.any(Number),
+      }),
+      'jarvis turn completed',
+    );
 
     expect(result.loopExhausted).toBe(false);
     expect(result.stopReason).toBe('end_turn');
