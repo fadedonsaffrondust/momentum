@@ -12,6 +12,8 @@ import type { AnyTool } from './tools/types.ts';
 import type { JarvisLogger, ToolContext } from './tools/types.ts';
 import type { ToolRegistry } from './tools/index.ts';
 import { SYNTHESIS_PROMPT_V1 } from './prompts/synthesis.ts';
+import { buildPersistence, type JarvisPersistence } from './persistence/index.ts';
+import type { MessageRow } from './persistence/messages.ts';
 
 /**
  * Hard cap on sequential tool calls per user turn. Per the spec (§7) and
@@ -41,19 +43,26 @@ export interface JarvisServiceOptions {
   llm: LLMProvider;
   registry: ToolRegistry;
   db: Database;
+  /**
+   * Override the default Drizzle-backed persistence. Tests inject a fake
+   * surface; production code lets the orchestrator build one from `db`.
+   */
+  persistence?: JarvisPersistence;
   /** Override `new Date()` inside handlers — used by tests and evals. */
   now?: () => Date;
   /** Override loop cap (tests). Production code should not touch this. */
   toolLoopMax?: number;
   /** Override turn timeout (tests). */
   turnTimeoutMs?: number;
+  /** How many historical messages to load for the LLM context window. */
+  historyLimit?: number;
 }
 
 export interface HandleMessageInput {
+  /** Conversation the turn belongs to. Route layer has already verified ownership. */
+  conversationId: string;
   userId: string;
   userMessage: string;
-  /** Prior turns in this conversation. Task 5 loads this from the DB. */
-  history?: LLMMessageParam[];
   logger: JarvisLogger;
 }
 
@@ -88,9 +97,13 @@ export interface HandleMessageResult {
  * talks to the LLM directly (per the guardrails). Does not read the DB
  * itself — tools do that via `ctx.db`. Persistence lands in Task 5.
  */
+/** Default history window in messages — matches spec §7 context budget. */
+export const DEFAULT_HISTORY_LIMIT = 20;
+
 export class JarvisService {
-  private readonly opts: Required<Omit<JarvisServiceOptions, 'now'>> & {
+  private readonly opts: Required<Omit<JarvisServiceOptions, 'now' | 'persistence'>> & {
     now: () => Date;
+    persistence: JarvisPersistence;
   };
 
   constructor(opts: JarvisServiceOptions) {
@@ -98,9 +111,11 @@ export class JarvisService {
       llm: opts.llm,
       registry: opts.registry,
       db: opts.db,
+      persistence: opts.persistence ?? buildPersistence(opts.db),
       now: opts.now ?? (() => new Date()),
       toolLoopMax: opts.toolLoopMax ?? TOOL_LOOP_MAX,
       turnTimeoutMs: opts.turnTimeoutMs ?? TURN_TIMEOUT_MS,
+      historyLimit: opts.historyLimit ?? DEFAULT_HISTORY_LIMIT,
     };
   }
 
@@ -112,6 +127,24 @@ export class JarvisService {
       logger: input.logger,
     };
 
+    // Persist the user's turn first — even if everything downstream
+    // explodes (LLM outage, turn timeout), the conversation shows the
+    // user did reach out. Spec §5: "On error mid-loop, partial messages
+    // are still persisted."
+    await this.opts.persistence.insertMessage({
+      conversationId: input.conversationId,
+      role: 'user',
+      content: [{ type: 'text', text: input.userMessage }],
+    });
+
+    // Load recent history for the LLM context window. Includes the user
+    // message we just inserted.
+    const historyRows = await this.opts.persistence.listMessagesByConversation(
+      input.conversationId,
+      this.opts.historyLimit,
+    );
+    const anthropicMessages = historyRows.map(dbMessageToAnthropic);
+
     let timer: NodeJS.Timeout | undefined;
     const timeoutPromise = new Promise<never>((_, reject) => {
       timer = setTimeout(
@@ -121,17 +154,42 @@ export class JarvisService {
     });
 
     try {
-      return await Promise.race([this.runLoop(input, ctx), timeoutPromise]);
+      const result = await Promise.race([
+        this.runLoop(input, ctx, anthropicMessages),
+        timeoutPromise,
+      ]);
+      await this.opts.persistence.bumpConversationUpdatedAt(input.conversationId);
+      return result;
+    } catch (err) {
+      // Best-effort: record the failure as an assistant-side marker so the
+      // conversation doesn't silently end. Swallow persistence errors on
+      // this path — we're already bubbling the primary failure up.
+      try {
+        await this.opts.persistence.insertMessage({
+          conversationId: input.conversationId,
+          role: 'assistant',
+          content: [],
+          error: serializeError(err),
+        });
+        await this.opts.persistence.bumpConversationUpdatedAt(input.conversationId);
+      } catch (persistErr) {
+        input.logger.error(
+          { err: persistErr },
+          'jarvis: failed to persist error marker after turn failure',
+        );
+      }
+      throw err;
     } finally {
       if (timer) clearTimeout(timer);
     }
   }
 
-  private async runLoop(input: HandleMessageInput, ctx: ToolContext): Promise<HandleMessageResult> {
-    const messages: LLMMessageParam[] = [
-      ...(input.history ?? []),
-      { role: 'user', content: input.userMessage },
-    ];
+  private async runLoop(
+    input: HandleMessageInput,
+    ctx: ToolContext,
+    anthropicMessages: LLMMessageParam[],
+  ): Promise<HandleMessageResult> {
+    const messages: LLMMessageParam[] = [...anthropicMessages];
 
     const tools = this.opts.registry.getAllTools().map(toolToAnthropic);
     const toolCalls: ToolCallRecord[] = [];
@@ -140,6 +198,7 @@ export class JarvisService {
     let lastStopReason: string | null = null;
 
     for (let iter = 0; iter < this.opts.toolLoopMax; iter++) {
+      const llmStartedAt = Date.now();
       const response = await this.opts.llm.sendMessage({
         system: SYNTHESIS_PROMPT_V1,
         // Shallow-copy so we don't hand the LLM provider a mutable
@@ -149,9 +208,21 @@ export class JarvisService {
         messages: [...messages],
         tools,
       });
+      const llmLatencyMs = Date.now() - llmStartedAt;
       lastContent = response.content;
       lastStopReason = response.stopReason;
       addUsage(usage, response.usage);
+
+      // Persist the assistant turn before executing tools. Tool-call rows
+      // (below) FK to this message, so the insert has to happen first.
+      const assistantRow = await this.opts.persistence.insertMessage({
+        conversationId: input.conversationId,
+        role: 'assistant',
+        content: response.content,
+        model: response.model,
+        latencyMs: llmLatencyMs,
+        tokenUsage: response.usage,
+      });
 
       if (response.stopReason === 'end_turn' || response.stopReason === 'stop_sequence') {
         return {
@@ -186,6 +257,14 @@ export class JarvisService {
       for (const block of toolUseBlocks) {
         const record = await this.executeToolForLoop(block, ctx);
         toolCalls.push(record);
+        await this.opts.persistence.insertToolCall({
+          messageId: assistantRow.id,
+          toolName: record.name,
+          arguments: record.input,
+          result: record.result,
+          error: record.error,
+          latencyMs: record.latencyMs,
+        });
         toolResults.push({
           type: 'tool_result',
           tool_use_id: block.id,
@@ -193,6 +272,15 @@ export class JarvisService {
           ...(record.error ? { is_error: true as const } : {}),
         });
       }
+
+      // Persist the tool-results batch as role='tool' so replay reconstructs
+      // the exact Anthropic message sequence. Mapped back to role='user'
+      // in dbMessageToAnthropic on the next turn's context build.
+      await this.opts.persistence.insertMessage({
+        conversationId: input.conversationId,
+        role: 'tool',
+        content: toolResults,
+      });
 
       messages.push({ role: 'user', content: toolResults });
     }
@@ -284,6 +372,29 @@ function serializeToolResult(result: unknown): string {
   // Tool handlers already return JSON-serializable shapes by contract (see
   // tools/CLAUDE.md guardrails). We just stringify.
   return JSON.stringify(result);
+}
+
+function serializeError(err: unknown): Record<string, unknown> {
+  if (err instanceof Error) {
+    return { name: err.name, message: err.message };
+  }
+  return { name: 'Unknown', message: String(err) };
+}
+
+/**
+ * Map a stored jarvis_messages row back into the Anthropic message shape
+ * the SDK expects. `role='tool'` in DB is our convention for a
+ * tool_result-bearing user message in Anthropic's format — mapped back
+ * to `role='user'` here so the SDK accepts it.
+ */
+export function dbMessageToAnthropic(row: MessageRow): LLMMessageParam {
+  if (row.role === 'assistant') {
+    return { role: 'assistant', content: row.content } as LLMMessageParam;
+  }
+  // Both 'user' text messages and 'tool' tool_result messages are Anthropic
+  // `user` messages — `role='tool'` is our DB-internal convention for
+  // tool_result-bearing user messages.
+  return { role: 'user', content: row.content } as LLMMessageParam;
 }
 
 function emptyUsage(): LLMUsage {

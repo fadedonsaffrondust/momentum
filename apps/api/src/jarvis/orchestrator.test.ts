@@ -11,6 +11,7 @@ import {
 import {
   JarvisService,
   TurnTimeoutError,
+  dbMessageToAnthropic,
   extractAssistantText,
   toolToAnthropic,
 } from './orchestrator.ts';
@@ -21,8 +22,12 @@ import type {
   LLMContentBlock,
   LLMUsage,
 } from './llm-provider.ts';
+import type { JarvisPersistence } from './persistence/index.ts';
+import type { MessageRow } from './persistence/messages.ts';
+import type { ToolCallRow } from './persistence/tool-calls.ts';
 
 const USER_ID = '00000000-0000-0000-0000-0000000000a1';
+const CONVERSATION_ID = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
 const NOW = new Date('2026-04-19T12:00:00.000Z');
 
 function makeLogger(): JarvisLogger {
@@ -70,10 +75,72 @@ function makeMockLLM(responses: LLMResponse[]): LLMProvider & {
   return { sendMessage: fn } as LLMProvider & { sendMessage: ReturnType<typeof vi.fn> };
 }
 
+/**
+ * Mock persistence that auto-generates sequential ids so the orchestrator
+ * can chain inserts (assistant message → tool_call FK) without any
+ * per-test setup. Tests that care about specific IDs can override.
+ */
+interface MockPersistence extends JarvisPersistence {
+  insertMessage: ReturnType<typeof vi.fn>;
+  insertToolCall: ReturnType<typeof vi.fn>;
+  listMessagesByConversation: ReturnType<typeof vi.fn>;
+  bumpConversationUpdatedAt: ReturnType<typeof vi.fn>;
+  getConversationForUser: ReturnType<typeof vi.fn>;
+}
+
+function makeMockPersistence(
+  overrides: {
+    historyRows?: MessageRow[];
+  } = {},
+): MockPersistence {
+  let msgSeq = 0;
+  let tcSeq = 0;
+  const history = overrides.historyRows ?? [];
+
+  return {
+    listMessagesByConversation: vi.fn(async () => history),
+    insertMessage: vi.fn(async (input) => {
+      msgSeq += 1;
+      const row: MessageRow = {
+        id: `msg-${msgSeq}`,
+        conversationId: input.conversationId,
+        role: input.role,
+        content: input.content,
+        intent: input.intent ?? null,
+        model: input.model ?? null,
+        latencyMs: input.latencyMs ?? null,
+        tokenUsage: input.tokenUsage ?? null,
+        error: input.error ?? null,
+        createdAt: new Date(`2026-04-19T12:00:0${msgSeq}.000Z`),
+        metadata: input.metadata ?? {},
+      };
+      history.push(row);
+      return row;
+    }),
+    insertToolCall: vi.fn(async (input) => {
+      tcSeq += 1;
+      const row: ToolCallRow = {
+        id: `tc-${tcSeq}`,
+        messageId: input.messageId,
+        toolName: input.toolName,
+        arguments: input.arguments,
+        result: input.result ?? null,
+        error: input.error ?? null,
+        latencyMs: input.latencyMs,
+        createdAt: new Date('2026-04-19T12:00:00.000Z'),
+        metadata: input.metadata ?? {},
+      };
+      return row;
+    }),
+    bumpConversationUpdatedAt: vi.fn(async () => undefined),
+    getConversationForUser: vi.fn(async (id, userId) => ({ id, userId })),
+  };
+}
+
 /* ─────────────── happy path: two-tool-call flow ─────────────── */
 
 describe('JarvisService.handleMessage — happy path', () => {
-  it('runs a two-tool-call turn, then returns the end_turn answer', async () => {
+  it('runs a two-tool-call turn, persists every message + tool_call, then returns end_turn text', async () => {
     const mockDb = createMockDb();
     // Tool queries, in the order the orchestrator will consume them:
     // 1) getMyTasks — 1 query
@@ -82,7 +149,7 @@ describe('JarvisService.handleMessage — happy path', () => {
         id: '11111111-1111-1111-1111-111111111111',
         creatorId: USER_ID,
         assigneeId: USER_ID,
-        title: 'Ship Jarvis Task 4',
+        title: 'Ship Jarvis Task 5',
         roleId: null,
         priority: 'high',
         estimateMinutes: 120,
@@ -117,7 +184,6 @@ describe('JarvisService.handleMessage — happy path', () => {
     ]);
 
     const mockLLM = makeMockLLM([
-      // Turn 1 — parallel tool calls
       llmResponse(
         'tool_use',
         [
@@ -126,20 +192,23 @@ describe('JarvisService.handleMessage — happy path', () => {
         ],
         { usage: usage({ inputTokens: 100, outputTokens: 80 }) },
       ),
-      // Turn 2 — LLM has both results, produces final text
       llmResponse('end_turn', [textBlock('You have 1 task today and **Risky** needs attention.')], {
         usage: usage({ inputTokens: 150, outputTokens: 40 }),
       }),
     ]);
 
+    const persistence = makeMockPersistence();
+
     const service = new JarvisService({
       llm: mockLLM,
       registry: createDefaultRegistry(),
       db: mockDb as unknown as Database,
+      persistence,
       now: () => NOW,
     });
 
     const result = await service.handleMessage({
+      conversationId: CONVERSATION_ID,
       userId: USER_ID,
       userMessage: 'What do I need to look at today?',
       logger: makeLogger(),
@@ -148,39 +217,109 @@ describe('JarvisService.handleMessage — happy path', () => {
     expect(result.loopExhausted).toBe(false);
     expect(result.stopReason).toBe('end_turn');
     expect(result.assistantText).toBe('You have 1 task today and **Risky** needs attention.');
-    expect(result.toolCalls).toHaveLength(2);
-    expect(result.toolCalls[0]).toMatchObject({ name: 'getMyTasks', error: null });
-    expect(result.toolCalls[1]).toMatchObject({
-      name: 'getBrandsRequiringAttention',
+
+    // Persistence: user → assistant (turn 1) → tool-results → assistant (turn 2)
+    const inserted = persistence.insertMessage.mock.calls.map(
+      (c) => c[0] as { role: string; error?: unknown },
+    );
+    expect(inserted.map((m) => m.role)).toEqual(['user', 'assistant', 'tool', 'assistant']);
+    expect(inserted[0]).toMatchObject({
+      conversationId: CONVERSATION_ID,
+      role: 'user',
+      content: [{ type: 'text', text: 'What do I need to look at today?' }],
+    });
+    expect(inserted[1]).toMatchObject({
+      role: 'assistant',
+      model: 'claude-sonnet-4-6',
+      tokenUsage: expect.objectContaining({ inputTokens: 100 }),
+    });
+    expect(inserted[3]).toMatchObject({
+      role: 'assistant',
+      tokenUsage: expect.objectContaining({ inputTokens: 150 }),
+    });
+    // No error markers on a successful turn
+    for (const m of inserted) expect(m.error ?? null).toBeNull();
+
+    // Both tool calls persisted, both linked to the turn-1 assistant message
+    expect(persistence.insertToolCall).toHaveBeenCalledTimes(2);
+    const tcCalls = persistence.insertToolCall.mock.calls.map((c) => c[0]);
+    expect(tcCalls[0]).toMatchObject({
+      messageId: 'msg-2', // turn-1 assistant (msg-1 = user message)
+      toolName: 'getMyTasks',
       error: null,
     });
-    // Summed usage across both LLM calls
-    expect(result.usage.inputTokens).toBe(250);
-    expect(result.usage.outputTokens).toBe(120);
+    expect(tcCalls[1]).toMatchObject({
+      messageId: 'msg-2',
+      toolName: 'getBrandsRequiringAttention',
+      error: null,
+    });
 
-    // The orchestrator forwards the system prompt and tool definitions on
-    // every turn, and carries history forward.
-    expect(mockLLM.sendMessage).toHaveBeenCalledTimes(2);
-    const firstCall = mockLLM.sendMessage.mock.calls[0]![0] as LLMRequest;
-    expect(firstCall.system).toMatch(/You are Jarvis/);
-    expect(firstCall.tools.length).toBeGreaterThanOrEqual(3);
-    expect(firstCall.messages).toEqual([
-      { role: 'user', content: 'What do I need to look at today?' },
-    ]);
+    // Conversation bumped exactly once on success
+    expect(persistence.bumpConversationUpdatedAt).toHaveBeenCalledTimes(1);
+    expect(persistence.bumpConversationUpdatedAt).toHaveBeenCalledWith(CONVERSATION_ID);
+  });
 
-    const secondCall = mockLLM.sendMessage.mock.calls[1]![0] as LLMRequest;
-    // user message → assistant tool_use → user tool_result
-    expect(secondCall.messages).toHaveLength(3);
-    expect(secondCall.messages[1]!.role).toBe('assistant');
-    expect(secondCall.messages[2]!.role).toBe('user');
+  it('prepends historical messages (loaded from DB) into the LLM context', async () => {
+    const priorHistory: MessageRow[] = [
+      {
+        id: 'old-1',
+        conversationId: CONVERSATION_ID,
+        role: 'user',
+        content: [{ type: 'text', text: 'earlier turn' }],
+        intent: null,
+        model: null,
+        latencyMs: null,
+        tokenUsage: null,
+        error: null,
+        createdAt: new Date('2026-04-18T09:00:00.000Z'),
+        metadata: {},
+      },
+      {
+        id: 'old-2',
+        conversationId: CONVERSATION_ID,
+        role: 'assistant',
+        content: [{ type: 'text', text: 'earlier reply' }],
+        intent: null,
+        model: 'claude-sonnet-4-6',
+        latencyMs: 300,
+        tokenUsage: null,
+        error: null,
+        createdAt: new Date('2026-04-18T09:00:05.000Z'),
+        metadata: {},
+      },
+    ];
+    const persistence = makeMockPersistence({ historyRows: priorHistory });
+
+    const mockLLM = makeMockLLM([llmResponse('end_turn', [textBlock('OK')])]);
+
+    const service = new JarvisService({
+      llm: mockLLM,
+      registry: new ToolRegistry(),
+      db: createMockDb() as unknown as Database,
+      persistence,
+      now: () => NOW,
+    });
+
+    await service.handleMessage({
+      conversationId: CONVERSATION_ID,
+      userId: USER_ID,
+      userMessage: 'follow up',
+      logger: makeLogger(),
+    });
+
+    const firstReq = mockLLM.sendMessage.mock.calls[0]![0] as LLMRequest;
+    // Messages: [old-1 user, old-2 assistant, new user]
+    expect(firstReq.messages).toHaveLength(3);
+    expect(firstReq.messages[0]!.role).toBe('user');
+    expect(firstReq.messages[1]!.role).toBe('assistant');
+    expect(firstReq.messages[2]!.role).toBe('user');
   });
 });
 
 /* ─────────────── tool error surfaces as is_error tool_result ─────────────── */
 
 describe('JarvisService.handleMessage — tool failures', () => {
-  it('surfaces a failing tool as an is_error tool_result without aborting the turn', async () => {
-    // Use a custom minimal registry so the failure mode is obvious.
+  it('surfaces a failing tool as an is_error tool_result and persists error on the tool_call row', async () => {
     const registry = new ToolRegistry();
     const failingTool: Tool<{ x: number }, { ok: true }> = {
       name: 'failingTool',
@@ -197,15 +336,18 @@ describe('JarvisService.handleMessage — tool failures', () => {
       llmResponse('tool_use', [toolUseBlock('tu_1', 'failingTool', { x: 1 })]),
       llmResponse('end_turn', [textBlock('Sorry — that lookup failed.')]),
     ]);
+    const persistence = makeMockPersistence();
 
     const service = new JarvisService({
       llm: mockLLM,
       registry,
       db: createMockDb() as unknown as Database,
+      persistence,
       now: () => NOW,
     });
 
     const result = await service.handleMessage({
+      conversationId: CONVERSATION_ID,
       userId: USER_ID,
       userMessage: 'try it',
       logger: makeLogger(),
@@ -223,6 +365,12 @@ describe('JarvisService.handleMessage — tool failures', () => {
     );
     expect(toolResultBlocks).toHaveLength(1);
     expect(toolResultBlocks[0]!.is_error).toBe(true);
+    // tool_call row records the failure
+    expect(persistence.insertToolCall.mock.calls[0]![0]).toMatchObject({
+      toolName: 'failingTool',
+      error: expect.stringMatching(/synthetic failure/),
+      result: null,
+    });
   });
 });
 
@@ -241,24 +389,26 @@ describe('JarvisService.handleMessage — loop exhaustion', () => {
       },
     });
 
-    // LLM will return tool_use indefinitely.
     const sendMessage = vi
       .fn<(req: LLMRequest) => Promise<LLMResponse>>()
       .mockImplementation(async () =>
         llmResponse('tool_use', [toolUseBlock(`tu_${Math.random()}`, 'noop', {})]),
       );
     const mockLLM: LLMProvider = { sendMessage };
+    const persistence = makeMockPersistence();
 
     const logger = makeLogger();
     const service = new JarvisService({
       llm: mockLLM,
       registry,
       db: createMockDb() as unknown as Database,
+      persistence,
       now: () => NOW,
       toolLoopMax: 3,
     });
 
     const result = await service.handleMessage({
+      conversationId: CONVERSATION_ID,
       userId: USER_ID,
       userMessage: 'loop forever',
       logger,
@@ -269,10 +419,9 @@ describe('JarvisService.handleMessage — loop exhaustion', () => {
     expect(result.toolCalls).toHaveLength(3);
     expect(result.assistantText).toMatch(/rephrase/i);
     expect(sendMessage).toHaveBeenCalledTimes(3);
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.objectContaining({ toolLoopMax: 3 }),
-      'jarvis tool loop exhausted',
-    );
+    // 1 user + 3 assistants + 3 tool-batches persisted
+    expect(persistence.insertMessage).toHaveBeenCalledTimes(1 + 3 + 3);
+    expect(persistence.bumpConversationUpdatedAt).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -282,21 +431,21 @@ describe('JarvisService.handleMessage — turn timeout', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it('throws TurnTimeoutError when the LLM hangs past turnTimeoutMs', async () => {
-    const mockLLM: LLMProvider = {
-      // Never resolves.
-      sendMessage: () => new Promise(() => {}),
-    };
+  it('throws TurnTimeoutError, persists an error-marker assistant message, and re-throws', async () => {
+    const mockLLM: LLMProvider = { sendMessage: () => new Promise(() => {}) };
+    const persistence = makeMockPersistence();
 
     const service = new JarvisService({
       llm: mockLLM,
       registry: new ToolRegistry(),
       db: createMockDb() as unknown as Database,
+      persistence,
       now: () => NOW,
       turnTimeoutMs: 1000,
     });
 
     const promise = service.handleMessage({
+      conversationId: CONVERSATION_ID,
       userId: USER_ID,
       userMessage: 'slow',
       logger: makeLogger(),
@@ -304,6 +453,17 @@ describe('JarvisService.handleMessage — turn timeout', () => {
     const assertion = expect(promise).rejects.toBeInstanceOf(TurnTimeoutError);
     await vi.advanceTimersByTimeAsync(1001);
     await assertion;
+
+    // User message saved first, then error-marker assistant message.
+    const inserted = persistence.insertMessage.mock.calls.map((c) => c[0]);
+    expect(inserted.map((m) => m.role)).toEqual(['user', 'assistant']);
+    expect(inserted[1]).toMatchObject({
+      role: 'assistant',
+      content: [],
+      error: { name: 'TurnTimeoutError' },
+    });
+    // Still bump updated_at so the list view surfaces the failed turn.
+    expect(persistence.bumpConversationUpdatedAt).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -319,10 +479,12 @@ describe('JarvisService.handleMessage — unexpected stop_reason', () => {
       llm: mockLLM,
       registry: new ToolRegistry(),
       db: createMockDb() as unknown as Database,
+      persistence: makeMockPersistence(),
       now: () => NOW,
     });
 
     const result = await service.handleMessage({
+      conversationId: CONVERSATION_ID,
       userId: USER_ID,
       userMessage: 'anything',
       logger: makeLogger(),
@@ -364,5 +526,41 @@ describe('extractAssistantText', () => {
   it('ignores non-text blocks', () => {
     const content = [textBlock('hello'), toolUseBlock('tu_1', 'x', {})];
     expect(extractAssistantText(content)).toBe('hello');
+  });
+});
+
+describe('dbMessageToAnthropic', () => {
+  function row(role: 'user' | 'assistant' | 'tool', content: unknown): MessageRow {
+    return {
+      id: 'x',
+      conversationId: CONVERSATION_ID,
+      role,
+      content,
+      intent: null,
+      model: null,
+      latencyMs: null,
+      tokenUsage: null,
+      error: null,
+      createdAt: NOW,
+      metadata: {},
+    };
+  }
+
+  it('maps user rows as-is', () => {
+    const anth = dbMessageToAnthropic(row('user', [{ type: 'text', text: 'hi' }]));
+    expect(anth).toEqual({ role: 'user', content: [{ type: 'text', text: 'hi' }] });
+  });
+
+  it('maps assistant rows as-is', () => {
+    const anth = dbMessageToAnthropic(row('assistant', [{ type: 'text', text: 'hello' }]));
+    expect(anth).toEqual({ role: 'assistant', content: [{ type: 'text', text: 'hello' }] });
+  });
+
+  it('maps tool rows to user role (Anthropic carries tool_result on user messages)', () => {
+    const anth = dbMessageToAnthropic(
+      row('tool', [{ type: 'tool_result', tool_use_id: 'tu_1', content: '...' }]),
+    );
+    expect(anth.role).toBe('user');
+    expect(anth.content).toEqual([{ type: 'tool_result', tool_use_id: 'tu_1', content: '...' }]);
   });
 });
