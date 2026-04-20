@@ -102,12 +102,14 @@ export function ConversationView({ conversationId, initialMessage }: Conversatio
   }, [conversationId, initialMessage]);
 
   const historical = detailQ.data?.messages ?? [];
-  const showRetry = liveTurn.status === 'error';
+  const canRetry = liveTurn.status === 'error' && liveTurn.optimisticUserMessage !== null;
 
   return (
     <>
       <MessageList historical={historical} liveTurn={liveTurn} />
-      {showRetry ? <RetryBar onRetry={handleRetry} /> : null}
+      {canRetry ? (
+        <RetryBar onRetry={handleRetry} errorName={liveTurn.error?.name ?? null} />
+      ) : null}
       <Composer
         value={composerValue}
         onChange={setComposerValue}
@@ -122,10 +124,21 @@ function isInFlight(state: TurnState): boolean {
   return state.status === 'streaming' || state.status === 'done';
 }
 
-function RetryBar({ onRetry }: { onRetry: () => void }) {
+/**
+ * Inline strip below the transcript when a turn fails. Copy is tuned to
+ * the server's error name so timeouts and everything-else read
+ * differently — timeouts are a wait-and-try-again situation, the rest
+ * are opaque-failure.
+ */
+function RetryBar({ onRetry, errorName }: { onRetry: () => void; errorName: string | null }) {
+  const isTimeout = errorName === 'TurnTimeoutError';
   return (
     <div className="flex items-center justify-center border-t border-destructive/30 bg-destructive/5 px-4 py-2 text-xs text-destructive">
-      <span className="mr-2">The assistant didn't finish. You can retry the last message.</span>
+      <span className="mr-2">
+        {isTimeout
+          ? 'Jarvis took too long to answer. Try again — usually a retry goes through faster.'
+          : "The assistant didn't finish. You can retry the last message."}
+      </span>
       <button
         type="button"
         onClick={onRetry}

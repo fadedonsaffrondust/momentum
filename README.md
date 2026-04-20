@@ -21,6 +21,7 @@ The product is organized around a few load-bearing ideas:
 - **Team Task View** (`g u`) — everyone's Today grouped by teammate, with the same keyboard-first kanban flow as the personal Today view.
 - **Inbox** (`g i`) — the five events that involve you: tasks assigned to you, your tasks edited, parkings that tag you, action items assigned to you, meetings you were added to.
 - **End of Day team pulse + Weekly Stats Team tab** — your personal review stays private; a quiet strip in EOD and a Team tab in Weekly Stats surface team signal without competing with personal rituals.
+- **Jarvis** (`g j`) — the team's internal AI assistant. Ask natural-language questions about your brands, tasks, action items, meetings, and team workflow; Jarvis answers by calling 14 read-only tools over Momentum's own data and streams the answer token-by-token. Every tool call renders as an inline pill you can expand to see exactly what was fetched. V1 is strictly read-only — Jarvis summarizes and ranks, never mutates. Requires `ANTHROPIC_API_KEY` in `.env`; the rest of the app works without it.
 - **What's new** — release notes that auto-open on update; an accent dot on the sidebar flags unseen releases.
 
 See [`docs/CLAUDE-CODE-PROMPT.md`](./docs/CLAUDE-CODE-PROMPT.md) for the original product spec, [`docs/MOMENTUM-TEAM-SPACE-SPEC.md`](./docs/MOMENTUM-TEAM-SPACE-SPEC.md) for the v0.7.0 team-space rewrite, [`docs/MOMENTUM-BRANDS-FEATURE-SPEC.md`](./docs/MOMENTUM-BRANDS-FEATURE-SPEC.md), [`docs/MOMENTUM-TLDV-SYNC-SPEC.md`](./docs/MOMENTUM-TLDV-SYNC-SPEC.md), and [`docs/MOMENTUM-FEATURE-REQUESTS-SPEC.md`](./docs/MOMENTUM-FEATURE-REQUESTS-SPEC.md) for the relationship surfaces, and [`docs/KEYBOARD-SHORTCUTS-REFERENCE.md`](./docs/KEYBOARD-SHORTCUTS-REFERENCE.md) for the shortcut contract.
@@ -29,18 +30,18 @@ See [`docs/CLAUDE-CODE-PROMPT.md`](./docs/CLAUDE-CODE-PROMPT.md) for the origina
 
 ## Tech stack
 
-| Layer                | Choice                                                                                                                                                  |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Monorepo**         | pnpm workspaces + Turborepo                                                                                                                             |
-| **Language**         | TypeScript (strict, `noUncheckedIndexedAccess`, ESM everywhere)                                                                                         |
-| **Frontend**         | React 18, Vite, Tailwind CSS (semantic `m.*` token namespace), TanStack Query, Zustand, React Router, cmdk, react-hotkeys-hook                          |
-| **Backend**          | Node.js 20+, Fastify 5, `fastify-type-provider-zod`, `@fastify/jwt`, `@fastify/helmet`, `@fastify/rate-limit`, bcryptjs                                 |
-| **Integrations**     | OpenAI (brand import, action-item dedup, meeting extraction), tldv (meeting recordings), Google Sheets via `googleapis` (feature requests two-way sync) |
-| **Database**         | PostgreSQL 16                                                                                                                                           |
-| **ORM / migrations** | Drizzle ORM + drizzle-kit, postgres.js driver                                                                                                           |
-| **Shared contracts** | Zod schemas in `packages/shared` — single source of truth for types shared between web and api                                                          |
-| **Testing**          | Vitest in every package (~360+ tests); Fastify `.inject()` + a mock-db helper at `apps/api/src/test/mock-db.ts` for route tests                         |
-| **Tooling**          | ESLint (flat config), Prettier, lefthook (pre-commit), tsx (dev + runtime), Turbo for task orchestration                                                |
+| Layer                | Choice                                                                                                                                                                                                                 |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Monorepo**         | pnpm workspaces + Turborepo                                                                                                                                                                                            |
+| **Language**         | TypeScript (strict, `noUncheckedIndexedAccess`, ESM everywhere)                                                                                                                                                        |
+| **Frontend**         | React 18, Vite, Tailwind CSS (semantic `m.*` token namespace), TanStack Query, Zustand, React Router, cmdk, react-hotkeys-hook                                                                                         |
+| **Backend**          | Node.js 20+, Fastify 5, `fastify-type-provider-zod`, `@fastify/jwt`, `@fastify/helmet`, `@fastify/rate-limit`, bcryptjs                                                                                                |
+| **Integrations**     | Anthropic SDK (Jarvis, Claude Sonnet 4.6), OpenAI (brand import, action-item dedup, meeting extraction), tldv (meeting recordings), Google Sheets via `googleapis` (feature requests two-way sync)                     |
+| **Database**         | PostgreSQL 16                                                                                                                                                                                                          |
+| **ORM / migrations** | Drizzle ORM + drizzle-kit, postgres.js driver                                                                                                                                                                          |
+| **Shared contracts** | Zod schemas in `packages/shared` — single source of truth for types shared between web and api                                                                                                                         |
+| **Testing**          | Vitest in every package (~900 tests); Fastify `.inject()` + a mock-db helper at `apps/api/src/test/mock-db.ts` for route tests; Jarvis eval harness (`pnpm jarvis:eval`) runs 20 cases end-to-end against the real LLM |
+| **Tooling**          | ESLint (flat config), Prettier, lefthook (pre-commit), tsx (dev + runtime), Turbo for task orchestration                                                                                                               |
 
 ### Repo layout
 
@@ -88,12 +89,13 @@ Open `.env` and set `JWT_SECRET` to a long random string. The defaults for `DATA
 
 The following variables are optional — the app runs fine without them, but the associated features are gated:
 
-| Variable                     | Enables                                                                                                                                                                                     |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `UPLOAD_DIR`                 | Where the local-disk storage adapter writes task attachments. Defaults to `apps/api/.uploads`. Will be replaced by `STORAGE_BACKEND=gcs\|s3` once cloud storage lands (see `docs/TODO.md`). |
-| `OPENAI_API_KEY`             | AI brand import from `.md` / `.txt` notes, meeting summary / action-item extraction during recording sync, LLM-based action-item deduplication                                              |
-| `TLDV_API_KEY`               | "Sync Recordings" on a brand — pulls recordings from tldv and processes transcripts                                                                                                         |
-| `GOOGLE_SERVICE_ACCOUNT_KEY` | Feature Requests two-way sync with Google Sheets. Paste the full JSON key as a single-line string, and share the target sheet with the service account's email                              |
+| Variable                     | Enables                                                                                                                                                                                        |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `UPLOAD_DIR`                 | Where the local-disk storage adapter writes task attachments. Defaults to `apps/api/.uploads`. Will be replaced by `STORAGE_BACKEND=gcs\|s3` once cloud storage lands (see `docs/TODO.md`).    |
+| `OPENAI_API_KEY`             | AI brand import from `.md` / `.txt` notes, meeting summary / action-item extraction during recording sync, LLM-based action-item deduplication                                                 |
+| `ANTHROPIC_API_KEY`          | **Jarvis** — the conversational assistant at `/jarvis`. Only the streaming `/messages` endpoint requires it; conversation CRUD works without it. Uses Claude Sonnet 4.6 via the Anthropic SDK. |
+| `TLDV_API_KEY`               | "Sync Recordings" on a brand — pulls recordings from tldv and processes transcripts                                                                                                            |
+| `GOOGLE_SERVICE_ACCOUNT_KEY` | Feature Requests two-way sync with Google Sheets. Paste the full JSON key as a single-line string, and share the target sheet with the service account's email                                 |
 
 ### 4. Start the database
 
@@ -133,20 +135,21 @@ On first visit the web client walks you through a short first-run wizard (displa
 
 All scripts are run from the repo root and delegated to the appropriate workspace by Turborepo.
 
-| Command                           | What it does                                                   |
-| --------------------------------- | -------------------------------------------------------------- |
-| `pnpm dev`                        | Run the API and web in watch mode concurrently                 |
-| `pnpm build`                      | Build all packages (typecheck + vite production bundle)        |
-| `pnpm typecheck`                  | Type-check the whole monorepo                                  |
-| `pnpm test`                       | Run the Vitest suites across every package                     |
-| `pnpm lint`                       | Lint every workspace with ESLint (`--max-warnings=0`)          |
-| `pnpm format`                     | Prettier-format every file                                     |
-| `pnpm format:check`               | Verify Prettier formatting without writing (matches CI's gate) |
-| `pnpm db:generate`                | Generate a new Drizzle migration from schema changes           |
-| `pnpm db:migrate`                 | Apply pending migrations against `DATABASE_URL`                |
-| `pnpm db:studio`                  | Launch Drizzle Studio for inspecting the database              |
-| `pnpm --filter @momentum/api dev` | Run just the API                                               |
-| `pnpm --filter @momentum/web dev` | Run just the web client                                        |
+| Command                           | What it does                                                                                                                                                            |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                        | Run the API and web in watch mode concurrently                                                                                                                          |
+| `pnpm build`                      | Build all packages (typecheck + vite production bundle)                                                                                                                 |
+| `pnpm typecheck`                  | Type-check the whole monorepo                                                                                                                                           |
+| `pnpm test`                       | Run the Vitest suites across every package                                                                                                                              |
+| `pnpm lint`                       | Lint every workspace with ESLint (`--max-warnings=0`)                                                                                                                   |
+| `pnpm format`                     | Prettier-format every file                                                                                                                                              |
+| `pnpm format:check`               | Verify Prettier formatting without writing (matches CI's gate)                                                                                                          |
+| `pnpm db:generate`                | Generate a new Drizzle migration from schema changes                                                                                                                    |
+| `pnpm db:migrate`                 | Apply pending migrations against `DATABASE_URL`                                                                                                                         |
+| `pnpm db:studio`                  | Launch Drizzle Studio for inspecting the database                                                                                                                       |
+| `pnpm jarvis:eval`                | Run the 20-case Jarvis eval harness against the real Anthropic API (requires `ANTHROPIC_API_KEY` + a reachable Postgres; rolls back in-transaction so no data persists) |
+| `pnpm --filter @momentum/api dev` | Run just the API                                                                                                                                                        |
+| `pnpm --filter @momentum/web dev` | Run just the web client                                                                                                                                                 |
 
 ---
 
