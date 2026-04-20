@@ -1,0 +1,96 @@
+name: Jarvis eval
+
+# Runs the 20-case eval harness only when a change touches the Jarvis
+# subsystem (by file path). Lives in its own workflow file — separate
+# from `ci.yml` — so the Anthropic-API-key requirement and the service
+# container don't slow down non-Jarvis PRs, and so a Jarvis-only
+# regression shows up as a distinct check on the PR page.
+#
+# The eval talks to the real Anthropic API. That costs ~$1–$2 per run
+# (20 turns × Sonnet), so we gate it further on the `ANTHROPIC_API_KEY`
+# secret being present — without it, the job skips with a clear log
+# message instead of failing. This lets contributors without the secret
+# still merge Jarvis changes; main-branch runs in the org repo catch
+# regressions.
+
+on:
+  pull_request:
+    paths:
+      - 'apps/api/src/jarvis/**'
+      - 'apps/web/src/jarvis/**'
+      - 'packages/shared/src/jarvis.ts'
+      - 'packages/db/src/schema.ts'
+      - 'packages/db/drizzle/**'
+      - '.github/workflows/jarvis-eval.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/src/jarvis/**'
+      - 'apps/web/src/jarvis/**'
+      - 'packages/shared/src/jarvis.ts'
+      - 'packages/db/src/schema.ts'
+      - 'packages/db/drizzle/**'
+      - '.github/workflows/jarvis-eval.yml'
+
+concurrency:
+  group: jarvis-eval-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10.33.0'
+
+jobs:
+  eval:
+    name: jarvis:eval (≥90% pass)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: momentum
+          POSTGRES_PASSWORD: momentum
+          POSTGRES_DB: momentum_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U momentum -d momentum_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://momentum:momentum@localhost:5432/momentum_test
+      JWT_SECRET: eval-harness-secret-not-real
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip if ANTHROPIC_API_KEY is not configured
+        if: env.ANTHROPIC_API_KEY == ''
+        run: |
+          echo "::warning::ANTHROPIC_API_KEY secret is not set — skipping Jarvis eval."
+          echo "Configure the secret on the repo for automated eval runs."
+          exit 0
+
+      - uses: pnpm/action-setup@v4
+        if: env.ANTHROPIC_API_KEY != ''
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        if: env.ANTHROPIC_API_KEY != ''
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        if: env.ANTHROPIC_API_KEY != ''
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply migrations to test DB
+        if: env.ANTHROPIC_API_KEY != ''
+        run: pnpm db:migrate
+
+      - name: Run Jarvis eval harness
+        if: env.ANTHROPIC_API_KEY != ''
+        run: pnpm jarvis:eval

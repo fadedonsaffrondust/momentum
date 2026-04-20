@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
+    "jarvis:eval": "tsx src/jarvis/evals/runner.ts",
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
