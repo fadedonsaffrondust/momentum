@@ -22,6 +22,10 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   TLDV_API_KEY: z.string().optional(),
   GOOGLE_SERVICE_ACCOUNT_KEY: z.string().optional(),
+  // Jarvis (V1) — read by AnthropicProvider at construction. Left
+  // optional here because test suites don't need it; the provider throws
+  // clearly if instantiated without a key.
+  ANTHROPIC_API_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
