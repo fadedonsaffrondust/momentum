@@ -337,6 +337,129 @@ describe('POST /api/jarvis/conversations/:id/messages', () => {
     expect(body).toContain('"messageId":"msg-42"');
   });
 
+  it("replaces the placeholder title with the first message's when the conversation was created blank", async () => {
+    // Ownership check returns the sidebar-"+ new" placeholder title.
+    mockDb._pushResult([sampleConversationRow({ title: 'New conversation' })]);
+    // findFirstUserMessageText: no prior user messages (first turn).
+    mockDb._pushResult([]);
+    // The auto-title UPDATE resolves to nothing (no rows returned).
+    mockDb._pushResult([]);
+
+    const fakeService = {
+      streamMessage: vi.fn(async (_input, onEvent: (e: JarvisStreamEvent) => void) => {
+        onEvent({ type: 'intent', intent: '' });
+        onEvent({
+          type: 'done',
+          messageId: 'm',
+          totalLatencyMs: 1,
+          tokenUsage: {
+            inputTokens: 0,
+            outputTokens: 0,
+            cacheReadInputTokens: 0,
+            cacheCreationInputTokens: 0,
+          },
+          stopReason: 'end_turn',
+        });
+        return {} as never;
+      }),
+    } as unknown as JarvisService;
+    _setJarvisServiceForTesting(fakeService);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/jarvis/conversations/${CONV_ID}/messages`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { content: 'How is Boudin doing this week?' },
+    });
+
+    expect(res.statusCode).toBe(200);
+    // One UPDATE for the auto-title — the streamed turn itself uses the
+    // service mock, which doesn't exercise persistence.
+    expect(mockDb.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('self-heals a legacy placeholder title by back-filling from the oldest persisted user message, not the current one', async () => {
+    mockDb._pushResult([sampleConversationRow({ title: 'New conversation' })]);
+    // findFirstUserMessageText: oldest user message on the conversation —
+    // the one that should have become the title if the code had existed
+    // when the conversation was created.
+    mockDb._pushResult([
+      sampleMessageRow({
+        role: 'user',
+        content: [{ type: 'text', text: 'What Brand needs the most attention now?' }],
+      }),
+    ]);
+    mockDb._pushResult([]); // auto-title UPDATE
+
+    const fakeService = {
+      streamMessage: vi.fn(async (_input, onEvent: (e: JarvisStreamEvent) => void) => {
+        onEvent({ type: 'intent', intent: '' });
+        onEvent({
+          type: 'done',
+          messageId: 'm',
+          totalLatencyMs: 1,
+          tokenUsage: {
+            inputTokens: 0,
+            outputTokens: 0,
+            cacheReadInputTokens: 0,
+            cacheCreationInputTokens: 0,
+          },
+          stopReason: 'end_turn',
+        });
+        return {} as never;
+      }),
+    } as unknown as JarvisService;
+    _setJarvisServiceForTesting(fakeService);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/jarvis/conversations/${CONV_ID}/messages`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { content: 'and what about tomorrow?' },
+    });
+
+    expect(res.statusCode).toBe(200);
+    // Exactly one UPDATE — the auto-title. findFirstUserMessageText
+    // returning a prior message is what proves the title source is the
+    // legacy message, not `content` of the request; the UPDATE firing
+    // confirms the back-fill actually ran.
+    expect(mockDb.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves a user-derived title alone on subsequent turns', async () => {
+    mockDb._pushResult([sampleConversationRow({ title: 'What should I focus on today?' })]);
+
+    const fakeService = {
+      streamMessage: vi.fn(async (_input, onEvent: (e: JarvisStreamEvent) => void) => {
+        onEvent({ type: 'intent', intent: '' });
+        onEvent({
+          type: 'done',
+          messageId: 'm',
+          totalLatencyMs: 1,
+          tokenUsage: {
+            inputTokens: 0,
+            outputTokens: 0,
+            cacheReadInputTokens: 0,
+            cacheCreationInputTokens: 0,
+          },
+          stopReason: 'end_turn',
+        });
+        return {} as never;
+      }),
+    } as unknown as JarvisService;
+    _setJarvisServiceForTesting(fakeService);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/jarvis/conversations/${CONV_ID}/messages`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { content: 'and what about tomorrow?' },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(mockDb.update).not.toHaveBeenCalled();
+  });
+
   it('returns 404 for a conversation owned by someone else (no service call)', async () => {
     mockDb._pushResult([]); // ownership check returns empty
     const streamMessage = vi.fn();

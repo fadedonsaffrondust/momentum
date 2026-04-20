@@ -15,8 +15,12 @@ import {
   listConversationsByUser,
   getConversationForUser,
   archiveConversation,
+  updateConversationTitle,
 } from '../persistence/conversations.ts';
-import { listAllMessagesByConversation } from '../persistence/messages.ts';
+import {
+  findFirstUserMessageText,
+  listAllMessagesByConversation,
+} from '../persistence/messages.ts';
 import { getJarvisService } from '../service.ts';
 import { endSse, startSseKeepAlive, writeSseEvent, writeSseHeaders } from './streaming.ts';
 
@@ -35,6 +39,14 @@ import { endSse, startSseKeepAlive, writeSseEvent, writeSseHeaders } from './str
 const conversationIdParamsSchema = z.object({
   id: z.string().uuid(),
 });
+
+/**
+ * Placeholder title for conversations created without a seed prompt (the
+ * "+ new" button in the sidebar). The first user message overwrites it
+ * in the /messages route — see the auto-title block below. Exported so
+ * other modules can detect the default without duplicating the string.
+ */
+export const DEFAULT_CONVERSATION_TITLE = 'New conversation';
 
 /** Generate a short title from the first user message. LLM-summarized titles are TODO. */
 export function titleFromMessage(message: string): string {
@@ -58,7 +70,7 @@ export const jarvisRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req) => {
       const title = req.body.initialMessage
         ? titleFromMessage(req.body.initialMessage)
-        : 'New conversation';
+        : DEFAULT_CONVERSATION_TITLE;
       const row = await createConversation(db, { userId: req.userId, title });
       return { conversationId: row.id, title: row.title };
     },
@@ -156,6 +168,25 @@ export const jarvisRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const conv = await getConversationForUser(db, req.params.id, req.userId);
       if (!conv) throw notFound('Conversation not found');
+
+      // When a conversation still carries the placeholder title (user
+      // clicked "+ new" in the sidebar rather than seeding from an
+      // empty-state prompt), derive the title from its earliest user
+      // message so the sidebar stops showing "New conversation" forever.
+      // Prefer the oldest persisted user message if one exists — that
+      // self-heals legacy conversations created before this behavior
+      // shipped by using their actual first question, not the message
+      // that happens to trigger the back-fill — and fall back to the
+      // current request body on a truly first turn (nothing persisted
+      // yet; the orchestrator inserts the user row after this block).
+      // Clients pick the new title up by invalidating the conversations
+      // list once the SSE stream ends — the stream itself does not ship
+      // the new title.
+      if (conv.title === DEFAULT_CONVERSATION_TITLE) {
+        const firstUserMessage = await findFirstUserMessageText(db, conv.id);
+        const source = firstUserMessage ?? req.body.content;
+        await updateConversationTitle(db, conv.id, titleFromMessage(source));
+      }
 
       const service = getJarvisService();
 

@@ -120,3 +120,15 @@ export async function bumpConversationUpdatedAt(
     .set({ updatedAt: sql`now()` })
     .where(eq(jarvisConversations.id, conversationId));
 }
+
+/** Overwrite the conversation's display title. No-op if the row does not exist. */
+export async function updateConversationTitle(
+  db: Database,
+  conversationId: string,
+  title: string,
+): Promise<void> {
+  await db
+    .update(jarvisConversations)
+    .set({ title })
+    .where(eq(jarvisConversations.id, conversationId));
+}

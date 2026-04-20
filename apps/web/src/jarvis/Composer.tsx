@@ -81,7 +81,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
     >
       <div
         className={cn(
-          'relative flex items-end gap-2 rounded-md border bg-card px-3 py-2 transition-colors duration-150',
+          'relative flex items-center gap-2 rounded-md border bg-card px-3 py-2 transition-colors duration-150',
           'focus-within:border-primary/60',
           'border-border',
         )}

@@ -7,6 +7,7 @@ import {
   getConversationForUser,
   archiveConversation,
   bumpConversationUpdatedAt,
+  updateConversationTitle,
 } from './conversations.ts';
 
 const USER_ID = '00000000-0000-0000-0000-0000000000a1';
@@ -110,5 +111,20 @@ describe('archiveConversation + bumpConversationUpdatedAt', () => {
     await bumpConversationUpdatedAt(mockDb as unknown as Database, CONVERSATION_ID);
 
     expect(mockDb.update).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('updateConversationTitle', () => {
+  it('issues a single UPDATE with the new title', async () => {
+    const mockDb = createMockDb();
+    mockDb._pushResult([]);
+
+    await updateConversationTitle(
+      mockDb as unknown as Database,
+      CONVERSATION_ID,
+      'What did I ship?',
+    );
+
+    expect(mockDb.update).toHaveBeenCalledTimes(1);
   });
 });

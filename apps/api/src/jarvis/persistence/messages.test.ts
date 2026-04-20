@@ -5,6 +5,7 @@ import {
   insertMessage,
   listMessagesByConversation,
   listAllMessagesByConversation,
+  findFirstUserMessageText,
 } from './messages.ts';
 
 const CONVERSATION_ID = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
@@ -149,5 +150,53 @@ describe('listAllMessagesByConversation', () => {
       CONVERSATION_ID,
     );
     expect(rows.map((r) => r.id)).toEqual(['m1', 'm2', 'm3']);
+  });
+});
+
+describe('findFirstUserMessageText', () => {
+  it('returns the oldest user message as plain text', async () => {
+    const mockDb = createMockDb();
+    mockDb._pushResult([
+      sampleRow({
+        role: 'user',
+        content: [{ type: 'text', text: 'What Brand needs the most attention now?' }],
+      }),
+    ]);
+    const text = await findFirstUserMessageText(mockDb as unknown as Database, CONVERSATION_ID);
+    expect(text).toBe('What Brand needs the most attention now?');
+  });
+
+  it('concatenates multiple text blocks so split user messages round-trip', async () => {
+    const mockDb = createMockDb();
+    mockDb._pushResult([
+      sampleRow({
+        role: 'user',
+        content: [
+          { type: 'text', text: 'first line' },
+          { type: 'text', text: 'second line' },
+        ],
+      }),
+    ]);
+    const text = await findFirstUserMessageText(mockDb as unknown as Database, CONVERSATION_ID);
+    expect(text).toBe('first line\nsecond line');
+  });
+
+  it('returns null when the conversation has no user messages yet', async () => {
+    const mockDb = createMockDb();
+    mockDb._pushResult([]);
+    const text = await findFirstUserMessageText(mockDb as unknown as Database, CONVERSATION_ID);
+    expect(text).toBeNull();
+  });
+
+  it('returns null when the message has no text blocks (e.g. pure tool_result row)', async () => {
+    const mockDb = createMockDb();
+    mockDb._pushResult([
+      sampleRow({
+        role: 'user',
+        content: [{ type: 'tool_result', tool_use_id: 'tu_1', content: '{"ok":true}' }],
+      }),
+    ]);
+    const text = await findFirstUserMessageText(mockDb as unknown as Database, CONVERSATION_ID);
+    expect(text).toBeNull();
   });
 });

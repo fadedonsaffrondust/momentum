@@ -1,4 +1,4 @@
-import { asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq } from 'drizzle-orm';
 import type { Database } from '@momentum/db';
 import { jarvisMessages } from '@momentum/db';
 import type { LLMUsage } from '../llm-provider.ts';
@@ -121,4 +121,40 @@ export async function listAllMessagesByConversation(
     .where(eq(jarvisMessages.conversationId, conversationId))
     .orderBy(asc(jarvisMessages.createdAt));
   return rows.map(normalize);
+}
+
+/**
+ * Extract the plain text of the oldest user-role message for a
+ * conversation, or null if none exists yet. Used by the auto-title
+ * logic so a conversation that was created with the placeholder title
+ * back-fills from its actual first question instead of whatever turn
+ * triggered the self-heal. Concatenates every text block so a user
+ * message split across blocks still round-trips correctly.
+ */
+export async function findFirstUserMessageText(
+  db: Database,
+  conversationId: string,
+): Promise<string | null> {
+  const rows = await db
+    .select()
+    .from(jarvisMessages)
+    .where(and(eq(jarvisMessages.conversationId, conversationId), eq(jarvisMessages.role, 'user')))
+    .orderBy(asc(jarvisMessages.createdAt))
+    .limit(1);
+  const row = rows[0];
+  if (!row) return null;
+  const blocks = row.content as unknown;
+  if (!Array.isArray(blocks)) return null;
+  const text = blocks
+    .filter(
+      (b): b is { type: 'text'; text: string } =>
+        typeof b === 'object' &&
+        b !== null &&
+        (b as { type?: unknown }).type === 'text' &&
+        typeof (b as { text?: unknown }).text === 'string',
+    )
+    .map((b) => b.text)
+    .join('\n')
+    .trim();
+  return text.length > 0 ? text : null;
 }

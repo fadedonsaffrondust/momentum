@@ -38,13 +38,17 @@ export function ConversationView({ conversationId, initialMessage }: Conversatio
   // After a turn completes: wait for the detail query to refetch with
   // the persisted messages, then clear the ephemeral state. Otherwise
   // the just-finished turn briefly double-renders (live copy + historical
-  // copy) after the invalidation lands.
+  // copy) after the invalidation lands. Also invalidate the list so the
+  // sidebar picks up any server-side title/timestamp change (e.g. the
+  // first message of a conversation that was created with the
+  // placeholder "New conversation" title).
   useEffect(() => {
     if (liveTurn.status !== 'done') return;
     let cancelled = false;
     void qc.invalidateQueries({ queryKey: jarvisKeys.conversation(conversationId) }).then(() => {
       if (!cancelled) dispatch({ type: 'reset' });
     });
+    void qc.invalidateQueries({ queryKey: jarvisKeys.conversations });
     return () => {
       cancelled = true;
     };
