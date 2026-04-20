@@ -10,7 +10,7 @@ wins over the spec.
 
 ---
 
-### [ ] Task 1: Install guardrails, static context, and project pointer
+### [x] Task 1: Install guardrails, static context, and project pointer
 
 **Goal:** The foundational files that every future Jarvis session depends on are in
 place, and the project-root `CLAUDE.md` points at them.
