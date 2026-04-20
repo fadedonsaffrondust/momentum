@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ConversationList } from './ConversationList';
 import { ConversationView } from './ConversationView';
 import { EmptyState } from './EmptyState';
+import { useJarvisKeyboardController } from './hooks/useJarvisKeyboardController';
 import { useCreateJarvisConversation, useJarvisConversations } from './api/conversations';
 
 /**
@@ -27,7 +28,7 @@ export function JarvisPage() {
 
   const conversations = useMemo(() => listQ.data ?? [], [listQ.data]);
 
-  const handleNewConversation = () => {
+  const handleNewConversation = useCallback(() => {
     createConversation.mutate(
       {},
       {
@@ -36,7 +37,9 @@ export function JarvisPage() {
         },
       },
     );
-  };
+  }, [createConversation, navigate]);
+
+  useJarvisKeyboardController({ onNewConversation: handleNewConversation });
 
   const handlePromptClick = (prompt: string) => {
     createConversation.mutate(
