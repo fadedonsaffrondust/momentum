@@ -200,7 +200,7 @@ element={<JarvisPage />} />` nested inside the authenticated `AppShell`.
   **Out of scope:** composer, message rendering, streaming client, tool-call pills,
   keyboard shortcuts (beyond routing).
 
-### [ ] Task 8: Composer + streaming message rendering + tool-call inline pills
+### [x] Task 8: Composer + streaming message rendering + tool-call inline pills
 
 **Goal:** You can send a message, watch text stream in, see tool calls as animated
 pills, and click a pill to see arguments + result. End-to-end Jarvis works for real
