@@ -340,7 +340,7 @@ src/jarvis/evals/runner.ts"` (or standalone if cleaner).
   **Out of scope:** production monitoring dashboards, eval leaderboards, prompt
   auto-tuning.
 
-### [ ] Task 13: Empty / loading / error polish + release notes + README + TODO.md update
+### [x] Task 13: Empty / loading / error polish + release notes + README + TODO.md update
 
 **Goal:** Jarvis feels production-ready. Every failure mode has a graceful path.
 Release notes entry explains the feature. README reflects the new top-level surface.
