@@ -289,7 +289,7 @@ computed from `token_usage`. Tool-level latency/success queryable.
   **Depends on:** Task 9
   **Out of scope:** admin dashboard, real-time cost alerts (capture in TODOs).
 
-### [ ] Task 11: Keyboard shortcuts + `g j` chord + ShortcutsModal update
+### [x] Task 11: Keyboard shortcuts + `g j` chord + ShortcutsModal update
 
 **Goal:** All Jarvis-page keybindings work. Global `g j` chord navigates to
 `/jarvis`. ShortcutsModal documents the Jarvis section.
