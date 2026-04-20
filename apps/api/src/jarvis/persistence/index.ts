@@ -7,6 +7,8 @@ import {
   type MessageRow,
 } from './messages.ts';
 import { insertToolCall, type InsertToolCallInput, type ToolCallRow } from './tool-calls.ts';
+import { loadActingUser, loadBrandPortfolio, loadTeamRoster } from '../prompts/rosters.ts';
+import type { SynthesisBrand, SynthesisTeamMember, SynthesisUser } from '../prompts/synthesis.ts';
 
 /**
  * The narrow persistence surface the orchestrator depends on. Kept tight
@@ -26,6 +28,10 @@ export interface JarvisPersistence {
     conversationId: string,
     userId: string,
   ): Promise<{ id: string; userId: string } | null>;
+  /** Prompt-construction inputs, queried once per turn by the orchestrator. */
+  loadActingUser(userId: string): Promise<SynthesisUser>;
+  loadTeamRoster(): Promise<SynthesisTeamMember[]>;
+  loadBrandPortfolio(): Promise<SynthesisBrand[]>;
 }
 
 /**
@@ -41,6 +47,9 @@ export function buildPersistence(db: Database): JarvisPersistence {
     bumpConversationUpdatedAt: (conversationId) => bumpConversationUpdatedAt(db, conversationId),
     getConversationForUser: (conversationId, userId) =>
       getConversationForUser(db, conversationId, userId),
+    loadActingUser: (userId) => loadActingUser(db, userId),
+    loadTeamRoster: () => loadTeamRoster(db),
+    loadBrandPortfolio: () => loadBrandPortfolio(db),
   };
 }
 

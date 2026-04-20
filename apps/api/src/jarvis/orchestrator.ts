@@ -5,6 +5,7 @@ import type {
   LLMContentBlock,
   LLMMessageParam,
   LLMProvider,
+  LLMSystem,
   LLMToolDefinition,
   LLMToolUseBlock,
   LLMUsage,
@@ -12,7 +13,12 @@ import type {
 import type { AnyTool } from './tools/types.ts';
 import type { JarvisLogger, ToolContext } from './tools/types.ts';
 import type { ToolRegistry } from './tools/index.ts';
-import { SYNTHESIS_PROMPT_V1 } from './prompts/synthesis.ts';
+import {
+  assertStaticPromptUnderCap,
+  buildSynthesisSystemBlocks,
+  SYNTHESIS_PROMPT_V1_STATIC,
+} from './prompts/synthesis.ts';
+import { loadOmnirevContext } from './knowledge/loader.ts';
 import { buildPersistence, type JarvisPersistence } from './persistence/index.ts';
 import type { MessageRow } from './persistence/messages.ts';
 
@@ -123,6 +129,12 @@ export class JarvisService {
       turnTimeoutMs: opts.turnTimeoutMs ?? TURN_TIMEOUT_MS,
       historyLimit: opts.historyLimit ?? DEFAULT_HISTORY_LIMIT,
     };
+
+    // Guardrail: "System prompt cap: 2000 tokens. Enforce at startup."
+    // Check the STATIC half alone — tool defs are counted against a
+    // separate budget, and the dynamic half scales with roster size
+    // (spec §5 allocates ~500 tokens for rosters inside the 2000 cap).
+    assertStaticPromptUnderCap(SYNTHESIS_PROMPT_V1_STATIC);
   }
 
   /** Non-streaming handler — used by evals, CLI tooling, and tests. */
@@ -194,6 +206,23 @@ export class JarvisService {
     );
     const anthropicMessages = historyRows.map(dbMessageToAnthropic);
 
+    // Dynamic prompt construction — per spec §5 these are re-queried
+    // every turn (no cache) so a new brand or role change is never stale
+    // in Jarvis's view. Routed through the persistence adapter so tests
+    // stub at the same surface as message/tool-call inserts.
+    const [actingUser, teamRoster, brandPortfolio] = await Promise.all([
+      this.opts.persistence.loadActingUser(input.userId),
+      this.opts.persistence.loadTeamRoster(),
+      this.opts.persistence.loadBrandPortfolio(),
+    ]);
+    const systemBlocks = buildSynthesisSystemBlocks({
+      user: actingUser,
+      now: ctx.now,
+      teamRoster,
+      brandPortfolio,
+      omnirevContext: loadOmnirevContext(),
+    });
+
     let timer: NodeJS.Timeout | undefined;
     const timeoutPromise = new Promise<never>((_, reject) => {
       timer = setTimeout(
@@ -204,7 +233,7 @@ export class JarvisService {
 
     try {
       const result = await Promise.race([
-        this.runLoop(input, ctx, anthropicMessages, onEvent, streaming),
+        this.runLoop(input, ctx, anthropicMessages, systemBlocks, onEvent, streaming),
         timeoutPromise,
       ]);
       await this.opts.persistence.bumpConversationUpdatedAt(input.conversationId);
@@ -237,12 +266,16 @@ export class JarvisService {
     input: HandleMessageInput,
     ctx: ToolContext,
     anthropicMessages: LLMMessageParam[],
+    system: LLMSystem,
     onEvent: JarvisStreamCallback,
     streaming: boolean,
   ): Promise<HandleMessageResult> {
     const messages: LLMMessageParam[] = [...anthropicMessages];
 
-    const tools = this.opts.registry.getAllTools().map(toolToAnthropic);
+    // Mark the last tool definition as the Anthropic cache breakpoint so
+    // the full tool array is cached. Tools are entirely static across
+    // turns; there's no reason to re-serialize them every call.
+    const tools = withToolsCached(this.opts.registry.getAllTools().map(toolToAnthropic));
     const toolCalls: ToolCallRecord[] = [];
     const usage = emptyUsage();
     let lastContent: LLMContentBlock[] = [];
@@ -256,7 +289,7 @@ export class JarvisService {
       // would serialize anyway, but keeping the boundary defensive lets
       // tests (and any future provider) observe a stable snapshot.
       const llmRequest = {
-        system: SYNTHESIS_PROMPT_V1,
+        system,
         messages: [...messages],
         tools,
       };
@@ -416,6 +449,19 @@ type Anthropic_ToolResultBlockParam = {
   content: string;
   is_error?: true;
 };
+
+/**
+ * Adds `cache_control: { type: 'ephemeral' }` to the last tool so the
+ * whole tools array becomes an Anthropic cache breakpoint. Tool defs
+ * never change at runtime, so this caches once per deploy. See spec §7
+ * Caching.
+ */
+export function withToolsCached(tools: LLMToolDefinition[]): LLMToolDefinition[] {
+  if (tools.length === 0) return tools;
+  return tools.map((t, i) =>
+    i === tools.length - 1 ? { ...t, cache_control: { type: 'ephemeral' as const } } : t,
+  );
+}
 
 export function toolToAnthropic(tool: AnyTool): LLMToolDefinition {
   const schema = zodToJsonSchema(tool.inputSchema, {

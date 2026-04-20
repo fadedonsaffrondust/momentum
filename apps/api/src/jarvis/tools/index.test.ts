@@ -154,13 +154,31 @@ describe('ToolRegistry — timeout', () => {
 });
 
 describe('createDefaultRegistry', () => {
-  it('registers the three V1 tools', () => {
+  it('registers the V1 fourteen-tool set (getTeamMemberByName was dropped per spec edit)', () => {
     const registry = createDefaultRegistry();
     const names = registry
       .getAllTools()
       .map((t) => t.name)
       .sort();
-    expect(names).toEqual(['getBrand', 'getBrandsRequiringAttention', 'getMyTasks']);
+    expect(names).toEqual(
+      [
+        'getActionItems',
+        'getBrand',
+        'getBrandActionItems',
+        'getBrandMeetings',
+        'getBrands',
+        'getBrandsRequiringAttention',
+        'getMeeting',
+        'getMemberTasks',
+        'getMyTasks',
+        'getOverdueActionItems',
+        'getRecentMeetings',
+        'getTaskById',
+        'getTasks',
+        'getTeamMembers',
+      ].sort(),
+    );
+    expect(names).toHaveLength(14);
   });
 
   it('every registered tool is read-only', () => {

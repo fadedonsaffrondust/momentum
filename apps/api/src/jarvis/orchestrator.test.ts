@@ -110,6 +110,9 @@ interface MockPersistence extends JarvisPersistence {
   listMessagesByConversation: ReturnType<typeof vi.fn>;
   bumpConversationUpdatedAt: ReturnType<typeof vi.fn>;
   getConversationForUser: ReturnType<typeof vi.fn>;
+  loadActingUser: ReturnType<typeof vi.fn>;
+  loadTeamRoster: ReturnType<typeof vi.fn>;
+  loadBrandPortfolio: ReturnType<typeof vi.fn>;
 }
 
 function makeMockPersistence(
@@ -158,6 +161,12 @@ function makeMockPersistence(
     }),
     bumpConversationUpdatedAt: vi.fn(async () => undefined),
     getConversationForUser: vi.fn(async (id, userId) => ({ id, userId })),
+    loadActingUser: vi.fn(async (userId: string) => ({
+      id: userId,
+      displayName: 'Test User',
+    })),
+    loadTeamRoster: vi.fn(async () => []),
+    loadBrandPortfolio: vi.fn(async () => []),
   };
 }
 

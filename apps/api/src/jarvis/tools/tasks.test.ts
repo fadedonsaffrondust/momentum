@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import type { Database } from '@momentum/db';
 import { createMockDb } from '../../test/mock-db.ts';
 import type { ToolContext, JarvisLogger } from './types.ts';
-import { getMyTasks } from './tasks.ts';
+import { getMyTasks, getTasks, getTaskById } from './tasks.ts';
 
 const USER_ID = '00000000-0000-0000-0000-0000000000a1';
 const NOW = new Date('2026-04-19T12:00:00.000Z');
@@ -95,5 +95,89 @@ describe('getMyTasks', () => {
   it('accepts a status filter', () => {
     const parsed = getMyTasks.inputSchema.parse({ status: 'done' });
     expect(parsed.status).toBe('done');
+  });
+});
+
+describe('getTasks', () => {
+  it('has a descriptive, V1-shaped definition', () => {
+    expect(getTasks.name).toBe('getTasks');
+    expect(getTasks.readOnly).toBe(true);
+    expect(getTasks.description).toMatch(/team|someone specific/i);
+  });
+
+  it('returns a mapped task list without the description column', async () => {
+    const mockDb = createMockDb();
+    mockDb._pushResult([sampleTaskRow({ assigneeId: 'someone-else' })]);
+    const ctx = makeCtx(mockDb);
+    const result = await getTasks.handler({ assigneeId: 'someone-else', limit: 50 }, ctx);
+    expect(result).toHaveLength(1);
+    expect(result[0]!).not.toHaveProperty('description');
+  });
+
+  it('returns [] early when brandId filter yields no linked tasks', async () => {
+    const mockDb = createMockDb();
+    mockDb._pushResult([]); // brandActionItems lookup
+    const ctx = makeCtx(mockDb);
+    const result = await getTasks.handler(
+      { brandId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', limit: 50 },
+      ctx,
+    );
+    expect(result).toEqual([]);
+  });
+
+  it('resolves brandId filter into a task-id IN-list', async () => {
+    const mockDb = createMockDb();
+    mockDb._pushResult([
+      { linkedTaskId: '11111111-1111-1111-1111-111111111111' },
+      { linkedTaskId: null },
+      { linkedTaskId: '22222222-2222-2222-2222-222222222222' },
+    ]);
+    mockDb._pushResult([sampleTaskRow()]);
+    const ctx = makeCtx(mockDb);
+    const result = await getTasks.handler(
+      { brandId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', limit: 50 },
+      ctx,
+    );
+    expect(result).toHaveLength(1);
+  });
+
+  it('rejects non-UUID assigneeId / brandId', () => {
+    expect(() => getTasks.inputSchema.parse({ assigneeId: 'not-a-uuid' })).toThrow();
+    expect(() => getTasks.inputSchema.parse({ brandId: 'not-a-uuid' })).toThrow();
+  });
+});
+
+describe('getTaskById', () => {
+  it('has a descriptive, V1-shaped definition', () => {
+    expect(getTaskById.name).toBe('getTaskById');
+    expect(getTaskById.readOnly).toBe(true);
+    expect(getTaskById.description).toMatch(/complete task record|including description/i);
+  });
+
+  it('returns the full task including description', async () => {
+    const mockDb = createMockDb();
+    mockDb._pushResult([{ ...sampleTaskRow(), description: '<p>The full body</p>' }]);
+    const ctx = makeCtx(mockDb);
+    const result = await getTaskById.handler(
+      { taskId: '11111111-1111-1111-1111-111111111111' },
+      ctx,
+    );
+    expect(result).not.toBeNull();
+    expect(result!.description).toBe('<p>The full body</p>');
+  });
+
+  it('returns null when the task is not found', async () => {
+    const mockDb = createMockDb();
+    mockDb._pushResult([]);
+    const ctx = makeCtx(mockDb);
+    const result = await getTaskById.handler(
+      { taskId: '11111111-1111-1111-1111-111111111111' },
+      ctx,
+    );
+    expect(result).toBeNull();
+  });
+
+  it('rejects non-UUID taskId', () => {
+    expect(() => getTaskById.inputSchema.parse({ taskId: 'not-a-uuid' })).toThrow();
   });
 });

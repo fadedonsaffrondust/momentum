@@ -25,9 +25,16 @@ export type LLMStopReason =
   | 'refusal'
   | null;
 
+/**
+ * System prompt shape accepted by Anthropic. A plain string is the simple
+ * form; an array of `TextBlockParam`s allows cache_control per block so
+ * the static preamble can be cached independently of the dynamic rosters.
+ * Both are passed through to the SDK as-is.
+ */
+export type LLMSystem = string | Anthropic.Messages.TextBlockParam[];
+
 export interface LLMRequest {
-  /** Static preamble. Will become an array of cache-partitioned blocks in Task 9. */
-  system: string;
+  system: LLMSystem;
   messages: LLMMessageParam[];
   tools: LLMToolDefinition[];
   maxTokens?: number;

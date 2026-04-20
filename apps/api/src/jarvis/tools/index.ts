@@ -5,8 +5,11 @@ import {
   ToolTimeoutError,
   ToolExecutionError,
 } from './types.ts';
-import { getMyTasks } from './tasks.ts';
-import { getBrand } from './brands.ts';
+import { getMyTasks, getTasks, getTaskById } from './tasks.ts';
+import { getTeamMembers, getMemberTasks } from './team.ts';
+import { getBrand, getBrands, getBrandActionItems, getBrandMeetings } from './brands.ts';
+import { getActionItems, getOverdueActionItems } from './action-items.ts';
+import { getRecentMeetings, getMeeting } from './meetings.ts';
 import { getBrandsRequiringAttention } from './analytical.ts';
 
 /**
@@ -95,13 +98,33 @@ export class ToolRegistry {
  */
 export function createDefaultRegistry(): ToolRegistry {
   const registry = new ToolRegistry();
+  // Task tools
   registry.registerTool(getMyTasks);
+  registry.registerTool(getTasks);
+  registry.registerTool(getTaskById);
+  // Team tools
+  registry.registerTool(getTeamMembers);
+  registry.registerTool(getMemberTasks);
+  // Brand tools
   registry.registerTool(getBrand);
+  registry.registerTool(getBrands);
+  registry.registerTool(getBrandActionItems);
+  registry.registerTool(getBrandMeetings);
+  // Action item tools
+  registry.registerTool(getActionItems);
+  registry.registerTool(getOverdueActionItems);
+  // Meeting tools
+  registry.registerTool(getRecentMeetings);
+  registry.registerTool(getMeeting);
+  // Analytical tools
   registry.registerTool(getBrandsRequiringAttention);
   return registry;
 }
 
 export * from './types.ts';
-export { getMyTasks } from './tasks.ts';
-export { getBrand } from './brands.ts';
+export { getMyTasks, getTasks, getTaskById } from './tasks.ts';
+export { getTeamMembers, getMemberTasks } from './team.ts';
+export { getBrand, getBrands, getBrandActionItems, getBrandMeetings } from './brands.ts';
+export { getActionItems, getOverdueActionItems } from './action-items.ts';
+export { getRecentMeetings, getMeeting } from './meetings.ts';
 export { getBrandsRequiringAttention } from './analytical.ts';
