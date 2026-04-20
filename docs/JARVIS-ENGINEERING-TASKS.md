@@ -229,7 +229,7 @@ users.
   **Out of scope:** keyboard shortcuts (next task), remaining tools, dynamic prompt
   content, evals.
 
-### [ ] Task 9: Remaining 11 tools + dynamic prompt construction
+### [x] Task 9: Remaining 11 tools + dynamic prompt construction
 
 **Goal:** All 14 V1 tools exist with tests. System prompt is assembled at
 turn-construction time with team-roster and brand-portfolio injection, Omnirev
