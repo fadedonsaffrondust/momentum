@@ -85,7 +85,7 @@ jarvis_messages`.
   **Depends on:** Task 2
   **Out of scope:** the orchestrator, the LLM, the remaining 11 tools, any API route.
 
-### [ ] Task 4: Anthropic SDK wrapper + non-streaming tool-use loop
+### [x] Task 4: Anthropic SDK wrapper + non-streaming tool-use loop
 
 **Goal:** A `JarvisService.handleMessage()` that accepts a user message, runs the
 Anthropic tool-use loop with the three tools from Task 3, and returns the final
